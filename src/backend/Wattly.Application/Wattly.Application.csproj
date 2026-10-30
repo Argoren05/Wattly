@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Wattly.Domain\Wattly.Domain.csproj" />
   </ItemGroup>
@@ -8,7 +12,5 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
   </ItemGroup>
 
-  <PropertyGroup>
-  </PropertyGroup>
 
 </Project>

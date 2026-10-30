@@ -4,10 +4,17 @@ using Wattly.Infrastructure.Identity;
 
 namespace Wattly.Api.Endpoints;
 
+/// <summary>Account endpoints: Identity API, logout and current user.</summary>
 public static class AuthEndpoints
 {
+    /// <summary>Current user.</summary>
+    /// <param name="Id">Identifier.</param>
+    /// <param name="Email">E-mail.</param>
+    /// <param name="Roles">Roles.</param>
     public sealed record UserDto(Guid Id, string? Email, IReadOnlyList<string> Roles);
 
+    /// <summary>Maps <c>/auth/*</c> and <c>/users/me</c>.</summary>
+    /// <param name="api">The <c>/api/v1</c> route group.</param>
     public static void MapAuthEndpoints(this RouteGroupBuilder api)
     {
         var auth = api.MapGroup("/auth").WithTags("Auth").RequireRateLimiting(RateLimitPolicies.Auth);

@@ -9,8 +9,12 @@ using Wattly.Infrastructure.Storage;
 
 namespace Wattly.Infrastructure;
 
+/// <summary>Registration of the infrastructure layer.</summary>
 public static class DependencyInjection
 {
+    /// <summary>Registers EF Core (PostgreSQL), Identity, file storage, clock and health checks.</summary>
+    /// <param name="services">Service collection.</param>
+    /// <param name="configuration">Application configuration.</param>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Wattly")

@@ -5,8 +5,10 @@ using Wattly.Domain.Metering;
 
 namespace Wattly.Infrastructure.Persistence.Configurations;
 
+/// <summary>EF Core mapping of <c>Meter</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class MeterConfiguration : IEntityTypeConfiguration<Meter>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Meter> b)
     {
         b.Property(x => x.Name).HasMaxLength(100);
@@ -16,8 +18,10 @@ internal sealed class MeterConfiguration : IEntityTypeConfiguration<Meter>
     }
 }
 
+/// <summary>EF Core mapping of <c>MeterRegister</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class MeterRegisterConfiguration : IEntityTypeConfiguration<MeterRegister>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<MeterRegister> b)
     {
         b.Property(x => x.Name).HasMaxLength(100);
@@ -29,8 +33,10 @@ internal sealed class MeterRegisterConfiguration : IEntityTypeConfiguration<Mete
     }
 }
 
+/// <summary>EF Core mapping of <c>MeterReading</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class MeterReadingConfiguration : IEntityTypeConfiguration<MeterReading>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<MeterReading> b)
     {
         b.Property(x => x.Value).HasPrecision(18, 4);

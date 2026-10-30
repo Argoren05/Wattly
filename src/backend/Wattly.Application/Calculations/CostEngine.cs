@@ -10,8 +10,14 @@ namespace Wattly.Application.Calculations;
 /// </summary>
 public static class CostEngine
 {
+    /// <summary>Notice added to every result (product rule: a forecast is not an invoice).</summary>
     public const string NotAnInvoiceNotice = "Kalkulacja ma charakter informacyjny i szacunkowy – nie jest fakturą sprzedawcy.";
 
+    /// <summary>Calculates consumption and costs of a property in [from, to).</summary>
+    /// <param name="data">Preloaded property data.</param>
+    /// <param name="from">Period start.</param>
+    /// <param name="to">Period end (exclusive).</param>
+    /// <param name="calculatedAt">Current time; periods ending later are estimates.</param>
     public static CalculationResultDto Calculate(PropertyEnergyData data, DateTimeOffset from, DateTimeOffset to, DateTimeOffset calculatedAt)
     {
         from = from.ToUniversalTime();
@@ -159,6 +165,9 @@ public static class CostEngine
     }
 
     /// <summary>Splits [from, to) at every contract and rate plan validity boundary.</summary>
+    /// <param name="data">Property data.</param>
+    /// <param name="from">Period start.</param>
+    /// <param name="to">Period end.</param>
     private static IEnumerable<(DateTimeOffset Start, DateTimeOffset End)> Boundaries(PropertyEnergyData data, DateTimeOffset from, DateTimeOffset to)
     {
         var tz = data.TimeZone;

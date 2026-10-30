@@ -5,6 +5,7 @@ namespace Wattly.IntegrationTests;
 /// <summary>Builds a configured property: G12 contract, own rate plan and a two-zone meter.</summary>
 public sealed record Scenario(string PropertyId, string TariffId, string DayRegisterId, string NightRegisterId)
 {
+    /// <summary>Creates the scenario through the public API.</summary>
     public static async Task<Scenario> CreateAsync(HttpClient client)
     {
         var property = await client.PostJsonAsync("/api/v1/properties", new { name = "Mieszkanie", billingPeriodMonths = 2, billingAnchorDate = "2026-01-01" });
@@ -45,6 +46,7 @@ public sealed record Scenario(string PropertyId, string TariffId, string DayRegi
         return new Scenario(propertyId, tariffId, Register("DAY"), Register("NIGHT"));
     }
 
+    /// <summary>Adds a reading to a register and asserts success.</summary>
     public async Task<JsonNode> AddReadingAsync(HttpClient client, string registerId, string at, decimal value) =>
         await client.PostJsonAsync($"/api/v1/registers/{registerId}/readings", new { readingAt = at, value });
 }

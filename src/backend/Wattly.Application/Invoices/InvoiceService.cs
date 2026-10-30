@@ -5,10 +5,19 @@ using Wattly.Domain.Invoices;
 
 namespace Wattly.Application.Invoices;
 
+/// <summary>Invoices, their attachments and comparison with the estimate.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="storage">Private file storage.</param>
+/// <param name="clock">Time source.</param>
 public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser, IFileStorage storage, TimeProvider clock)
 {
+    /// <summary>Maximum attachment size (10 MB).</summary>
     public const long MaxAttachmentBytes = 10 * 1024 * 1024;
 
+    /// <summary>Invoices of a property with comparisons, newest period first.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<InvoiceDto>> ListAsync(Guid propertyId, CancellationToken ct)
     {
         var data = await PropertyEnergyData.LoadAsync(db, currentUser.UserId, propertyId, ct);
@@ -17,6 +26,9 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return invoices.Select(i => ToDto(i, attachments, data)).ToList();
     }
 
+    /// <summary>One invoice with comparison.</summary>
+    /// <param name="invoiceId">Invoice.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<InvoiceDto> GetAsync(Guid invoiceId, CancellationToken ct)
     {
         var invoice = await LoadAsync(invoiceId, tracking: false, ct);
@@ -24,6 +36,10 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return ToDto(invoice, await LoadAttachmentsAsync([invoice], ct), data);
     }
 
+    /// <summary>Creates an invoice in the property currency.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="request">Data.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<InvoiceDto> CreateAsync(Guid propertyId, InvoiceRequest request, CancellationToken ct)
     {
         var property = await db.GetOwnedPropertyAsync(currentUser.UserId, propertyId, ct);
@@ -37,6 +53,10 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return await GetAsync(invoice.Id, ct);
     }
 
+    /// <summary>Updates an invoice.</summary>
+    /// <param name="invoiceId">Invoice.</param>
+    /// <param name="request">Data.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<InvoiceDto> UpdateAsync(Guid invoiceId, InvoiceRequest request, CancellationToken ct)
     {
         var invoice = await LoadAsync(invoiceId, tracking: true, ct);
@@ -46,6 +66,9 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return await GetAsync(invoice.Id, ct);
     }
 
+    /// <summary>Deletes an invoice and its attachment (database and file).</summary>
+    /// <param name="invoiceId">Invoice.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task DeleteAsync(Guid invoiceId, CancellationToken ct)
     {
         var invoice = await LoadAsync(invoiceId, tracking: true, ct);
@@ -61,6 +84,11 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
     }
 
     /// <summary>Stores a PDF/JPEG/PNG attachment, replacing the previous one. The type is verified by file signature, not only by the declared content type.</summary>
+    /// <param name="invoiceId">Invoice.</param>
+    /// <param name="fileName">Original file name (sanitised).</param>
+    /// <param name="length">Declared length.</param>
+    /// <param name="content">File content.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<AttachmentDto> AttachAsync(Guid invoiceId, string fileName, long length, Stream content, CancellationToken ct)
     {
         var invoice = await LoadAsync(invoiceId, tracking: true, ct);
@@ -111,6 +139,9 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return ToDto(attachment);
     }
 
+    /// <summary>Opens an attachment owned by the current user.</summary>
+    /// <param name="attachmentId">Attachment.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<FileContent> OpenAttachmentAsync(Guid attachmentId, CancellationToken ct)
     {
         var attachment = await db.Attachments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == attachmentId && a.OwnerUserId == currentUser.UserId, ct)
@@ -119,6 +150,7 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return new FileContent(attachment.FileName, attachment.ContentType, stream);
     }
 
+    /// <summary>Loads an invoice of an owned property or throws NotFound.</summary>
     private async Task<Invoice> LoadAsync(Guid invoiceId, bool tracking, CancellationToken ct)
     {
         var ownedProperties = db.Properties.OwnedBy(currentUser.UserId).Select(p => p.Id);
@@ -128,12 +160,14 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         return await query.FirstOrDefaultAsync(ct) ?? throw new NotFoundException("Faktura");
     }
 
+    /// <summary>Loads attachments of the given invoices in one query.</summary>
     private async Task<Dictionary<Guid, Attachment>> LoadAttachmentsAsync(IReadOnlyCollection<Invoice> invoices, CancellationToken ct)
     {
         var ids = invoices.Where(i => i.AttachmentId != null).Select(i => i.AttachmentId!.Value).ToList();
         return ids.Count == 0 ? [] : await db.Attachments.AsNoTracking().Where(a => ids.Contains(a.Id)).ToDictionaryAsync(a => a.Id, ct);
     }
 
+    /// <summary>Validates invoice data.</summary>
     private async Task ValidateAsync(InvoiceRequest request, CancellationToken ct)
     {
         var validation = new Validation()
@@ -150,6 +184,7 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         validation.ThrowIfInvalid();
     }
 
+    /// <summary>Copies request values to the entity.</summary>
     private static void Apply(Invoice invoice, InvoiceRequest request, DateTimeOffset now)
     {
         invoice.SupplierId = request.SupplierId;
@@ -164,6 +199,7 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         invoice.UpdatedAt = now;
     }
 
+    /// <summary>Maps an invoice and computes the comparison with the estimate for its period.</summary>
     private InvoiceDto ToDto(Invoice i, IReadOnlyDictionary<Guid, Attachment> attachments, PropertyEnergyData data)
     {
         var start = TimeZones.StartOfDay(i.PeriodStart, data.TimeZone);
@@ -183,8 +219,10 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
             i.TotalNet, i.TotalGross, i.CurrencyCode, i.Notes, attachment, comparison, i.CreatedAt, i.UpdatedAt);
     }
 
+    /// <summary>Maps attachment metadata.</summary>
     private static AttachmentDto ToDto(Attachment a) => new(a.Id, a.FileName, a.ContentType, a.SizeBytes, a.CreatedAt);
 
+    /// <summary>Keeps only safe characters (no paths) and forces the extension matching the detected type.</summary>
     private static string SanitizeFileName(string fileName, string contentType)
     {
         var name = Path.GetFileNameWithoutExtension(fileName ?? string.Empty);

@@ -6,10 +6,13 @@ using System.Text.Json.Serialization;
 
 namespace Wattly.IntegrationTests;
 
+/// <summary>HTTP helpers for integration tests: user creation, sign-in and JSON calls with readable failures.</summary>
 public static class ApiClient
 {
+    /// <summary>Serializer options matching the API (camelCase, enums as strings).</summary>
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
+    /// <summary>Registers a new user and returns a client authenticated as that user.</summary>
     public static async Task<HttpClient> CreateUserClientAsync(this WattlyApiFactory factory, string? email = null, string password = "Password12345")
     {
         email ??= $"user_{Guid.NewGuid():N}@wattly.test";
@@ -19,6 +22,7 @@ public static class ApiClient
         return await LoginAsync(factory, email, password);
     }
 
+    /// <summary>Signs in and returns a client with the bearer token set.</summary>
     public static async Task<HttpClient> LoginAsync(this WattlyApiFactory factory, string email, string password)
     {
         var client = factory.CreateClient();
@@ -29,9 +33,11 @@ public static class ApiClient
         return client;
     }
 
+    /// <summary>Parses the response body as JSON.</summary>
     public static async Task<JsonNode> ReadJsonAsync(this HttpResponseMessage response) =>
         JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
 
+    /// <summary>POSTs JSON and asserts success (the failure message contains the response body).</summary>
     public static async Task<JsonNode> PostJsonAsync(this HttpClient client, string url, object body)
     {
         var response = await client.PostAsJsonAsync(url, body, Json);
@@ -39,6 +45,7 @@ public static class ApiClient
         return await response.ReadJsonAsync();
     }
 
+    /// <summary>PUTs JSON and asserts success.</summary>
     public static async Task<JsonNode> PutJsonAsync(this HttpClient client, string url, object body)
     {
         var response = await client.PutAsJsonAsync(url, body, Json);
@@ -46,6 +53,7 @@ public static class ApiClient
         return await response.ReadJsonAsync();
     }
 
+    /// <summary>GETs JSON and asserts success.</summary>
     public static async Task<JsonNode> GetJsonAsync(this HttpClient client, string url)
     {
         var response = await client.GetAsync(url);

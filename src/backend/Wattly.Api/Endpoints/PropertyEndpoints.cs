@@ -3,8 +3,11 @@ using Wattly.Application.Properties;
 
 namespace Wattly.Api.Endpoints;
 
+/// <summary>Endpoints for properties, contracts and rate plans.</summary>
 public static class PropertyEndpoints
 {
+    /// <summary>Maps the endpoints.</summary>
+    /// <param name="api">Authorised <c>/api/v1</c> route group.</param>
     public static void MapPropertyEndpoints(this RouteGroupBuilder api)
     {
         var properties = api.MapGroup("/properties").WithTags("Properties");

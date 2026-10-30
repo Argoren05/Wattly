@@ -9,8 +9,12 @@ namespace Wattly.Infrastructure.Persistence;
 /// </summary>
 public static class CatalogSeeder
 {
+    /// <summary>Note shown instead of zone hours, which differ between operators.</summary>
     private const string ZoneHoursNote = "Godziny stref zależą od operatora i taryfy OSD – sprawdź aktualną taryfę.";
 
+    /// <summary>Adds missing catalog entries (matched by code); existing entries are not modified.</summary>
+    /// <param name="db">Database context.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static async Task SeedAsync(WattlyDbContext db, CancellationToken ct)
     {
         await SeedOperatorsAsync(db, ct);
@@ -19,6 +23,7 @@ public static class CatalogSeeder
         await db.SaveChangesAsync(ct);
     }
 
+    /// <summary>Main Polish distribution operators.</summary>
     private static async Task SeedOperatorsAsync(WattlyDbContext db, CancellationToken ct)
     {
         (string Code, string Name)[] operators =
@@ -34,6 +39,7 @@ public static class CatalogSeeder
         db.EnergyOperators.AddRange(operators.Where(o => !existing.Contains(o.Code)).Select(o => new EnergyOperator { Code = o.Code, Name = o.Name }));
     }
 
+    /// <summary>Main Polish default (incumbent) energy suppliers.</summary>
     private static async Task SeedSuppliersAsync(WattlyDbContext db, CancellationToken ct)
     {
         (string Code, string Name)[] suppliers =
@@ -49,6 +55,7 @@ public static class CatalogSeeder
         db.EnergySuppliers.AddRange(suppliers.Where(s => !existing.Contains(s.Code)).Select(s => new EnergySupplier { Code = s.Code, Name = s.Name }));
     }
 
+    /// <summary>Household tariff groups with their zones (structure only, no prices).</summary>
     private static async Task SeedTariffsAsync(WattlyDbContext db, CancellationToken ct)
     {
         Tariff[] tariffs =

@@ -4,8 +4,15 @@ using Wattly.Domain.Households;
 
 namespace Wattly.Application.Properties;
 
+/// <summary>Energy contracts (supplier, operator, tariff) of properties.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="clock">Time source.</param>
 public sealed class EnergyContractService(IWattlyDbContext db, ICurrentUser currentUser, TimeProvider clock)
 {
+    /// <summary>Contract history, newest first.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<EnergyContractDto>> ListAsync(Guid propertyId, CancellationToken ct)
     {
         await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
@@ -14,6 +21,8 @@ public sealed class EnergyContractService(IWattlyDbContext db, ICurrentUser curr
     }
 
     /// <summary>Contract valid today (property time zone) or, if none, the most recent one.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<EnergyContractDto> GetCurrentAsync(Guid propertyId, CancellationToken ct)
     {
         var property = await db.GetOwnedPropertyAsync(currentUser.UserId, propertyId, ct);
@@ -29,6 +38,9 @@ public sealed class EnergyContractService(IWattlyDbContext db, ICurrentUser curr
     /// Sets the contract starting at <c>ValidFrom</c>. A contract starting on the same day is updated;
     /// an earlier open contract is closed the day before. Overlapping later contracts are rejected.
     /// </summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="request">Contract.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<EnergyContractDto> UpsertAsync(Guid propertyId, EnergyContractRequest request, CancellationToken ct)
     {
         await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
@@ -75,9 +87,11 @@ public sealed class EnergyContractService(IWattlyDbContext db, ICurrentUser curr
         return ToDto(await Query().FirstAsync(c => c.Id == contract.Id, ct));
     }
 
+    /// <summary>Read-only query with supplier, operator and tariff.</summary>
     private IQueryable<EnergyContract> Query() =>
         db.EnergyContracts.AsNoTracking().Include(c => c.Supplier).Include(c => c.Operator).Include(c => c.Tariff);
 
+    /// <summary>Maps a contract.</summary>
     private static EnergyContractDto ToDto(EnergyContract c) => new(
         c.Id, c.PropertyId, c.SupplierId, c.Supplier?.Name, c.OperatorId, c.Operator?.Name,
         c.TariffId, c.Tariff.Code, c.ContractedPowerKw, c.ValidFrom, c.ValidTo);

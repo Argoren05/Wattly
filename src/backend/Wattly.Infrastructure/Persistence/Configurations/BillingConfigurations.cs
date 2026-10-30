@@ -9,8 +9,10 @@ using Wattly.Infrastructure.Identity;
 
 namespace Wattly.Infrastructure.Persistence.Configurations;
 
+/// <summary>EF Core mapping of <c>CostCalculation</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class CostCalculationConfiguration : IEntityTypeConfiguration<CostCalculation>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<CostCalculation> b)
     {
         b.Property(x => x.ConsumptionKwh).HasPrecision(18, 3);
@@ -28,8 +30,10 @@ internal sealed class CostCalculationConfiguration : IEntityTypeConfiguration<Co
     }
 }
 
+/// <summary>EF Core mapping of <c>CostCalculationLine</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class CostCalculationLineConfiguration : IEntityTypeConfiguration<CostCalculationLine>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<CostCalculationLine> b)
     {
         b.Property(x => x.RatePlanName).HasMaxLength(200);
@@ -45,8 +49,10 @@ internal sealed class CostCalculationLineConfiguration : IEntityTypeConfiguratio
     }
 }
 
+/// <summary>EF Core mapping of <c>Invoice</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Invoice> b)
     {
         b.Property(x => x.InvoiceNumber).HasMaxLength(64);
@@ -63,8 +69,10 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
     }
 }
 
+/// <summary>EF Core mapping of <c>Attachment</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachment>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Attachment> b)
     {
         b.Property(x => x.StorageKey).HasMaxLength(200);
@@ -75,8 +83,10 @@ internal sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachm
     }
 }
 
+/// <summary>EF Core mapping of <c>AuditEvent</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<AuditEvent> b)
     {
         b.Property(x => x.EntityType).HasMaxLength(100);

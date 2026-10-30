@@ -8,8 +8,14 @@ namespace Wattly.Application.Catalog;
 /// Price lists. Catalog plans are managed by administrators; users may enter their own rates for a property
 /// (e.g. copied from an invoice). Plans are immutable – only the end of validity can be set, so history is preserved.
 /// </summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="clock">Time source.</param>
 public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUser, TimeProvider clock)
 {
+    /// <summary>Catalog rate plans of a tariff, newest first.</summary>
+    /// <param name="tariffId">Tariff.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<RatePlanDto>> ListCatalogAsync(Guid tariffId, CancellationToken ct)
     {
         if (!await db.Tariffs.AnyAsync(t => t.Id == tariffId, ct))
@@ -19,6 +25,9 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return plans.Select(ToDto).ToList();
     }
 
+    /// <summary>User's own rate plans of a property.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<RatePlanDto>> ListForPropertyAsync(Guid propertyId, CancellationToken ct)
     {
         await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
@@ -26,6 +35,9 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return plans.Select(ToDto).ToList();
     }
 
+    /// <summary>Returns a rate plan the user may read.</summary>
+    /// <param name="id">Rate plan.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<RatePlanDto> GetAsync(Guid id, CancellationToken ct)
     {
         var plan = await Query().FirstOrDefaultAsync(p => p.Id == id, ct) ?? throw new NotFoundException("Cennik");
@@ -33,6 +45,9 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(plan);
     }
 
+    /// <summary>Creates a catalog rate plan (Admin).</summary>
+    /// <param name="request">Plan.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<RatePlanDto> CreateCatalogPlanAsync(RatePlanRequest request, CancellationToken ct)
     {
         if (!currentUser.IsAdmin)
@@ -40,12 +55,20 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return await CreateAsync(request, propertyId: null, ct);
     }
 
+    /// <summary>Creates the user's own rate plan for a property.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="request">Plan.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<RatePlanDto> CreatePropertyPlanAsync(Guid propertyId, RatePlanRequest request, CancellationToken ct)
     {
         await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
         return await CreateAsync(request, propertyId, ct);
     }
 
+    /// <summary>Shortens the validity of a plan (the only allowed modification).</summary>
+    /// <param name="id">Rate plan.</param>
+    /// <param name="request">New last day.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<RatePlanDto> EndAsync(Guid id, EndRatePlanRequest request, CancellationToken ct)
     {
         var plan = await db.TariffRatePlans.FirstOrDefaultAsync(p => p.Id == id, ct) ?? throw new NotFoundException("Cennik");
@@ -61,6 +84,7 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(await Query().FirstAsync(p => p.Id == id, ct));
     }
 
+    /// <summary>Validates and stores a plan; rejects overlaps within the same scope.</summary>
     private async Task<RatePlanDto> CreateAsync(RatePlanRequest request, Guid? propertyId, CancellationToken ct)
     {
         var tariff = await db.Tariffs.AsNoTracking().FirstOrDefaultAsync(t => t.Id == request.TariffId, ct);
@@ -121,6 +145,7 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(await Query().FirstAsync(p => p.Id == plan.Id, ct));
     }
 
+    /// <summary>Validates one component: rates, VAT, unit allowed for the type and zone of the tariff.</summary>
     private static void ValidateComponent(Validation validation, RateComponentRequest c, string prefix, IReadOnlySet<string> zoneCodes)
     {
         var zone = Validation.Clean(c.ZoneCode)?.ToUpperInvariant();
@@ -137,6 +162,7 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
             .Require(zone is null || zoneCodes.Contains(zone), $"{prefix}.ZoneCode", "Taryfa nie zawiera wskazanej strefy.");
     }
 
+    /// <summary>Units allowed for a component type.</summary>
     private static RateUnit[] AllowedUnits(RateComponentType type) => type switch
     {
         RateComponentType.Energy or RateComponentType.VariableDistribution => [RateUnit.Kwh],
@@ -145,12 +171,14 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         _ => [RateUnit.Kwh, RateUnit.Month, RateUnit.Day, RateUnit.Kw],
     };
 
+    /// <summary>Own plans are readable only by the property owner; catalog plans by everyone.</summary>
     private async Task EnsureCanReadAsync(TariffRatePlan plan, CancellationToken ct)
     {
         if (plan.PropertyId is { } propertyId)
             await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
     }
 
+    /// <summary>Own plans: property owner; catalog plans: administrators.</summary>
     private async Task EnsureCanModifyAsync(TariffRatePlan plan, CancellationToken ct)
     {
         if (plan.PropertyId is { } propertyId)
@@ -159,9 +187,11 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
             throw new ForbiddenException();
     }
 
+    /// <summary>Read-only query including tariff and components.</summary>
     private IQueryable<TariffRatePlan> Query() =>
         db.TariffRatePlans.AsNoTracking().Include(p => p.Tariff).Include(p => p.Components);
 
+    /// <summary>Maps a plan to its DTO with sorted components.</summary>
     internal static RatePlanDto ToDto(TariffRatePlan p) => new(
         p.Id, p.TariffId, p.Tariff.Code, p.SupplierId, p.OperatorId, p.PropertyId, p.Name, p.ValidFrom, p.ValidTo,
         p.CurrencyCode, p.SourceReference, p.PublishedAt, p.CreatedAt,

@@ -8,12 +8,15 @@ using Wattly.Infrastructure.Identity;
 
 namespace Wattly.Infrastructure.Persistence;
 
+/// <summary>Database start-up tasks.</summary>
 public static class DatabaseInitializer
 {
     /// <summary>
     /// Applies migrations (when <c>Database:MigrateOnStartup</c> is true), seeds the catalog and roles,
     /// and optionally creates the first administrator from <c>Seed:AdminEmail</c>/<c>Seed:AdminPassword</c> (never commit those values).
     /// </summary>
+    /// <param name="services">Root service provider.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static async Task InitializeAsync(IServiceProvider services, CancellationToken ct = default)
     {
         using var scope = services.CreateScope();

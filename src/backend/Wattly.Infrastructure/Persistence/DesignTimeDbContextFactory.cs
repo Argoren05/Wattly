@@ -6,6 +6,7 @@ namespace Wattly.Infrastructure.Persistence;
 /// <summary>Used only by <c>dotnet ef</c> tooling to create migrations.</summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<WattlyDbContext>
 {
+    /// <inheritdoc />
     public WattlyDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable("WATTLY_DESIGN_CONNECTION")

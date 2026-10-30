@@ -5,8 +5,10 @@ using Wattly.Domain.Tariffs;
 
 namespace Wattly.Infrastructure.Persistence.Configurations;
 
+/// <summary>EF Core mapping of <c>Tariff</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class TariffConfiguration : IEntityTypeConfiguration<Tariff>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Tariff> b)
     {
         b.Property(x => x.Code).HasMaxLength(32);
@@ -17,8 +19,10 @@ internal sealed class TariffConfiguration : IEntityTypeConfiguration<Tariff>
     }
 }
 
+/// <summary>EF Core mapping of <c>TariffRatePlan</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class TariffRatePlanConfiguration : IEntityTypeConfiguration<TariffRatePlan>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<TariffRatePlan> b)
     {
         b.Property(x => x.Name).HasMaxLength(200);
@@ -34,8 +38,10 @@ internal sealed class TariffRatePlanConfiguration : IEntityTypeConfiguration<Tar
     }
 }
 
+/// <summary>EF Core mapping of <c>TariffRateComponent</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class TariffRateComponentConfiguration : IEntityTypeConfiguration<TariffRateComponent>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<TariffRateComponent> b)
     {
         b.Property(x => x.Name).HasMaxLength(200);

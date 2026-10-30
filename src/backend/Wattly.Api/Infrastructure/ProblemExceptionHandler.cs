@@ -6,8 +6,11 @@ using Wattly.Domain.Common;
 namespace Wattly.Api.Infrastructure;
 
 /// <summary>Maps application exceptions to RFC 9457 Problem Details without leaking internal details.</summary>
+/// <param name="problemDetails">Problem details writer.</param>
+/// <param name="logger">Logger.</param>
 public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetails, ILogger<ProblemExceptionHandler> logger) : IExceptionHandler
 {
+    /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         ProblemDetails problem = exception switch
@@ -40,6 +43,7 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
         });
     }
 
+    /// <summary>Adds the stable error code as the <c>code</c> extension.</summary>
     private static ProblemDetails WithCode(ProblemDetails problem, string code)
     {
         problem.Extensions["code"] = code;

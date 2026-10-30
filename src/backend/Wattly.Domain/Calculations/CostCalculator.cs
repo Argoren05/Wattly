@@ -2,6 +2,15 @@ using Wattly.Domain.Tariffs;
 
 namespace Wattly.Domain.Calculations;
 
+/// <summary>Rate component prepared for calculation (copied from a rate plan).</summary>
+/// <param name="RatePlanId">Source rate plan.</param>
+/// <param name="RatePlanName">Source rate plan name.</param>
+/// <param name="ComponentType">Component kind.</param>
+/// <param name="Name">Component name.</param>
+/// <param name="ZoneCode">Tariff zone or null for the whole consumption.</param>
+/// <param name="Unit">Rate unit.</param>
+/// <param name="NetRate">Net rate.</param>
+/// <param name="TaxRate">VAT fraction.</param>
 public sealed record RateComponentInput(
     Guid RatePlanId,
     string RatePlanName,
@@ -16,6 +25,12 @@ public sealed record RateComponentInput(
 /// Time slice with a constant set of rate components. <see cref="ZoneConsumption"/> maps tariff zone codes
 /// to consumption in kWh; <see cref="TotalConsumption"/> is the consumption of all import registers.
 /// </summary>
+/// <param name="Start">Segment start (inclusive).</param>
+/// <param name="End">Segment end (exclusive).</param>
+/// <param name="Components">Rate components applicable in the whole segment.</param>
+/// <param name="ZoneConsumption">Consumption per tariff zone.</param>
+/// <param name="TotalConsumption">Consumption of all import registers.</param>
+/// <param name="ContractedPowerKw">Contracted power for per-kW components.</param>
 public sealed record CostSegment(
     DateTimeOffset Start,
     DateTimeOffset End,
@@ -24,6 +39,20 @@ public sealed record CostSegment(
     decimal TotalConsumption,
     decimal? ContractedPowerKw);
 
+/// <summary>Calculated amount of one component in one segment.</summary>
+/// <param name="RatePlanId">Source rate plan.</param>
+/// <param name="RatePlanName">Source rate plan name.</param>
+/// <param name="ComponentType">Component kind.</param>
+/// <param name="Category">Summary category.</param>
+/// <param name="ComponentName">Component name.</param>
+/// <param name="ZoneCode">Tariff zone or null.</param>
+/// <param name="Unit">Rate unit.</param>
+/// <param name="Quantity">Quantity in the rate unit.</param>
+/// <param name="NetRate">Net rate.</param>
+/// <param name="TaxRate">VAT fraction.</param>
+/// <param name="NetAmount">Rounded net amount.</param>
+/// <param name="SegmentStart">Segment start.</param>
+/// <param name="SegmentEnd">Segment end.</param>
 public sealed record CostLine(
     Guid RatePlanId,
     string RatePlanName,
@@ -39,8 +68,22 @@ public sealed record CostLine(
     DateTimeOffset SegmentStart,
     DateTimeOffset SegmentEnd);
 
+/// <summary>VAT summary for one tax rate.</summary>
+/// <param name="TaxRate">VAT fraction.</param>
+/// <param name="NetAmount">Sum of net amounts with this rate.</param>
+/// <param name="TaxAmount">Rounded VAT.</param>
 public sealed record TaxSummary(decimal TaxRate, decimal NetAmount, decimal TaxAmount);
 
+/// <summary>Result of <see cref="CostCalculator.Calculate"/>.</summary>
+/// <param name="Lines">Component lines.</param>
+/// <param name="Taxes">VAT per rate.</param>
+/// <param name="EnergyCostNet">Net energy cost.</param>
+/// <param name="DistributionCostNet">Net distribution cost.</param>
+/// <param name="OtherCostNet">Net other fees.</param>
+/// <param name="TotalNet">Total net.</param>
+/// <param name="TaxAmount">Total VAT.</param>
+/// <param name="TotalGross">Total gross.</param>
+/// <param name="Assumptions">Skipped components and other notes.</param>
 public sealed record CostResult(
     IReadOnlyList<CostLine> Lines,
     IReadOnlyList<TaxSummary> Taxes,
@@ -60,8 +103,12 @@ public sealed record CostResult(
 /// </summary>
 public static class CostCalculator
 {
+    /// <summary>Algorithm version stored with saved calculations; bump when rules change.</summary>
     public const int Version = 1;
 
+    /// <summary>Calculates all component lines, VAT and totals for the given segments.</summary>
+    /// <param name="segments">Time segments with constant rates.</param>
+    /// <param name="timeZone">Property time zone (for month/day proration).</param>
     public static CostResult Calculate(IEnumerable<CostSegment> segments, TimeZoneInfo timeZone)
     {
         var lines = new List<CostLine>();
@@ -93,6 +140,7 @@ public static class CostCalculator
             }
         }
 
+        // VAT is calculated on the sum of net amounts per tax rate, not per line.
         var taxes = lines
             .GroupBy(l => l.TaxRate)
             .OrderBy(g => g.Key)
@@ -118,11 +166,15 @@ public static class CostCalculator
             assumptions.Distinct().ToList());
     }
 
+    /// <summary>Rounds money to 0.01 half away from zero (DEC-013).</summary>
+    /// <param name="value">Amount to round.</param>
     public static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
+    /// <summary>Sums net amounts of lines in one category.</summary>
     private static decimal SumCategory(IEnumerable<CostLine> lines, CostCategory category) =>
         lines.Where(l => l.Category == category).Sum(l => l.NetAmount);
 
+    /// <summary>Quantity of a component in a segment, or null when it cannot be applied (the reason is added to assumptions).</summary>
     private static decimal? Quantity(RateComponentInput component, CostSegment segment, TimeZoneInfo timeZone, List<string> assumptions)
     {
         switch (component.Unit)
@@ -156,6 +208,9 @@ public static class CostCalculator
     }
 
     /// <summary>Number of (fractional) calendar months covered by [start, end) in the given time zone.</summary>
+    /// <param name="start">Start (inclusive).</param>
+    /// <param name="end">End (exclusive).</param>
+    /// <param name="timeZone">Time zone whose calendar months are used.</param>
     public static decimal MonthFraction(DateTimeOffset start, DateTimeOffset end, TimeZoneInfo timeZone)
     {
         if (end <= start)
@@ -166,6 +221,7 @@ public static class CostCalculator
 
         var total = 0m;
         var monthStart = new DateTime(localStart.Year, localStart.Month, 1);
+        // Each calendar month contributes the share of its length covered by the period.
         while (monthStart < localEnd)
         {
             var monthEnd = monthStart.AddMonths(1);
@@ -180,6 +236,9 @@ public static class CostCalculator
     }
 
     /// <summary>Number of (fractional) days covered by [start, end), measured in wall-clock time of the time zone.</summary>
+    /// <param name="start">Start (inclusive).</param>
+    /// <param name="end">End (exclusive).</param>
+    /// <param name="timeZone">Time zone of the wall clock.</param>
     public static decimal DayCount(DateTimeOffset start, DateTimeOffset end, TimeZoneInfo timeZone)
     {
         if (end <= start)

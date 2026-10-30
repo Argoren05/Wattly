@@ -5,11 +5,23 @@ using Wattly.Domain.Metering;
 
 namespace Wattly.Application.Metering;
 
+/// <summary>Meter readings: listing, entry with validation, corrections and cancellations.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="clock">Time source.</param>
 public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser, TimeProvider clock)
 {
     /// <summary>Tolerance for clock differences between device and server.</summary>
     private static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(10);
 
+    /// <summary>Readings of a register, newest first, with consumption since the previous active reading.</summary>
+    /// <param name="registerId">Register.</param>
+    /// <param name="from">Optional start.</param>
+    /// <param name="to">Optional end.</param>
+    /// <param name="includeInactive">Include superseded and voided readings.</param>
+    /// <param name="page">Page.</param>
+    /// <param name="pageSize">Page size.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<PagedResult<ReadingDto>> ListAsync(
         Guid registerId, DateTimeOffset? from, DateTimeOffset? to, bool includeInactive, int? page, int? pageSize, CancellationToken ct)
     {
@@ -47,6 +59,9 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         return new PagedResult<ReadingDto>(items.Select(r => ToDto(r, register, activeContext)).ToList(), p, size, total);
     }
 
+    /// <summary>One reading.</summary>
+    /// <param name="readingId">Reading.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ReadingDto> GetAsync(Guid readingId, CancellationToken ct)
     {
         var reading = await db.MeterReadings.AsNoTracking().Include(r => r.MeterRegister).OwnedBy(currentUser.UserId)
@@ -55,6 +70,10 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         return ToDto(reading, reading.MeterRegister, context);
     }
 
+    /// <summary>Adds a reading after validation; unusual jumps require <c>ConfirmAnomaly</c>.</summary>
+    /// <param name="registerId">Register.</param>
+    /// <param name="request">Reading.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ReadingSavedDto> CreateAsync(Guid registerId, ReadingRequest request, CancellationToken ct)
     {
         var register = await LoadRegisterAsync(registerId, ct);
@@ -70,6 +89,9 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
     }
 
     /// <summary>Correction: the original reading is kept as <see cref="ReadingStatus.Superseded"/> and a new one replaces it.</summary>
+    /// <param name="readingId">Reading to correct.</param>
+    /// <param name="request">Corrected values.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ReadingSavedDto> CorrectAsync(Guid readingId, ReadingRequest request, CancellationToken ct)
     {
         var original = await db.MeterReadings.Include(r => r.MeterRegister).OwnedBy(currentUser.UserId)
@@ -94,6 +116,10 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         return new ReadingSavedDto(ToDto(correction, original.MeterRegister, existing), warnings);
     }
 
+    /// <summary>Cancels an active reading (kept for audit).</summary>
+    /// <param name="readingId">Reading.</param>
+    /// <param name="request">Optional reason.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ReadingDto> VoidAsync(Guid readingId, VoidReadingRequest request, CancellationToken ct)
     {
         var reading = await db.MeterReadings.Include(r => r.MeterRegister).OwnedBy(currentUser.UserId)
@@ -112,6 +138,7 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         return ToDto(reading, reading.MeterRegister, context);
     }
 
+    /// <summary>Validates input and domain rules; throws for blocking issues and unconfirmed anomalies.</summary>
     private List<ReadingWarningDto> Validate(ReadingRequest request, MeterRegister register, IReadOnlyCollection<ReadingPoint> existing)
     {
         var now = clock.GetUtcNow();
@@ -147,6 +174,7 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         return warnings;
     }
 
+    /// <summary>Creates a reading entity (instants normalised to UTC).</summary>
     private MeterReading NewReading(Guid registerId, ReadingRequest request) => new()
     {
         MeterRegisterId = registerId,
@@ -159,10 +187,12 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
         CreatedAt = clock.GetUtcNow(),
     };
 
+    /// <summary>Loads an owned register or throws NotFound.</summary>
     private async Task<MeterRegister> LoadRegisterAsync(Guid registerId, CancellationToken ct) =>
         await db.MeterRegisters.AsNoTracking().OwnedBy(currentUser.UserId).FirstOrDefaultAsync(r => r.Id == registerId, ct)
         ?? throw new NotFoundException("Rejestr licznika");
 
+    /// <summary>Active readings of a register as points, optionally excluding one reading.</summary>
     private async Task<List<ReadingPoint>> ActivePointsAsync(Guid registerId, Guid? excludeId, CancellationToken ct) =>
         await db.MeterReadings.AsNoTracking()
             .Where(r => r.MeterRegisterId == registerId && r.Status == ReadingStatus.Active && r.Id != excludeId)
@@ -170,6 +200,7 @@ public sealed class ReadingService(IWattlyDbContext db, ICurrentUser currentUser
             .Select(r => new ReadingPoint(r.ReadingAt, r.Value))
             .ToListAsync(ct);
 
+    /// <summary>Maps a reading and computes the difference to the previous active reading.</summary>
     private static ReadingDto ToDto(MeterReading r, MeterRegister register, IReadOnlyList<ReadingPoint> activePoints)
     {
         decimal? consumption = null;

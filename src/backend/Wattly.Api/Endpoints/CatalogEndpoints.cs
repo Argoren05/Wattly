@@ -2,8 +2,11 @@ using Wattly.Application.Catalog;
 
 namespace Wattly.Api.Endpoints;
 
+/// <summary>Catalog endpoints (read for users, write for administrators).</summary>
 public static class CatalogEndpoints
 {
+    /// <summary>Maps the endpoints.</summary>
+    /// <param name="api">Authorised <c>/api/v1</c> route group.</param>
     public static void MapCatalogEndpoints(this RouteGroupBuilder api)
     {
         var catalog = api.MapGroup("/catalog").WithTags("Catalog");

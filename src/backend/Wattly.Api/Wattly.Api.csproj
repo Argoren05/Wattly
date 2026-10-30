@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Wattly.Infrastructure\Wattly.Infrastructure.csproj" />
   </ItemGroup>
@@ -12,7 +16,5 @@
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
-  </PropertyGroup>
 
 </Project>

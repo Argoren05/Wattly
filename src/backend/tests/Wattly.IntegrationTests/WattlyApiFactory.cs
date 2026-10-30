@@ -15,8 +15,10 @@ public sealed class WattlyApiFactory : WebApplicationFactory<Program>, IAsyncLif
                                                 ?? "Host=localhost;Port=5432;Username=postgres;Password=postgres";
     private readonly string _storagePath = Path.Combine(Path.GetTempPath(), $"wattly_test_{Guid.NewGuid():N}");
 
+    /// <summary>Connection string of the temporary database.</summary>
     public string ConnectionString => new NpgsqlConnectionStringBuilder(_serverConnection) { Database = _databaseName }.ConnectionString;
 
+    /// <summary>Points the API at the temporary database and relaxes rate limits for tests.</summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -29,8 +31,10 @@ public sealed class WattlyApiFactory : WebApplicationFactory<Program>, IAsyncLif
         builder.UseSetting("Seed:AdminPassword", "AdminPassword123");
     }
 
+    /// <summary>Nothing to prepare – the API migrates the database on start.</summary>
     public Task InitializeAsync() => Task.CompletedTask;
 
+    /// <summary>Drops the temporary database and storage directory.</summary>
     async Task IAsyncLifetime.DisposeAsync()
     {
         await base.DisposeAsync();
@@ -44,8 +48,10 @@ public sealed class WattlyApiFactory : WebApplicationFactory<Program>, IAsyncLif
     }
 }
 
+/// <summary>xUnit collection sharing one API host and database between test classes.</summary>
 [CollectionDefinition(Name)]
 public sealed class ApiCollection : ICollectionFixture<WattlyApiFactory>
 {
+    /// <summary>Collection name.</summary>
     public const string Name = "api";
 }

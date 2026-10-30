@@ -4,8 +4,11 @@ using Wattly.Application.Invoices;
 
 namespace Wattly.Api.Endpoints;
 
+/// <summary>Endpoints for calculations, analytics, forecast, invoices and attachments.</summary>
 public static class BillingEndpoints
 {
+    /// <summary>Maps the endpoints.</summary>
+    /// <param name="api">Authorised <c>/api/v1</c> route group.</param>
     public static void MapBillingEndpoints(this RouteGroupBuilder api)
     {
         var calculations = api.MapGroup("").WithTags("Calculations");

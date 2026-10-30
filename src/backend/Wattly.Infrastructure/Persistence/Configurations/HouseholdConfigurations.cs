@@ -6,8 +6,10 @@ using Wattly.Infrastructure.Identity;
 
 namespace Wattly.Infrastructure.Persistence.Configurations;
 
+/// <summary>EF Core mapping of <c>Household</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class HouseholdConfiguration : IEntityTypeConfiguration<Household>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Household> b)
     {
         b.Property(x => x.Name).HasMaxLength(100);
@@ -16,8 +18,10 @@ internal sealed class HouseholdConfiguration : IEntityTypeConfiguration<Househol
     }
 }
 
+/// <summary>EF Core mapping of <c>Property</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Property> b)
     {
         b.Property(x => x.Name).HasMaxLength(100);
@@ -33,8 +37,10 @@ internal sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
     }
 }
 
+/// <summary>EF Core mapping of <c>EnergyContract</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class EnergyContractConfiguration : IEntityTypeConfiguration<EnergyContract>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<EnergyContract> b)
     {
         b.Property(x => x.ContractedPowerKw).HasPrecision(10, 3);
@@ -47,8 +53,10 @@ internal sealed class EnergyContractConfiguration : IEntityTypeConfiguration<Ene
     }
 }
 
+/// <summary>EF Core mapping of <c>EnergyOperator</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class EnergyOperatorConfiguration : IEntityTypeConfiguration<EnergyOperator>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<EnergyOperator> b)
     {
         b.Property(x => x.Name).HasMaxLength(200);
@@ -58,8 +66,10 @@ internal sealed class EnergyOperatorConfiguration : IEntityTypeConfiguration<Ene
     }
 }
 
+/// <summary>EF Core mapping of <c>EnergySupplier</c>: lengths, precision, relations, indexes and check constraints.</summary>
 internal sealed class EnergySupplierConfiguration : IEntityTypeConfiguration<EnergySupplier>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<EnergySupplier> b)
     {
         b.Property(x => x.Name).HasMaxLength(200);

@@ -3,20 +3,39 @@ using Wattly.Application.Common;
 
 namespace Wattly.Application.Analytics;
 
+/// <summary>Consumption/cost series and billing-period forecast for the dashboard and statistics.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user (resource owner).</param>
+/// <param name="clock">Time source.</param>
 public sealed class AnalyticsService(IWattlyDbContext db, ICurrentUser currentUser, TimeProvider clock)
 {
+    /// <summary>Maximum number of buckets in one series (protects the server from huge requests).</summary>
     public const int MaxPoints = 400;
 
     private const string SparseReadingsNotice =
         "Wartości pomiędzy odczytami są estymacją liniową – rzeczywisty rozkład zużycia w poszczególnych dniach nie jest znany.";
 
+    /// <summary>Consumption of all import registers per bucket.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="from">First day (property time zone).</param>
+    /// <param name="to">Last day (inclusive).</param>
+    /// <param name="granularity">Bucket size.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<SeriesDto> ConsumptionAsync(Guid propertyId, DateOnly from, DateOnly to, Granularity granularity, CancellationToken ct) =>
         await SeriesAsync(propertyId, from, to, granularity, includeCost: false, ct);
 
+    /// <summary>Gross cost (and consumption) per bucket, calculated with the rates valid in each bucket.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="from">First day (property time zone).</param>
+    /// <param name="to">Last day (inclusive).</param>
+    /// <param name="granularity">Bucket size.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<SeriesDto> CostsAsync(Guid propertyId, DateOnly from, DateOnly to, Granularity granularity, CancellationToken ct) =>
         await SeriesAsync(propertyId, from, to, granularity, includeCost: true, ct);
 
     /// <summary>Dashboard figures for the current billing period: consumption and cost so far plus forecast to the end of the period.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ForecastDto> ForecastAsync(Guid propertyId, CancellationToken ct)
     {
         var data = await PropertyEnergyData.LoadAsync(db, currentUser.UserId, propertyId, ct);
@@ -86,6 +105,7 @@ public sealed class AnalyticsService(IWattlyDbContext db, ICurrentUser currentUs
             assumptions);
     }
 
+    /// <summary>Shared implementation of consumption and cost series.</summary>
     private async Task<SeriesDto> SeriesAsync(Guid propertyId, DateOnly from, DateOnly to, Granularity granularity, bool includeCost, CancellationToken ct)
     {
         new Validation()
@@ -164,6 +184,9 @@ public sealed class AnalyticsService(IWattlyDbContext db, ICurrentUser currentUs
     }
 
     /// <summary>Calendar buckets covering [from, to] (inclusive dates); weeks start on Monday.</summary>
+    /// <param name="from">First day.</param>
+    /// <param name="to">Last day (inclusive).</param>
+    /// <param name="granularity">Bucket size.</param>
     public static IEnumerable<(DateOnly Start, DateOnly EndExclusive)> Buckets(DateOnly from, DateOnly to, Granularity granularity)
     {
         var start = granularity switch
@@ -188,6 +211,7 @@ public sealed class AnalyticsService(IWattlyDbContext db, ICurrentUser currentUs
         }
     }
 
+    /// <summary>Limits a value to [min, max].</summary>
     private static DateTimeOffset Clamp(DateTimeOffset value, DateTimeOffset min, DateTimeOffset max) =>
         value < min ? min : value > max ? max : value;
 }

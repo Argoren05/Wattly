@@ -2,14 +2,26 @@ using Wattly.Domain.Calculations;
 
 namespace Wattly.Domain.Metering;
 
+/// <summary>Problems detected by <see cref="ReadingRules.Check"/>.</summary>
 public enum ReadingIssueType
 {
+    /// <summary>A reading already exists at the same moment.</summary>
     Duplicate,
+
+    /// <summary>Value lower than the previous reading (cumulative register cannot decrease).</summary>
     LowerThanPrevious,
+
+    /// <summary>Back-dated value higher than the next reading.</summary>
     HigherThanNext,
+
+    /// <summary>Suspiciously high consumption – a warning the user can confirm.</summary>
     UnusualJump,
 }
 
+/// <summary>Detected issue of a new reading.</summary>
+/// <param name="Type">Kind of the issue.</param>
+/// <param name="IsBlocking">Blocking issues prevent saving; others only require confirmation.</param>
+/// <param name="Message">Explanation for the user.</param>
 public sealed record ReadingIssue(ReadingIssueType Type, bool IsBlocking, string Message);
 
 /// <summary>Validation rules for a new reading of a cumulative register against existing active readings.</summary>
@@ -24,6 +36,11 @@ public static class ReadingRules
     /// <summary>Daily rate considered unusual for a household even without history (kWh/day).</summary>
     public const decimal UnusualDailyRateKwh = 200m;
 
+    /// <summary>Validates a new reading against existing active readings of the same register.</summary>
+    /// <param name="existing">Active readings of the register (excluding the one being corrected).</param>
+    /// <param name="at">Moment of the new reading.</param>
+    /// <param name="value">Value of the new reading.</param>
+    /// <returns>Detected issues; empty when the reading is fine.</returns>
     public static IReadOnlyList<ReadingIssue> Check(IReadOnlyCollection<ReadingPoint> existing, DateTimeOffset at, decimal value)
     {
         var issues = new List<ReadingIssue>();
@@ -50,6 +67,7 @@ public static class ReadingRules
         if (issues.Count > 0 || !hasPrevious)
             return issues;
 
+        // Compare the implied daily rate with the historical average before the previous reading.
         var increase = value - previous.Value;
         var days = Math.Max((decimal)(at - previous.At).Ticks / TimeSpan.TicksPerDay, 1m / 24m);
         var dailyRate = increase / days;

@@ -4,9 +4,25 @@ using System.Net.Http.Json;
 
 namespace Wattly.IntegrationTests;
 
+/// <summary>End-to-end tests of the HTTP API against a real PostgreSQL database.</summary>
+/// <param name="factory">Shared API host with a temporary database.</param>
 [Collection(ApiCollection.Name)]
 public class ApiTests(WattlyApiFactory factory)
 {
+    [Fact]
+    public async Task Release_endpoint_is_anonymous_and_reports_required_update()
+    {
+        var client = factory.CreateClient();
+
+        var current = await client.GetJsonAsync("/api/v1/app/release?platform=android&version=1.0.0");
+        var outdated = await client.GetJsonAsync("/api/v1/app/release?platform=android&version=0.9.0");
+        var invalid = await client.GetAsync("/api/v1/app/release?platform=windows&version=1.0.0");
+
+        Assert.False(current["updateRequired"]!.GetValue<bool>());
+        Assert.True(outdated["updateRequired"]!.GetValue<bool>());
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+    }
+
     [Fact]
     public async Task Health_endpoints_report_healthy()
     {

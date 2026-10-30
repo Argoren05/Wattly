@@ -4,10 +4,18 @@ using Wattly.Domain.Households;
 
 namespace Wattly.Application.Properties;
 
+/// <summary>Properties of the signed-in user.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="storage">File storage (attachments are removed with the property).</param>
+/// <param name="clock">Time source.</param>
 public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUser, IFileStorage storage, TimeProvider clock)
 {
+    /// <summary>Name of the household created automatically with the first property.</summary>
     private const string DefaultHouseholdName = "Moje gospodarstwo";
 
+    /// <summary>Properties of the user, oldest first.</summary>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<PropertyDto>> ListAsync(CancellationToken ct) =>
         await db.Properties.AsNoTracking()
             .OwnedBy(currentUser.UserId)
@@ -15,9 +23,15 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
             .Select(p => ToDto(p))
             .ToListAsync(ct);
 
+    /// <summary>One property.</summary>
+    /// <param name="id">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<PropertyDto> GetAsync(Guid id, CancellationToken ct) =>
         ToDto(await db.GetOwnedPropertyAsync(currentUser.UserId, id, ct));
 
+    /// <summary>Creates a property (and the household on first use).</summary>
+    /// <param name="request">Data.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<PropertyDto> CreateAsync(PropertyRequest request, CancellationToken ct)
     {
         var now = clock.GetUtcNow();
@@ -35,6 +49,10 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(property);
     }
 
+    /// <summary>Updates a property.</summary>
+    /// <param name="id">Property.</param>
+    /// <param name="request">Data.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<PropertyDto> UpdateAsync(Guid id, PropertyRequest request, CancellationToken ct)
     {
         var property = await db.GetOwnedPropertyAsync(currentUser.UserId, id, ct);
@@ -43,6 +61,9 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(property);
     }
 
+    /// <summary>Deletes a property with all its data and attachment files.</summary>
+    /// <param name="id">Property.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task DeleteAsync(Guid id, CancellationToken ct)
     {
         var property = await db.GetOwnedPropertyAsync(currentUser.UserId, id, ct);
@@ -61,6 +82,7 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
             await storage.DeleteAsync(attachment.StorageKey, ct);
     }
 
+    /// <summary>Validates the request and copies values to the entity.</summary>
     private static void Apply(Property property, PropertyRequest request, DateTimeOffset now)
     {
         var countryCode = (Validation.Clean(request.CountryCode) ?? property.CountryCode).ToUpperInvariant();
@@ -94,6 +116,7 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
         property.UpdatedAt = now;
     }
 
+    /// <summary>Maps a property.</summary>
     internal static PropertyDto ToDto(Property p) => new(
         p.Id, p.Name, p.AddressLine, p.PostalCode, p.City, p.CountryCode, p.TimeZoneId, p.CurrencyCode,
         p.BillingPeriodMonths, p.BillingAnchorDate, p.MonthlyBudget, p.CreatedAt, p.UpdatedAt);

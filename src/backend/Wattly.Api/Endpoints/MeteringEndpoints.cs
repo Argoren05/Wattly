@@ -2,8 +2,11 @@ using Wattly.Application.Metering;
 
 namespace Wattly.Api.Endpoints;
 
+/// <summary>Endpoints for meters, registers and readings.</summary>
 public static class MeteringEndpoints
 {
+    /// <summary>Maps the endpoints.</summary>
+    /// <param name="api">Authorised <c>/api/v1</c> route group.</param>
     public static void MapMeteringEndpoints(this RouteGroupBuilder api)
     {
         var meters = api.MapGroup("").WithTags("Meters");

@@ -4,10 +4,19 @@ using Wattly.Domain.Billing;
 
 namespace Wattly.Application.Calculations;
 
+/// <summary>Cost calculations: previews, saved calculations with rate snapshots and their history.</summary>
+/// <param name="db">Database context.</param>
+/// <param name="currentUser">Signed-in user.</param>
+/// <param name="clock">Time source.</param>
 public sealed class CalculationService(IWattlyDbContext db, ICurrentUser currentUser, TimeProvider clock)
 {
+    /// <summary>Longest period that can be calculated at once.</summary>
     public static readonly TimeSpan MaxPeriod = TimeSpan.FromDays(3 * 366);
 
+    /// <summary>Calculates costs for a period without saving the result.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="request">Period.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<CalculationResultDto> PreviewAsync(Guid propertyId, CalculationRequest request, CancellationToken ct)
     {
         Validate(request);
@@ -16,6 +25,9 @@ public sealed class CalculationService(IWattlyDbContext db, ICurrentUser current
     }
 
     /// <summary>Calculates and stores the result together with a snapshot of the rates used.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="request">Period.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<CalculationResultDto> SaveAsync(Guid propertyId, CalculationRequest request, CancellationToken ct)
     {
         var result = await PreviewAsync(propertyId, request, ct);
@@ -62,6 +74,11 @@ public sealed class CalculationService(IWattlyDbContext db, ICurrentUser current
         return result with { Id = entity.Id };
     }
 
+    /// <summary>Saved calculations of a property, newest first.</summary>
+    /// <param name="propertyId">Property.</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="pageSize">Page size.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<PagedResult<CalculationSummaryDto>> ListAsync(Guid propertyId, int? page, int? pageSize, CancellationToken ct)
     {
         await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
@@ -75,6 +92,8 @@ public sealed class CalculationService(IWattlyDbContext db, ICurrentUser current
     }
 
     /// <summary>Returns a stored calculation exactly as it was computed (rates from the snapshot, not current price lists).</summary>
+    /// <param name="calculationId">Saved calculation.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<CalculationResultDto> GetAsync(Guid calculationId, CancellationToken ct)
     {
         var c = await db.CostCalculations.AsNoTracking().Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == calculationId, ct)
@@ -101,6 +120,7 @@ public sealed class CalculationService(IWattlyDbContext db, ICurrentUser current
             c.IsEstimate, c.IsComplete, c.Assumptions);
     }
 
+    /// <summary>Validates the requested period.</summary>
     private static void Validate(CalculationRequest request) => new Validation()
         .Require(request.From != default && request.To != default, nameof(request.From), "Zakres dat jest wymagany.")
         .Require(request.To > request.From, nameof(request.To), "Koniec okresu musi być późniejszy niż początek.")

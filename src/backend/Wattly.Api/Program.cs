@@ -6,13 +6,16 @@ using Wattly.Api.Endpoints;
 using Wattly.Api.Infrastructure;
 using Wattly.Application;
 using Wattly.Application.Common;
+using Wattly.Application.MobileApp;
 using Wattly.Infrastructure;
 using Wattly.Infrastructure.Identity;
 using Wattly.Infrastructure.Persistence;
 
+// Composition root of the Wattly API: services, security, middleware pipeline and endpoints.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
+builder.Services.AddSingleton(builder.Configuration.GetSection(MobileAppOptions.SectionName).Get<MobileAppOptions>() ?? new MobileAppOptions());
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
@@ -30,6 +33,7 @@ builder.Services
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthorizationPolicies.Admin, policy => policy.RequireRole(Roles.Admin));
 
+// Brute-force protection for sign-in plus a global per-user/IP limit.
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -58,6 +62,8 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 var app = builder.Build();
 
+// Middleware order matters: correlation id first so that every log line (including errors) carries it.
+
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -84,6 +90,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check 
 
 var api = app.MapGroup("/api/v1");
 api.MapAuthEndpoints();
+api.MapMobileAppEndpoints();
 
 var secured = api.MapGroup("").RequireAuthorization();
 secured.MapPropertyEndpoints();
@@ -91,6 +98,7 @@ secured.MapCatalogEndpoints();
 secured.MapMeteringEndpoints();
 secured.MapBillingEndpoints();
 
+// Migrations (if enabled), catalog seed, roles and the optional first administrator.
 await DatabaseInitializer.InitializeAsync(app.Services);
 await app.RunAsync();
 
