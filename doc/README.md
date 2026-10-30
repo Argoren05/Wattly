@@ -4,7 +4,7 @@
 
 Wattly to aplikacja mobilna do monitorowania zużycia energii elektrycznej, analizowania kosztów oraz prognozowania rachunków. Użytkownik może wprowadzać odczyty licznika ręcznie lub ze zdjęcia, konfigurować sprzedawcę, operatora dystrybucyjnego i taryfę, a następnie przeglądać zużycie, koszty, statystyki i prognozy.
 
-> Status: dokumentacja projektowa – punkt wyjścia do implementacji. Elementy wymagające potwierdzenia są oznaczone jako **Do decyzji**.
+> Status: zaimplementowany szkielet MVP (backend + aplikacja mobilna). Elementy wymagające potwierdzenia są oznaczone jako **Do decyzji**.
 
 ## Główne możliwości
 
@@ -35,14 +35,15 @@ Wersje bibliotek i pakietów należy ustalać podczas tworzenia repozytorium i z
 
 ## Dokumentacja
 
-- [Wymagania funkcjonalne](docs/Wattly_Requirements.md)
-- [Architektura](docs/Wattly_Architecture.md)
-- [Model danych](docs/Wattly_Database.md)
-- [Kontrakt API](docs/Wattly_API.md)
-- [UI/UX](docs/Wattly_UI_UX.md)
-- [Roadmapa](docs/Wattly_Roadmap.md)
-- [Rejestr decyzji](docs/Wattly_Decisions.md)
-- [Instrukcje dla asystenta AI](docs/AI_WORKING_GUIDELINES.md)
+- [Wymagania funkcjonalne](Wattly_Requirements.md)
+- [Architektura](Wattly_Architecture.md)
+- [Model danych](Wattly_Database.md)
+- [Kontrakt API](Wattly_API.md)
+- [UI/UX](Wattly_UI_UX.md)
+- [Roadmapa](Wattly_Roadmap.md)
+- [Rejestr decyzji](Wattly_Decisions.md)
+- [Instrukcje dla asystenta AI](AI_WORKING_GUIDELINES.md)
+- [Uruchomienie i development](Wattly_Development.md)
 
 ## Najważniejsze zasady produktu
 
@@ -54,9 +55,27 @@ Wersje bibliotek i pakietów należy ustalać podczas tworzenia repozytorium i z
 6. Kwoty należy obliczać na podstawie jawnych składników rachunku, a nie jednej uniwersalnej ceny za kWh.
 7. Dane użytkowników i załączniki muszą być odseparowane i chronione.
 
+## Struktura repozytorium
+
+```
+Wattly/
+├── doc/                      # cała dokumentacja (.md)
+├── src/
+│   ├── backend/              # ASP.NET Core (.NET 10) – modularny monolit
+│   │   ├── Wattly.Domain/          # encje, reguły domenowe, silnik kalkulacji
+│   │   ├── Wattly.Application/     # przypadki użycia, DTO, walidacja
+│   │   ├── Wattly.Infrastructure/  # EF Core + PostgreSQL, Identity, storage
+│   │   ├── Wattly.Api/             # Minimal API, auth, ProblemDetails
+│   │   └── tests/                  # testy jednostkowe i integracyjne
+│   ├── mobile/               # React Native + Expo + TypeScript (Expo Router)
+│   ├── docker-compose.yml    # PostgreSQL + API lokalnie
+│   └── .env.example
+└── .github/workflows/ci.yml  # CI (GitHub wymaga tej lokalizacji)
+```
+
 ## Status projektu
 
-Projekt rozpoczyna się od MVP: konfiguracji profilu energetycznego, ręcznych odczytów, taryf, kalkulacji, dashboardu, wykresów i prognozy. OCR, automatyczne pobieranie taryf, fotowoltaika i integracje z licznikami są planowane na kolejne etapy.
+Zaimplementowane MVP: konto i logowanie, konfiguracja nieruchomości, umowy (operator/sprzedawca/taryfa), własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, dashboard z prognozą, statystyki, faktury z porównaniem i załącznikami. Poza zakresem (kolejne etapy): powiadomienia, OCR, eksport, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline. Szczegóły w [roadmapie](Wattly_Roadmap.md).
 
 ## Jak pracować z dokumentacją
 

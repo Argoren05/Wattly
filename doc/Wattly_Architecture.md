@@ -24,25 +24,34 @@ Przykładowe moduły:
 - Notifications – preferencje i wysyłka powiadomień.
 - Administration – zarządzanie katalogami i audyt.
 
-## 3. Proponowana struktura repozytorium
+## 3. Struktura repozytorium (zaimplementowana)
 
 Wattly/
-- README.md
-- docs/
+- doc/ – dokumentacja
 - src/
-  - mobile/
   - backend/
-    - Wattly.Api/
-    - Wattly.Application/
     - Wattly.Domain/
+    - Wattly.Application/
     - Wattly.Infrastructure/
-- tests/
-  - Wattly.UnitTests/
-  - Wattly.IntegrationTests/
-- infra/
-- .github/
+    - Wattly.Api/
+    - tests/Wattly.UnitTests/, tests/Wattly.IntegrationTests/
+    - Dockerfile, Wattly.slnx, dotnet-tools.json (dotnet-ef)
+  - mobile/ – Expo Router, kod w `src/` (app, api, components, hooks, state, theme, utils)
+  - docker-compose.yml, .env.example
+- .github/workflows/ci.yml
 
-To propozycja. Ostateczny układ należy dostosować do narzędzi i sposobu wdrożenia.
+Testy i infrastruktura lokalna zostały umieszczone w `src/`, zgodnie z decyzją DEC-018 (cała zawartość projektu w `src`, dokumentacja w `doc`). Wyjątkiem jest `.github/`, którego położenia wymaga GitHub.
+
+### Moduły backendu w kodzie
+
+Moduły są wydzielone przestrzeniami nazw w warstwach (`Properties`, `Catalog`, `Metering`, `Calculations`, `Analytics`, `Invoices`). Identity jest realizowane przez ASP.NET Core Identity. Moduły Notifications i Administration (poza katalogiem) nie są jeszcze zaimplementowane.
+
+### Silnik kalkulacji
+
+- `RegisterSeries` (Domain) – szereg odczytów jednego rejestru; wartość w dowolnej chwili: odczyt (Actual), interpolacja liniowa (Interpolated) lub ekstrapolacja średnią z ostatnich 90 dni (Extrapolated).
+- `CostEngine` (Application) – dzieli okres na segmenty o stałej umowie i cenniku, szacuje zużycie per strefa, zbiera założenia.
+- `CostCalculator` (Domain) – czysta funkcja: składniki × ilości, proporcjonalne opłaty miesięczne, VAT i zaokrąglenia (DEC-013).
+- Prognoza = kalkulacja okresu rozliczeniowego, którego koniec leży w przyszłości (ekstrapolacja), zawsze oznaczona jako szacunkowa.
 
 ## 4. Warstwy backendu
 

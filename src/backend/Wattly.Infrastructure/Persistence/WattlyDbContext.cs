@@ -58,6 +58,10 @@ public class WattlyDbContext(DbContextOptions<WattlyDbContext> options, ICurrent
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Users are created by the Identity endpoints, which do not know about CreatedAt.
+        foreach (var user in ChangeTracker.Entries<AppUser>().Where(e => e.State == EntityState.Added && e.Entity.CreatedAt == default))
+            user.Entity.CreatedAt = (clock ?? TimeProvider.System).GetUtcNow();
+
         AddAuditEvents();
         return await base.SaveChangesAsync(cancellationToken);
     }

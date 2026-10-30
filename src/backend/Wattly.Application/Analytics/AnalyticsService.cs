@@ -63,6 +63,8 @@ public sealed class AnalyticsService(IWattlyDbContext db, ICurrentUser currentUs
             propertyId,
             periodStart,
             periodEndExclusive.AddDays(-1),
+            start,
+            end,
             daysTotal,
             daysElapsed,
             lastReading,

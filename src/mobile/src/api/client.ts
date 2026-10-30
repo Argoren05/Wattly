@@ -1,0 +1,105 @@
+import Constants from 'expo-constants';
+
+import { ApiError, NetworkError } from './errors';
+import type { TokenResponse } from './types';
+
+const baseUrl: string =
+  process.env.EXPO_PUBLIC_API_URL ?? (Constants.expoConfig?.extra?.apiUrl as string | undefined) ?? 'http://localhost:5103';
+
+export const apiUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/api/v1${path}`;
+
+interface TokenStore {
+  getTokens(): TokenResponse | null;
+  setTokens(tokens: TokenResponse | null): Promise<void>;
+}
+
+let tokenStore: TokenStore | null = null;
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** Connects the HTTP client with the auth state (called once by AuthProvider). */
+export function configureTokenStore(store: TokenStore) {
+  tokenStore = store;
+}
+
+type Body = object | FormData | undefined;
+
+export async function request<T>(method: string, path: string, body?: Body, retry = true): Promise<T> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  const token = tokenStore?.getTokens()?.accessToken;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
+
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method,
+      headers,
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+    });
+  } catch {
+    throw new NetworkError();
+  }
+
+  if (response.status === 401 && retry && token && (await refreshTokens())) {
+    return request<T>(method, path, body, false);
+  }
+
+  if (!response.ok) throw await toApiError(response);
+  if (response.status === 204) return undefined as T;
+
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function toApiError(response: Response): Promise<ApiError> {
+  try {
+    const problem = (await response.json()) as { title?: string; code?: string; errors?: Record<string, string[]> };
+    return new ApiError(response.status, problem.title ?? defaultMessage(response.status), problem.code, problem.errors ?? {});
+  } catch {
+    return new ApiError(response.status, defaultMessage(response.status));
+  }
+}
+
+function defaultMessage(status: number): string {
+  if (status === 401) return 'Sesja wygasła. Zaloguj się ponownie.';
+  if (status === 403) return 'Brak uprawnień.';
+  if (status === 404) return 'Nie znaleziono zasobu.';
+  if (status === 429) return 'Zbyt wiele prób. Odczekaj chwilę.';
+  return 'Wystąpił błąd serwera.';
+}
+
+/** Exchanges the refresh token once for concurrent 401 responses; clears the session if it fails. */
+async function refreshTokens(): Promise<boolean> {
+  if (!tokenStore) return false;
+  refreshInFlight ??= (async () => {
+    const refreshToken = tokenStore?.getTokens()?.refreshToken;
+    if (!refreshToken) return false;
+    try {
+      const response = await fetch(apiUrl('/auth/refresh'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!response.ok) {
+        await tokenStore?.setTokens(null);
+        return false;
+      }
+      await tokenStore?.setTokens((await response.json()) as TokenResponse);
+      return true;
+    } catch {
+      return false;
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+export const http = {
+  get: <T>(path: string) => request<T>('GET', path),
+  post: <T>(path: string, body?: Body) => request<T>('POST', path, body ?? {}),
+  put: <T>(path: string, body: Body) => request<T>('PUT', path, body),
+  delete: (path: string) => request<void>('DELETE', path),
+};

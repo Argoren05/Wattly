@@ -180,6 +180,23 @@ Składnik stawki:
 - OccurredAt
 - ChangesJson
 
+## 2a. Stan implementacji (migracja `InitialCreate`)
+
+Model został zaimplementowany w EF Core z następującymi uzupełnieniami i odstępstwami od propozycji:
+
+- **EnergyContract** (nowa encja) – umowa nieruchomości: `SupplierId`, `OperatorId`, `TariffId`, `ContractedPowerKw`, `ValidFrom`, `ValidTo` (włącznie). Unikalny indeks (`PropertyId`, `ValidFrom`).
+- **Property** – dodatkowo `BillingPeriodMonths`, `BillingAnchorDate`, `MonthlyBudget`; okresy rozliczeniowe są wyliczane z tych pól (encja `BillingPeriod` nie została utworzona).
+- **Tariff** – strefy przechowywane jako JSON (`Zones`: kod, nazwa, opis harmonogramu); seed: G11, G12, G12W, G13 bez stawek.
+- **TariffRatePlan** – `SupplierId`, `OperatorId`, `PropertyId` (cennik własny użytkownika), `ValidTo` włącznie. Pola `TaxMode`, `CalculationMethod`, `ConditionsJson` pominięto – stawki są netto, a warunki niestandardowe nie są jeszcze obsługiwane.
+- **TariffRateComponent** – `Name`, `ComponentType` (Energy, VariableDistribution, FixedDistribution, Subscription, Capacity, Other), `Unit` (Kwh, Month, Day, Kw), `NetRate numeric(18,6)`, `TaxRate numeric(5,4)` jako ułamek.
+- **MeterReading** – `Status` (Active, Superseded, Voided), `SupersedesReadingId`, `VoidReason`, `StatusChangedAt`. Częściowy unikalny indeks: jeden aktywny odczyt na rejestr i chwilę.
+- **CostCalculation** – powiązana z `PropertyId` i okresem (`PeriodStart`, `PeriodEnd`), `TotalNet`, `IsComplete`, `Assumptions text[]`; **CostCalculationLine** przechowuje migawkę użytych stawek.
+- **Invoice** – dodatkowo `TotalNet`, `CreatedAt`, `UpdatedAt`.
+- **AuditEvent** – zapisywany automatycznie dla umów, cenników, odczytów i faktur (`ChangesJson jsonb`).
+- **NotificationPreference** – jeszcze niezaimplementowana.
+- Enumy zapisywane jako tekst; wszystkie znaczniki czasu jako `timestamptz` (UTC).
+- Usunięcie użytkownika kaskadowo usuwa gospodarstwa, nieruchomości i powiązane dane.
+
 ## 3. Relacje w skrócie
 
 - User 1..N Household
@@ -189,8 +206,9 @@ Składnik stawki:
 - MeterRegister 1..N MeterReading
 - Tariff 1..N TariffRatePlan
 - TariffRatePlan 1..N TariffRateComponent
-- Property 1..N BillingPeriod
-- BillingPeriod 1..N CostCalculation
+- Property 1..N EnergyContract
+- Property 1..N CostCalculation
+- CostCalculation 1..N CostCalculationLine
 - Property 1..N Invoice
 
 ## 4. Ważne ograniczenia

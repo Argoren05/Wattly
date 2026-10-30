@@ -5,64 +5,64 @@
 - [ ] Potwierdzenie zakresu MVP.
 - [ ] Doprecyzowanie modelu taryf i składników kosztów.
 - [ ] Wybór modelu logowania.
-- [ ] Ustalenie układu repozytorium.
+- [x] Ustalenie układu repozytorium.
 - [ ] Przygotowanie środowisk development/test/production.
 - [ ] Makiety kluczowych ekranów.
-- [ ] Przegląd modelu danych.
+- [x] Przegląd modelu danych.
 
 **Rezultat:** zatwierdzona specyfikacja i szkielet repozytorium.
 
 ## Etap 1 – fundament techniczny
 
-- [ ] Utworzenie aplikacji mobilnej.
-- [ ] Utworzenie backendu i warstw.
-- [ ] Konfiguracja PostgreSQL i EF Core.
-- [ ] Migracje początkowe.
-- [ ] Logowanie i autoryzacja.
-- [ ] Obsługa błędów i logowanie.
-- [ ] CI i podstawowe testy.
+- [x] Utworzenie aplikacji mobilnej.
+- [x] Utworzenie backendu i warstw.
+- [x] Konfiguracja PostgreSQL i EF Core.
+- [x] Migracje początkowe.
+- [x] Logowanie i autoryzacja.
+- [x] Obsługa błędów i logowanie.
+- [x] CI i podstawowe testy.
 
 **Rezultat:** działający szkielet aplikacji i API.
 
 ## Etap 2 – konfiguracja energii
 
-- [ ] Nieruchomości.
-- [ ] Liczniki i rejestry.
-- [ ] Operatorzy dystrybucyjni.
-- [ ] Sprzedawcy energii.
-- [ ] Taryfy i wersje cenników.
-- [ ] Formularze konfiguracji.
+- [x] Nieruchomości.
+- [x] Liczniki i rejestry.
+- [x] Operatorzy dystrybucyjni.
+- [x] Sprzedawcy energii.
+- [x] Taryfy i wersje cenników.
+- [x] Formularze konfiguracji.
 
 **Rezultat:** możliwość skonfigurowania profilu energetycznego.
 
 ## Etap 3 – odczyty i kalkulacje
 
-- [ ] Ręczne odczyty.
-- [ ] Walidacja wskazań.
-- [ ] Zużycie pomiędzy odczytami.
-- [ ] Obsługa stref taryfowych.
-- [ ] Kalkulator kosztów.
-- [ ] Testy przypadków granicznych i zaokrągleń.
-- [ ] Historia kalkulacji.
+- [x] Ręczne odczyty.
+- [x] Walidacja wskazań.
+- [x] Zużycie pomiędzy odczytami.
+- [x] Obsługa stref taryfowych.
+- [x] Kalkulator kosztów.
+- [x] Testy przypadków granicznych i zaokrągleń.
+- [x] Historia kalkulacji.
 
 **Rezultat:** wiarygodne obliczenia na podstawie wprowadzonych danych.
 
 ## Etap 4 – dashboard i analityka
 
-- [ ] Dashboard.
-- [ ] Wykresy.
-- [ ] Agregacje dzienne, miesięczne i roczne.
-- [ ] Prognoza zużycia i kosztów.
-- [ ] Oznaczanie danych szacunkowych.
-- [ ] Porównywanie okresów.
+- [x] Dashboard.
+- [x] Wykresy.
+- [x] Agregacje dzienne, miesięczne i roczne.
+- [x] Prognoza zużycia i kosztów.
+- [x] Oznaczanie danych szacunkowych.
+- [x] Porównywanie okresów.
 
 **Rezultat:** użyteczna aplikacja do codziennego monitorowania.
 
 ## Etap 5 – faktury i powiadomienia
 
-- [ ] Ręczne dodawanie faktur.
-- [ ] Porównanie faktury z prognozą.
-- [ ] Limity budżetowe.
+- [x] Ręczne dodawanie faktur.
+- [x] Porównanie faktury z prognozą.
+- [x] Limity budżetowe (budżet i jego wykorzystanie na dashboardzie; powiadomienia – do zrobienia).
 - [ ] Przypomnienia o odczytach.
 - [ ] Powiadomienia o anomaliach.
 

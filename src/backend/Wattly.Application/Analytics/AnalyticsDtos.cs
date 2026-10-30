@@ -32,6 +32,8 @@ public sealed record ForecastDto(
     Guid PropertyId,
     DateOnly PeriodStart,
     DateOnly PeriodEnd,
+    DateTimeOffset PeriodStartAt,
+    DateTimeOffset PeriodEndAt,
     int DaysTotal,
     int DaysElapsed,
     DateTimeOffset? LastReadingAt,
