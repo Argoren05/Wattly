@@ -29,3 +29,8 @@ expo-env.d.ts
 .DS_Store
 .idea/
 .vscode/
+
+# Generated native projects (Expo Continuous Native Generation)
+src/mobile/android/
+src/mobile/ios/
+coverage/

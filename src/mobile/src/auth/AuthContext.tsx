@@ -6,6 +6,7 @@ import { authApi } from '../api/endpoints';
 import type { TokenResponse } from '../api/types';
 import { loadTokens, saveTokens } from './tokenStorage';
 
+/** Session state and actions exposed by AuthProvider. */
 interface AuthState {
   isReady: boolean;
   isSignedIn: boolean;
@@ -14,8 +15,13 @@ interface AuthState {
   signOut(): Promise<void>;
 }
 
+/** React context holding the session state. */
 const AuthContext = createContext<AuthState | null>(null);
 
+/**
+ * Restores the session from secure storage and connects the HTTP client to the tokens.
+ * @param props.children App content.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const tokensRef = useRef<TokenResponse | null>(null);
@@ -61,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/** Session state; must be used inside AuthProvider. */
 export function useAuth(): AuthState {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used inside AuthProvider');

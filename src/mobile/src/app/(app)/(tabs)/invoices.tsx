@@ -9,6 +9,7 @@ import { useRequiredProperty } from '../../../state/PropertyContext';
 import { spacing, useTheme } from '../../../theme/theme';
 import { formatDate, formatMoney, formatPercent } from '../../../utils/format';
 
+/** Invoices tab: list with comparison against Wattly's estimate. */
 export default function Invoices() {
   const property = useRequiredProperty();
   const { colors } = useTheme();

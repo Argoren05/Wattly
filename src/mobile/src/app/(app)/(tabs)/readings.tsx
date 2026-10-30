@@ -11,9 +11,12 @@ import { useRequiredProperty } from '../../../state/PropertyContext';
 import { spacing, useTheme } from '../../../theme/theme';
 import { formatDateTime, formatKwh } from '../../../utils/format';
 
+/** Polish labels of reading sources. */
 const sourceLabel: Record<Reading['source'], string> = { Manual: 'Ręczny', Ocr: 'OCR', Import: 'Import', Integration: 'Integracja' };
+/** Polish labels of reading states (empty for active readings). */
 const statusLabel: Record<Reading['status'], string> = { Active: '', Superseded: 'Skorygowany', Voided: 'Anulowany' };
 
+/** Readings tab: history per register with consumption since the previous reading. */
 export default function Readings() {
   const property = useRequiredProperty();
   const { colors } = useTheme();

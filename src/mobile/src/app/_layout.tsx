@@ -7,8 +7,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError } from '../api/errors';
 import { AuthProvider } from '../auth/AuthContext';
 import { PropertyProvider } from '../state/PropertyContext';
+import { UpdateGate } from '../components/UpdateBanner';
+import { UpdateProvider } from '../updates/UpdateContext';
 import { useTheme } from '../theme/theme';
 
+/** Root of the app: query cache, session, selected property, automatic updates and navigation. */
 export default function RootLayout() {
   const [queryClient] = useState(
     () =>
@@ -27,7 +30,11 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <PropertyProvider>
-            <Navigator />
+            <UpdateProvider>
+              <UpdateGate>
+                <Navigator />
+              </UpdateGate>
+            </UpdateProvider>
           </PropertyProvider>
         </AuthProvider>
       </QueryClientProvider>
@@ -35,6 +42,7 @@ export default function RootLayout() {
   );
 }
 
+/** Top-level stack navigator with theme-aware headers. */
 function Navigator() {
   const { colors, dark } = useTheme();
   return (

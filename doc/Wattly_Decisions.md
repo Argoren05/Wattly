@@ -97,6 +97,23 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Status: Propozycja
 - Decyzja: blokowane są wartości ujemne, duplikaty czasu i naruszenie monotoniczności względem sąsiednich odczytów. Nietypowy skok (ponad 3× średnia dzienna i > 5 kWh lub > 200 kWh/dzień) wymaga potwierdzenia (`confirmAnomaly`). Korekta tworzy nowy odczyt i oznacza poprzedni jako `Superseded`; anulowanie – `Voided`. Wymiana licznika = nowy licznik.
 
+## DEC-021 – Dystrybucja aplikacji mobilnej
+- Data: 2026-10-30
+- Status: Propozycja
+- Decyzja: instalatory budowane przez EAS Build. Profil `preview` tworzy APK do bezpośredniej instalacji, profil `production` tworzy AAB i build iOS do sklepów. Brak instalatorów desktopowych (.exe).
+- Konsekwencje: wymagane konto Expo (darmowy plan wystarcza na start) oraz sekrety `EXPO_TOKEN` i `EAS_PROJECT_ID` w CI. iOS wymaga konta Apple Developer.
+
+## DEC-022 – Automatyczne aktualizacje
+- Data: 2026-10-30
+- Status: Propozycja
+- Decyzja: dwa poziomy. (1) OTA przez expo-updates/EAS Update z `runtimeVersion: fingerprint`: sprawdzenie przy starcie i powrocie do aplikacji, pobranie w tle, restart po potwierdzeniu użytkownika. (2) Nowe instalatory: endpoint `/api/v1/app/release` z konfigurowalną wersją najnowszą i minimalną (baner lub ekran blokujący).
+- Odrzucone: automatyczny restart bez pytania (ryzyko utraty danych w formularzu); własny serwer aktualizacji (większy koszt utrzymania).
+
+## DEC-023 – Komentarze i testy jako bramka jakości
+- Data: 2026-10-30
+- Status: Zatwierdzona
+- Decyzja: dokumentacja kodu wymuszana narzędziowo (XML docs w .NET, ESLint JSDoc w aplikacji mobilnej). Testy jednostkowe obejmują wszystkie warstwy, a CI blokuje build i publikację aktualizacji przy błędach.
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

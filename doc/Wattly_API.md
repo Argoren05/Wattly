@@ -127,7 +127,13 @@ Wynik kalkulacji zawiera: okres, zużycie (łącznie i per strefa), wartości ź
 
 Faktura zawiera `comparison` – szacunek Wattly dla okresu faktury i różnicę względem kwoty faktury.
 
-## 9. Operacyjne
+## 9. Aplikacja mobilna (bez logowania)
+
+- `GET /app/release?platform=android|ios&version=1.0.0` → `{ platform, currentVersion, latestVersion, minimumVersion, downloadUrl, releaseNotes, updateAvailable, updateRequired }`
+
+Wartości pochodzą z konfiguracji `MobileApp:Android` i `MobileApp:Ios`. Błędna konfiguracja nigdy nie wymusza aktualizacji.
+
+## 9a. Operacyjne
 
 - `GET /health` – liveness
 - `GET /health/ready` – gotowość (połączenie z bazą)

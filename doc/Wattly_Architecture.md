@@ -46,6 +46,14 @@ Testy i infrastruktura lokalna zostały umieszczone w `src/`, zgodnie z decyzją
 
 Moduły są wydzielone przestrzeniami nazw w warstwach (`Properties`, `Catalog`, `Metering`, `Calculations`, `Analytics`, `Invoices`). Identity jest realizowane przez ASP.NET Core Identity. Moduły Notifications i Administration (poza katalogiem) nie są jeszcze zaimplementowane.
 
+### Aktualizacje aplikacji mobilnej
+
+- `src/mobile/src/updates/otaUpdates.ts` – logika OTA (sprawdź → pobierz → `ready`) napisana względem interfejsu, dzięki czemu da się ją testować bez modułu natywnego.
+- `src/mobile/src/updates/nativeRelease.ts` – zapytanie o nowy instalator (`/app/release`).
+- `src/mobile/src/updates/UpdateContext.tsx` – provider uruchamiający sprawdzenia przy starcie i po powrocie do aplikacji (najczęściej co 30 min).
+- `src/mobile/src/components/UpdateBanner.tsx` – banery „Uruchom ponownie” i „Pobierz instalator” oraz ekran „Wymagana aktualizacja”.
+- Backend: `Wattly.Application/MobileApp` (`AppVersion`, `MobileReleaseService`).
+
 ### Silnik kalkulacji
 
 - `RegisterSeries` (Domain) – szereg odczytów jednego rejestru; wartość w dowolnej chwili: odczyt (Actual), interpolacja liniowa (Interpolated) lub ekstrapolacja średnią z ostatnich 90 dni (Extrapolated).

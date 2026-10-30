@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, Loading, Screen } from '../../../components/ui'
 import { importRegisters, useInvalidateEnergyData, useMeters } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 
+/** Modal adding a reading; an optional `registerId` route param preselects the register. */
 export default function NewReading() {
   const property = useRequiredProperty();
   const { registerId } = useLocalSearchParams<{ registerId?: string }>();

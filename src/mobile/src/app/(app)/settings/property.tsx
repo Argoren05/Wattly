@@ -2,12 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { errorMessage } from '../../../api/errors';
+import { errorMessage, ValidationError } from '../../../api/errors';
 import { propertyApi } from '../../../api/endpoints';
 import { Button, Card, Chips, Field, Notice, Screen } from '../../../components/ui';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { parseDecimal, parseIsoDate } from '../../../utils/format';
 
+/** Edits the property: name, city, billing period and budget. */
 export default function PropertySettings() {
   const property = useRequiredProperty();
   const queryClient = useQueryClient();
@@ -22,8 +23,8 @@ export default function PropertySettings() {
     mutationFn: async () => {
       const date = parseIsoDate(anchor);
       const budgetValue = budget.trim() ? parseDecimal(budget) : null;
-      if (!date) throw new Error('Podaj datę w formacie RRRR-MM-DD.');
-      if (budget.trim() && (budgetValue === null || budgetValue <= 0)) throw new Error('Budżet musi być dodatnią kwotą.');
+      if (!date) throw new ValidationError('Podaj datę w formacie RRRR-MM-DD.');
+      if (budget.trim() && (budgetValue === null || budgetValue <= 0)) throw new ValidationError('Budżet musi być dodatnią kwotą.');
       return propertyApi.update(property.id, {
         name: name.trim(), city: city.trim() || null, billingPeriodMonths: Number(months), billingAnchorDate: date, monthlyBudget: budgetValue,
         timeZoneId: property.timeZoneId, currencyCode: property.currencyCode, countryCode: property.countryCode,
@@ -33,7 +34,7 @@ export default function PropertySettings() {
       await queryClient.invalidateQueries();
       router.back();
     },
-    onError: (e) => setError(e instanceof Error && !('status' in e) ? e.message : errorMessage(e)),
+    onError: (e) => setError(errorMessage(e)),
   });
 
   return (

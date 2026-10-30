@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
-import { errorMessage } from '../api/errors';
+import { errorMessage, ValidationError } from '../api/errors';
 import { meterApi, propertyApi, readingApi } from '../api/endpoints';
 import type { Meter, Property, Tariff } from '../api/types';
 import { RatePlanForm } from '../components/RatePlanForm';
@@ -56,17 +56,17 @@ export default function Onboarding() {
   const saveProperty = () => run.mutate(async () => {
     const date = parseIsoDate(anchor);
     const budgetValue = budget.trim() ? parseDecimal(budget) : null;
-    if (!name.trim()) throw new Error('Podaj nazwę nieruchomości.');
-    if (!date) throw new Error('Podaj datę początku okresu w formacie RRRR-MM-DD.');
-    if (budget.trim() && (budgetValue === null || budgetValue <= 0)) throw new Error('Budżet musi być dodatnią kwotą.');
+    if (!name.trim()) throw new ValidationError('Podaj nazwę nieruchomości.');
+    if (!date) throw new ValidationError('Podaj datę początku okresu w formacie RRRR-MM-DD.');
+    if (budget.trim() && (budgetValue === null || budgetValue <= 0)) throw new ValidationError('Budżet musi być dodatnią kwotą.');
     const body = { name: name.trim(), billingPeriodMonths: Number(months), billingAnchorDate: date, monthlyBudget: budgetValue };
     setProperty(property ? await propertyApi.update(property.id, body) : await propertyApi.create(body));
   });
 
   const saveContract = () => run.mutate(async () => {
-    if (!property || !tariff) throw new Error('Wybierz taryfę.');
+    if (!property || !tariff) throw new ValidationError('Wybierz taryfę.');
     const powerValue = power.trim() ? parseDecimal(power) : null;
-    if (power.trim() && (powerValue === null || powerValue <= 0)) throw new Error('Moc umowna musi być dodatnią liczbą.');
+    if (power.trim() && (powerValue === null || powerValue <= 0)) throw new ValidationError('Moc umowna musi być dodatnią liczbą.');
     await propertyApi.setContract(property.id, {
       tariffId: tariff.id, operatorId, supplierId, contractedPowerKw: powerValue, validFrom: property.billingAnchorDate, validTo: null,
     });
@@ -85,10 +85,10 @@ export default function Onboarding() {
   const saveReadings = () => run.mutate(async () => {
     if (!meter) return;
     const readingAt = parseLocalDateTime(when);
-    if (!readingAt) throw new Error('Użyj formatu daty RRRR-MM-DD GG:MM.');
+    if (!readingAt) throw new ValidationError('Użyj formatu daty RRRR-MM-DD GG:MM.');
     for (const register of meter.registers) {
       const value = parseDecimal(values[register.id] ?? '');
-      if (value === null || value < 0) throw new Error(`Podaj wskazanie rejestru „${register.name}”.`);
+      if (value === null || value < 0) throw new ValidationError(`Podaj wskazanie rejestru „${register.name}”.`);
     }
     for (const register of meter.registers) {
       await readingApi.create(register.id, { readingAt, value: parseDecimal(values[register.id] ?? '')!, source: 'Manual' });

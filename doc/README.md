@@ -75,7 +75,7 @@ Wattly/
 
 ## Status projektu
 
-Zaimplementowane MVP: konto i logowanie, konfiguracja nieruchomości, umowy (operator/sprzedawca/taryfa), własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, dashboard z prognozą, statystyki, faktury z porównaniem i załącznikami. Poza zakresem (kolejne etapy): powiadomienia, OCR, eksport, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline. Szczegóły w [roadmapie](Wattly_Roadmap.md).
+Aplikację mobilną instaluje się z pliku APK (EAS Build) lub ze sklepów; aktualizuje się automatycznie (szczegóły w [instrukcji](Wattly_Development.md)). Zaimplementowane MVP: konto i logowanie, konfiguracja nieruchomości, umowy (operator/sprzedawca/taryfa), własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, dashboard z prognozą, statystyki, faktury z porównaniem i załącznikami. Poza zakresem (kolejne etapy): powiadomienia, OCR, eksport, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline. Szczegóły w [roadmapie](Wattly_Roadmap.md).
 
 ## Jak pracować z dokumentacją
 

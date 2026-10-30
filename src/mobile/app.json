@@ -8,7 +8,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.wattly.mobile"
+      "bundleIdentifier": "app.wattly.mobile",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,14 +19,16 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.wattly.mobile"
+      "package": "app.wattly.mobile",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-updates"
     ],
     "scheme": "wattly",
     "extra": {
@@ -33,6 +36,9 @@
     },
     "experiments": {
       "typedRoutes": false
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
     }
   }
 }

@@ -9,6 +9,7 @@ import { keys } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { addDays, addMonths, formatDate, formatKwh, formatMoney, formatPercent, toIsoDate } from '../../../utils/format';
 
+/** Displayed range and the previous range used for comparison, per granularity. */
 const ranges: Record<Granularity, { label: string; current: () => [Date, Date]; previous: () => [Date, Date] }> = {
   Day: { label: 'Dziennie', current: () => [addDays(new Date(), -29), new Date()], previous: () => [addDays(new Date(), -59), addDays(new Date(), -30)] },
   Week: { label: 'Tygodniowo', current: () => [addDays(new Date(), -7 * 12), new Date()], previous: () => [addDays(new Date(), -7 * 24), addDays(new Date(), -7 * 12 - 1)] },
@@ -16,12 +17,14 @@ const ranges: Record<Granularity, { label: string; current: () => [Date, Date]; 
   Year: { label: 'Rocznie', current: () => [addMonths(new Date(), -12 * 4), new Date()], previous: () => [addMonths(new Date(), -12 * 9), addMonths(new Date(), -12 * 5)] },
 };
 
+/** Short axis label of a bucket. */
 function pointLabel(start: string, granularity: Granularity) {
   if (granularity === 'Year') return start.slice(0, 4);
   if (granularity === 'Month') return `${start.slice(5, 7)}.${start.slice(2, 4)}`;
   return formatDate(start).slice(0, 5);
 }
 
+/** Statistics tab: consumption or cost series with comparison to the previous period. */
 export default function Stats() {
   const property = useRequiredProperty();
   const [granularity, setGranularity] = useState<Granularity>('Month');

@@ -10,8 +10,10 @@ import { importRegisters, keys, useInvalidateEnergyData, useMeters } from '../..
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { formatDateTime, formatKwh } from '../../../utils/format';
 
+/** Polish labels of reading states. */
 const statusLabel = { Active: 'Aktywny', Superseded: 'Zastąpiony korektą', Voided: 'Anulowany' } as const;
 
+/** Reading details with correction (keeps history) and cancellation. */
 export default function ReadingDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const property = useRequiredProperty();

@@ -5,6 +5,7 @@ import { ApiError, errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 import { Body, Button, Card, Field, Notice, Screen } from '../components/ui';
 
+/** Registration screen. */
 export default function Register() {
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /** Validates input locally, registers and signs in; translates Identity error codes. */
   async function submit() {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Podaj prawidłowy adres e-mail.');
     if (password.length < 10) return setError('Hasło musi mieć co najmniej 10 znaków.');

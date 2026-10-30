@@ -48,7 +48,7 @@ cd src/backend
 dotnet test
 ```
 
-Testy integracyjne tworzą tymczasową bazę na serwerze PostgreSQL wskazanym w `WATTLY_TEST_POSTGRES` (domyślnie `Host=localhost;Port=5432;Username=postgres;Password=postgres`) i usuwają ją po zakończeniu.
+Testy jednostkowe (serwisy na EF Core InMemory, domena, infrastruktura, middleware) nie wymagają bazy. Testy integracyjne tworzą tymczasową bazę na serwerze PostgreSQL wskazanym w `WATTLY_TEST_POSTGRES` (domyślnie `Host=localhost;Port=5432;Username=postgres;Password=postgres`) i usuwają ją po zakończeniu.
 
 ## Aplikacja mobilna
 
@@ -60,8 +60,49 @@ npx expo start
 ```
 
 - Na fizycznym telefonie ustaw `EXPO_PUBLIC_API_URL` na adres IP komputera w sieci LAN (np. `http://192.168.1.10:5103`), a nie `localhost`.
-- Kontrole jakości: `npm run typecheck`, `npm run lint`, `npm test`.
+- Kontrole jakości: `npm run typecheck`, `npm run lint` (wymusza JSDoc), `npm test` (Jest), `npm run test:coverage`.
 - Nowe moduły natywne instaluj przez `npx expo install <pakiet>`, aby wersje były zgodne z SDK.
+
+## Instalator na telefon (EAS Build)
+
+Instalatory są budowane w chmurze Expo (EAS Build) – nie są potrzebne Android Studio ani Xcode, a projekt nie zawiera plików .exe ani instalatorów desktopowych.
+
+| Profil (`src/mobile/eas.json`) | Wynik | Zastosowanie |
+|---|---|---|
+| `preview` | plik **APK** | instalacja bezpośrednio na telefonie z Androidem (link / kod QR) |
+| `production` | AAB (Android) + build iOS | Google Play i App Store |
+| `development` | development build | praca deweloperska z natywnymi modułami |
+
+### Jednorazowa konfiguracja
+
+1. Załóż darmowe konto na https://expo.dev.
+2. W katalogu `src/mobile` uruchom `npx eas-cli login`, a potem `npx eas-cli init`. Polecenie wypisze **identyfikator projektu**.
+3. W repozytorium GitHub dodaj sekrety: `EXPO_TOKEN` (token z expo.dev → Access tokens) oraz `EAS_PROJECT_ID`, a także zmienną `WATTLY_API_URL` z publicznym adresem API.
+4. W `eas.json` ustaw `EXPO_PUBLIC_API_URL` profilu `base` na adres produkcyjnego API (albo polegaj na zmiennej `WATTLY_API_URL` z CI).
+
+### Budowanie
+
+- Z GitHub Actions: workflow **Mobile build** (ręcznie albo tagiem `mobile-v1.2.0`).
+- Lokalnie: `cd src/mobile && EAS_PROJECT_ID=<id> npx eas-cli build --profile preview --platform android`.
+
+Po zakończeniu buildu EAS udostępnia link i kod QR. Na telefonie należy otworzyć link, pobrać APK i zezwolić na instalację z tego źródła.
+
+## Automatyczne aktualizacje
+
+Aplikacja aktualizuje się na dwóch poziomach (DEC-022):
+
+1. **Aktualizacje OTA (kod JavaScript/TypeScript, ekrany, logika)** – `expo-updates` + EAS Update.
+   - Workflow **Mobile OTA update** publikuje aktualizację po każdym pushu do `main`, który zmienia `src/mobile`. Wcześniej uruchamia typecheck, lint i testy.
+   - Aplikacja sprawdza aktualizacje przy każdym uruchomieniu i po powrocie na pierwszy plan (najczęściej co 30 min). Pobiera je w tle, a następnie pokazuje baner „Nowa wersja aplikacji jest gotowa – Uruchom ponownie”. Restart jest decyzją użytkownika, więc niezapisane formularze nie przepadają.
+   - `runtimeVersion` używa polityki `fingerprint`: aktualizacja trafia wyłącznie do instalacji ze zgodnym kodem natywnym.
+2. **Nowy instalator (zmiany natywne)** – endpoint `GET /api/v1/app/release` porównuje zainstalowaną wersję z konfiguracją API (`MobileApp:Android|Ios`):
+   - `LatestVersion` nowsza od zainstalowanej → baner „Dostępna wersja X” z przyciskiem pobrania;
+   - `MinimumVersion` nowsza od zainstalowanej → ekran blokujący „Wymagana aktualizacja”;
+   - `DownloadUrl` – link do APK z EAS lub strona w sklepie.
+
+Procedura wydania wersji natywnej: podnieś `version` w `src/mobile/app.json`, zbuduj instalator, a następnie ustaw w konfiguracji API `MobileApp__Android__LatestVersion`, `MobileApp__Android__DownloadUrl` i (opcjonalnie) `MinimumVersion`.
+
+W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawienia → Aplikacja pokazuje wtedy odpowiedni komunikat.
 
 ## Konfiguracja (najważniejsze klucze API)
 
@@ -74,6 +115,7 @@ npx expo start
 | `Storage:LocalPath` | Katalog załączników (poza web root) |
 | `Cors:AllowedOrigins` | Dozwolone originy (tylko dla wersji web) |
 | `Http:RedirectToHttps` | Przekierowanie na HTTPS (gdy TLS nie kończy się na proxy) |
+| `MobileApp:Android:*`, `MobileApp:Ios:*` | Najnowsza i minimalna wersja instalatora, link do pobrania, opis zmian |
 
 Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środowiskowe lub menedżer sekretów – nigdy przez repozytorium.
 
@@ -84,3 +126,9 @@ Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środow
 - Rejestry oddawania energii (PV) są przechowywane, ale nie wchodzą do kalkulacji kosztów.
 - Godziny stref taryfowych nie są modelowane – zużycie stref pochodzi z rejestrów licznika.
 - Storage załączników jest lokalny (jedna instancja API); przy skalowaniu potrzebny storage obiektowy zgodny z `IFileStorage`.
+
+## Standard komentarzy i testów (DEC-023)
+
+- **Backend:** `GenerateDocumentationFile` + `TreatWarningsAsErrors` – brak komentarza XML przy publicznym typie lub składowej przerywa build.
+- **Mobile:** reguła ESLint `jsdoc/require-jsdoc` – każda funkcja, komponent, eksportowana stała, interfejs i typ musi mieć JSDoc.
+- Każda zmiana zachowania wymaga testu: backend – xUnit (`tests/Wattly.UnitTests`, `tests/Wattly.IntegrationTests`), mobile – Jest + Testing Library (`*.test.ts(x)` obok kodu; testy ekranów w `src/__tests__/screens`, bo pliki w `src/app` są trasami Expo Router).

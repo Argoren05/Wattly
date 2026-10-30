@@ -10,9 +10,11 @@ import { useInvalidateEnergyData } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { parseDecimal, parseIsoDate, toIsoDate } from '../../../utils/format';
 
+/** File selected with the document picker. */
 type PickedFile = DocumentPicker.DocumentPickerAsset;
 
 /** Builds multipart data for both native (uri object) and web (File) uploads. */
+/** Builds multipart data for native (uri object) and web (File) uploads. */
 async function toFormData(file: PickedFile): Promise<FormData> {
   const form = new FormData();
   if (Platform.OS === 'web' && file.file) {
@@ -23,6 +25,7 @@ async function toFormData(file: PickedFile): Promise<FormData> {
   return form;
 }
 
+/** Form adding an invoice with an optional PDF/JPEG/PNG attachment. */
 export default function NewInvoice() {
   const property = useRequiredProperty();
   const invalidate = useInvalidateEnergyData();
@@ -37,11 +40,13 @@ export default function NewInvoice() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /** Opens the document picker limited to allowed file types. */
   async function pick() {
     const result = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/jpeg', 'image/png'], copyToCacheDirectory: true });
     if (!result.canceled) setFile(result.assets[0] ?? null);
   }
 
+  /** Validates the form, saves the invoice, uploads the attachment and opens the details. */
   async function submit() {
     const start = parseIsoDate(periodStart);
     const end = parseIsoDate(periodEnd);

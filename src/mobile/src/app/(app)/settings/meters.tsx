@@ -7,6 +7,7 @@ import { Body, Button, Card, Chips, ErrorState, Field, KeyValue, Loading, Notice
 import { keys, useCatalog, useContract, useMeters } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 
+/** Meter list and form adding a meter with registers for the tariff zones. */
 export default function MetersSettings() {
   const property = useRequiredProperty();
   const queryClient = useQueryClient();

@@ -1,16 +1,27 @@
 // Contract types mirroring the Wattly REST API (/api/v1). Decimal values arrive as JSON numbers.
 
+/** Origin of a reading. */
 export type ReadingSource = 'Manual' | 'Ocr' | 'Import' | 'Integration';
+/** Lifecycle state of a reading (readings are never physically changed). */
 export type ReadingStatus = 'Active' | 'Superseded' | 'Voided';
+/** Import (consumption) or export (e.g. photovoltaics) register. */
 export type RegisterType = 'Import' | 'Export';
+/** Meter technology. */
 export type MeterType = 'Conventional' | 'Smart';
+/** Whether a meter also measures energy fed into the grid. */
 export type MeterDirectionality = 'ImportOnly' | 'Bidirectional';
+/** Kind of a price component on the bill. */
 export type RateComponentType = 'Energy' | 'VariableDistribution' | 'FixedDistribution' | 'Subscription' | 'Capacity' | 'Other';
+/** Unit of a rate. */
 export type RateUnit = 'Kwh' | 'Month' | 'Day' | 'Kw';
+/** Summary category of costs. */
 export type CostCategory = 'Energy' | 'Distribution' | 'Other';
+/** Bucket size of statistics. */
 export type Granularity = 'Day' | 'Week' | 'Month' | 'Year';
+/** How a register value was obtained: reading, interpolation or extrapolation. */
 export type ValueKind = 'Actual' | 'Interpolated' | 'Extrapolated';
 
+/** Tokens returned by sign-in and refresh. */
 export interface TokenResponse {
   tokenType: string;
   accessToken: string;
@@ -18,12 +29,14 @@ export interface TokenResponse {
   refreshToken: string;
 }
 
+/** Signed-in user. */
 export interface User {
   id: string;
   email: string | null;
   roles: string[];
 }
 
+/** One page of a list. */
 export interface PagedResult<T> {
   items: T[];
   page: number;
@@ -31,6 +44,7 @@ export interface PagedResult<T> {
   totalCount: number;
 }
 
+/** Property (flat, house) with billing settings. */
 export interface Property {
   id: string;
   name: string;
@@ -47,6 +61,7 @@ export interface Property {
   updatedAt: string;
 }
 
+/** Create/update request of a property. */
 export interface PropertyRequest {
   name: string;
   addressLine?: string | null;
@@ -60,6 +75,7 @@ export interface PropertyRequest {
   monthlyBudget?: number | null;
 }
 
+/** Operator or supplier from the catalog. */
 export interface CatalogEntry {
   id: string;
   name: string;
@@ -68,12 +84,14 @@ export interface CatalogEntry {
   isActive: boolean;
 }
 
+/** Time zone of a multi-zone tariff. */
 export interface TariffZone {
   code: string;
   name: string;
   scheduleDescription: string | null;
 }
 
+/** Tariff group (G11, G12…). */
 export interface Tariff {
   id: string;
   code: string;
@@ -83,6 +101,7 @@ export interface Tariff {
   zones: TariffZone[];
 }
 
+/** Contract of a property: supplier, operator, tariff and validity. */
 export interface EnergyContract {
   id: string;
   propertyId: string;
@@ -97,6 +116,7 @@ export interface EnergyContract {
   validTo: string | null;
 }
 
+/** Request setting the contract. */
 export interface EnergyContractRequest {
   supplierId: string | null;
   operatorId: string | null;
@@ -106,6 +126,7 @@ export interface EnergyContractRequest {
   validTo: string | null;
 }
 
+/** Price component of a rate plan (net rate, VAT as fraction). */
 export interface RateComponent {
   id: string;
   componentType: RateComponentType;
@@ -117,6 +138,7 @@ export interface RateComponent {
   taxRate: number;
 }
 
+/** Versioned price list with its source. */
 export interface RatePlan {
   id: string;
   tariffId: string;
@@ -134,6 +156,7 @@ export interface RatePlan {
   components: RateComponent[];
 }
 
+/** Component in a create request. */
 export interface RateComponentRequest {
   componentType: RateComponentType;
   name: string;
@@ -143,6 +166,7 @@ export interface RateComponentRequest {
   taxRate: number;
 }
 
+/** Request creating a rate plan. */
 export interface RatePlanRequest {
   tariffId: string;
   supplierId?: string | null;
@@ -156,6 +180,7 @@ export interface RatePlanRequest {
   components: RateComponentRequest[];
 }
 
+/** Meter register. */
 export interface Register {
   id: string;
   meterId: string;
@@ -167,6 +192,7 @@ export interface Register {
   decimalPlaces: number;
 }
 
+/** Meter with registers. */
 export interface Meter {
   id: string;
   propertyId: string;
@@ -180,6 +206,7 @@ export interface Meter {
   registers: Register[];
 }
 
+/** Register in a create request. */
 export interface RegisterRequest {
   name: string;
   registerType: RegisterType;
@@ -188,6 +215,7 @@ export interface RegisterRequest {
   decimalPlaces?: number | null;
 }
 
+/** Create/update request of a meter. */
 export interface MeterRequest {
   name: string;
   serialNumber?: string | null;
@@ -199,6 +227,7 @@ export interface MeterRequest {
   registers?: RegisterRequest[];
 }
 
+/** Meter reading with consumption since the previous active reading. */
 export interface Reading {
   id: string;
   registerId: string;
@@ -216,6 +245,7 @@ export interface Reading {
   daysSincePrevious: number | null;
 }
 
+/** New reading or correction. */
 export interface ReadingRequest {
   readingAt: string;
   value: number;
@@ -224,11 +254,13 @@ export interface ReadingRequest {
   confirmAnomaly?: boolean;
 }
 
+/** Saved reading with confirmed warnings. */
 export interface ReadingSaved {
   reading: Reading;
   warnings: { code: string; message: string }[];
 }
 
+/** Calculated component of a cost calculation. */
 export interface CostLine {
   ratePlanId: string;
   ratePlanName: string;
@@ -245,6 +277,7 @@ export interface CostLine {
   segmentEnd: string;
 }
 
+/** Explainable calculation: consumption, components, VAT, flags and assumptions. */
 export interface CalculationResult {
   id: string | null;
   propertyId: string;
@@ -270,6 +303,7 @@ export interface CalculationResult {
   assumptions: string[];
 }
 
+/** One bucket of a series. */
 export interface SeriesPoint {
   periodStart: string;
   periodEnd: string;
@@ -279,6 +313,7 @@ export interface SeriesPoint {
   isPartial: boolean;
 }
 
+/** Consumption or cost series. */
 export interface Series {
   propertyId: string;
   granularity: Granularity;
@@ -292,6 +327,7 @@ export interface Series {
   assumptions: string[];
 }
 
+/** Dashboard figures and forecast for the current billing period. */
 export interface Forecast {
   propertyId: string;
   periodStart: string;
@@ -320,6 +356,7 @@ export interface Forecast {
   assumptions: string[];
 }
 
+/** Attachment metadata. */
 export interface Attachment {
   id: string;
   fileName: string;
@@ -328,6 +365,7 @@ export interface Attachment {
   createdAt: string;
 }
 
+/** Invoice with comparison against the estimate. */
 export interface Invoice {
   id: string;
   propertyId: string;
@@ -354,6 +392,7 @@ export interface Invoice {
   updatedAt: string;
 }
 
+/** Create/update request of an invoice. */
 export interface InvoiceRequest {
   supplierId?: string | null;
   invoiceNumber: string;
@@ -364,4 +403,16 @@ export interface InvoiceRequest {
   totalNet?: number | null;
   totalGross: number;
   notes?: string | null;
+}
+
+/** Native installer status returned by GET /app/release. */
+export interface MobileRelease {
+  platform: 'android' | 'ios';
+  currentVersion: string;
+  latestVersion: string | null;
+  minimumVersion: string | null;
+  downloadUrl: string | null;
+  releaseNotes: string | null;
+  updateAvailable: boolean;
+  updateRequired: boolean;
 }

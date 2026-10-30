@@ -28,6 +28,7 @@ export function RatePlanForm({ tariff, defaultValidFrom, submitLabel, onSubmit, 
 
   const update = (key: string, patch: Partial<ComponentDraft>) => setRows((r) => r.map((row) => (row.key === key ? { ...row, ...patch } : row)));
 
+  /** Validates the form and passes a rate plan request (VAT converted from percent to fraction) to onSubmit. */
   function submit() {
     const date = parseIsoDate(validFrom);
     if (!date) return setError('Podaj datę obowiązywania w formacie RRRR-MM-DD.');

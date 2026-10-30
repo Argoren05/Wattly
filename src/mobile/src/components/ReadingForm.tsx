@@ -11,6 +11,7 @@ import { formatDateTime, formatKwh, parseDecimal, parseLocalDateTime, toLocalDat
 import { spacing } from '../theme/theme';
 import { Button, Card, Chips, Field, KeyValue, Notice } from './ui';
 
+/** Asks the user to confirm an unusual reading; resolves true for "save anyway". */
 function confirmAsync(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') return Promise.resolve(globalThis.confirm?.(`${title}\n\n${message}`) ?? false);
   return new Promise((resolve) =>
@@ -47,6 +48,7 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
   const parsedValue = parseDecimal(value);
   const diff = previous && parsedValue !== null && !initial ? parsedValue - previous.value : null;
 
+  /** Validates input, saves and handles anomaly confirmation and server errors. */
   async function submit() {
     const readingAt = parseLocalDateTime(when);
     const next: typeof errors = {};

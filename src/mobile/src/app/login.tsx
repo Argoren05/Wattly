@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthContext';
 import { Body, Button, Card, Field, Notice, Screen, Title } from '../components/ui';
 import { spacing, useTheme } from '../theme/theme';
 
+/** Sign-in screen. */
 export default function Login() {
   const { signIn } = useAuth();
   const { colors } = useTheme();
@@ -15,6 +16,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /** Validates input and signs in; wrong credentials get a generic message (no account enumeration). */
   async function submit() {
     if (!email.trim() || !password) {
       setError('Podaj e-mail i hasło.');

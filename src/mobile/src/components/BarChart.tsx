@@ -4,6 +4,7 @@ import Svg, { Line, Rect } from 'react-native-svg';
 
 import { spacing, useTheme } from '../theme/theme';
 
+/** One bar of the chart. */
 export interface BarDatum {
   key: string;
   label: string;
@@ -80,6 +81,7 @@ export function BarChart({ data, unit, height = 160, summary }: { data: BarDatum
   );
 }
 
+/** Legend entry: colour sample with label. */
 function Legend({ color, label }: { color: string; label: string }) {
   const { colors } = useTheme();
   return (

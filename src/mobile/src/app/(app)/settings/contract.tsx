@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { errorMessage } from '../../../api/errors';
+import { errorMessage, ValidationError } from '../../../api/errors';
 import { propertyApi } from '../../../api/endpoints';
 import type { CatalogEntry, EnergyContract, Tariff } from '../../../api/types';
 import { Body, Button, Card, Chips, ErrorState, Field, Loading, Notice, Screen } from '../../../components/ui';
@@ -10,6 +10,7 @@ import { useCatalog, useContract } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { parseDecimal, parseIsoDate, toIsoDate } from '../../../utils/format';
 
+/** Loads the catalog and current contract, then renders the form. */
 export default function ContractSettings() {
   const property = useRequiredProperty();
   const catalog = useCatalog();
@@ -20,6 +21,7 @@ export default function ContractSettings() {
   return <ContractForm propertyId={property.id} contract={contract.data ?? null} {...catalog.data} />;
 }
 
+/** Contract form initialised once from the loaded contract. */
 function ContractForm({ propertyId, contract, operators, suppliers, tariffs }: {
   propertyId: string;
   contract: EnergyContract | null;
@@ -39,16 +41,16 @@ function ContractForm({ propertyId, contract, operators, suppliers, tariffs }: {
     mutationFn: async () => {
       const from = parseIsoDate(validFrom);
       const powerValue = power.trim() ? parseDecimal(power) : null;
-      if (!tariffId) throw new Error('Wybierz taryfę.');
-      if (!from) throw new Error('Podaj datę w formacie RRRR-MM-DD.');
-      if (power.trim() && (powerValue === null || powerValue <= 0)) throw new Error('Moc umowna musi być dodatnią liczbą.');
+      if (!tariffId) throw new ValidationError('Wybierz taryfę.');
+      if (!from) throw new ValidationError('Podaj datę w formacie RRRR-MM-DD.');
+      if (power.trim() && (powerValue === null || powerValue <= 0)) throw new ValidationError('Moc umowna musi być dodatnią liczbą.');
       return propertyApi.setContract(propertyId, { operatorId, supplierId, tariffId, contractedPowerKw: powerValue, validFrom: from, validTo: null });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries();
       router.back();
     },
-    onError: (e) => setError(e instanceof Error && !('status' in e) ? e.message : errorMessage(e)),
+    onError: (e) => setError(errorMessage(e)),
   });
 
   return (

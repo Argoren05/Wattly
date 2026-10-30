@@ -1,5 +1,6 @@
-import type { RateComponentType, RateUnit, TariffZone } from '../api/types.ts';
+import type { RateComponentType, RateUnit, TariffZone } from '../api/types';
 
+/** Editable row of the rate plan form (values kept as typed text). */
 export interface ComponentDraft {
   key: string;
   componentType: RateComponentType;
@@ -10,9 +11,12 @@ export interface ComponentDraft {
   taxRate: string;
 }
 
+/** Default VAT for electricity in Poland, in percent. */
 const DEFAULT_VAT = '23';
 
+/** Counter for unique row keys. */
 let counter = 0;
+/** Creates a unique row key. */
 const key = () => `c${++counter}`;
 
 /**
@@ -41,6 +45,7 @@ export function componentTemplate(zones: TariffZone[]): ComponentDraft[] {
   ];
 }
 
+/** Units shown next to rate inputs. */
 export const unitLabel: Record<RateUnit, string> = {
   Kwh: 'zł/kWh',
   Month: 'zł/mies.',

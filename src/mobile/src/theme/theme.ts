@@ -1,5 +1,6 @@
 import { useColorScheme } from 'react-native';
 
+/** Light colour palette (WCAG AA contrast for text). */
 const light = {
   background: '#F5F7FA',
   surface: '#FFFFFF',
@@ -20,6 +21,7 @@ const light = {
   chartBarEstimate: '#9ED3C2',
 };
 
+/** Dark colour palette. */
 const dark: typeof light = {
   background: '#0B1117',
   surface: '#141C24',
@@ -40,11 +42,15 @@ const dark: typeof light = {
   chartBarEstimate: '#24614F',
 };
 
+/** Colour tokens of a theme. */
 export type Colors = typeof light;
 
+/** Spacing scale in dp. */
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
+/** Corner radius scale in dp. */
 export const radius = { sm: 8, md: 12, lg: 16 } as const;
 
+/** Current theme following the system light/dark setting. */
 export function useTheme() {
   const scheme = useColorScheme();
   return { colors: scheme === 'dark' ? dark : light, dark: scheme === 'dark', spacing, radius };

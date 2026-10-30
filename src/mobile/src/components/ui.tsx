@@ -9,8 +9,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { errorMessage, NetworkError } from '../api/errors';
 import { radius, spacing, useTheme } from '../theme/theme';
 
+/** Name of an Ionicons glyph. */
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
+/**
+ * Screen container: safe area, optional pull-to-refresh, max width for tablets.
+ * @param props.scroll Wrap content in a ScrollView (default true).
+ */
 export function Screen({ children, refreshing, onRefresh, scroll = true }: {
   children: ReactNode;
   refreshing?: boolean;
@@ -34,26 +39,31 @@ export function Screen({ children, refreshing, onRefresh, scroll = true }: {
   );
 }
 
+/** Rounded surface grouping related content. */
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   const { colors } = useTheme();
   return <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style]}>{children}</View>;
 }
 
+/** Screen title (accessibility header). */
 export function Title({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
   return <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>{children}</Text>;
 }
 
+/** Section heading (accessibility header). */
 export function SectionTitle({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
   return <Text accessibilityRole="header" style={[styles.sectionTitle, { color: colors.text }]}>{children}</Text>;
 }
 
+/** Body text; `muted` renders secondary text. */
 export function Body({ children, muted, style }: { children: ReactNode; muted?: boolean; style?: object }) {
   const { colors } = useTheme();
   return <Text style={[styles.body, { color: muted ? colors.textMuted : colors.text }, style]}>{children}</Text>;
 }
 
+/** Accessible button (min. 48 px touch target) with variants, icon and loading state. */
 export function Button({ title, onPress, variant = 'primary', icon, disabled, loading, accessibilityHint }: {
   title: string;
   onPress: () => void;
@@ -90,6 +100,7 @@ export function Button({ title, onPress, variant = 'primary', icon, disabled, lo
   );
 }
 
+/** Labelled text input with error or hint below it. */
 export function Field({ label, error, hint, ...props }: TextInputProps & { label: string; error?: string; hint?: string }) {
   const { colors } = useTheme();
   return (
@@ -106,6 +117,7 @@ export function Field({ label, error, hint, ...props }: TextInputProps & { label
   );
 }
 
+/** Single-choice chips exposed to screen readers as a radio group. */
 export function Chips<T extends string>({ options, value, onChange, label }: {
   options: { value: T; label: string }[];
   value: T | null;
@@ -137,6 +149,7 @@ export function Chips<T extends string>({ options, value, onChange, label }: {
   );
 }
 
+/** Tile with a key figure; estimates are marked with a text badge. */
 export function Stat({ label, value, caption, estimate }: { label: string; value: string; caption?: string; estimate?: boolean }) {
   const { colors } = useTheme();
   return (
@@ -160,6 +173,7 @@ export function EstimateBadge({ label = 'Dane szacunkowe' }: { label?: string })
   );
 }
 
+/** Information, warning or error message with an optional action. */
 export function Notice({ tone = 'info', title, children, action }: {
   tone?: 'info' | 'warning' | 'danger';
   title?: string;
@@ -184,6 +198,7 @@ export function Notice({ tone = 'info', title, children, action }: {
   );
 }
 
+/** Centered loading indicator. */
 export function Loading({ label = 'Wczytywanie…' }: { label?: string }) {
   const { colors } = useTheme();
   return (
@@ -194,6 +209,7 @@ export function Loading({ label = 'Wczytywanie…' }: { label?: string }) {
   );
 }
 
+/** Error message (offline vs. other) with an optional retry button. */
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const offline = error instanceof NetworkError;
   return (
@@ -206,6 +222,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
+/** Empty-data message with icon and optional action. */
 export function EmptyState({ icon, title, description, action }: { icon: IconName; title: string; description: string; action?: ReactNode }) {
   const { colors } = useTheme();
   return (
@@ -218,10 +235,12 @@ export function EmptyState({ icon, title, description, action }: { icon: IconNam
   );
 }
 
+/** Horizontal, wrapping layout row. */
 export function Row({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return <View style={[styles.row, style]}>{children}</View>;
 }
 
+/** Label–value line of a details list. */
 export function KeyValue({ label, value }: { label: string; value: string }) {
   const { colors } = useTheme();
   return (
@@ -232,6 +251,7 @@ export function KeyValue({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Shared styles of the UI primitives. */
 const styles = StyleSheet.create({
   screenContent: { padding: spacing.lg, gap: spacing.lg, width: '100%', maxWidth: 720, alignSelf: 'center' },
   card: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },

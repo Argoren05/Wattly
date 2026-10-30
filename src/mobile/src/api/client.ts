@@ -3,17 +3,25 @@ import Constants from 'expo-constants';
 import { ApiError, NetworkError } from './errors';
 import type { TokenResponse } from './types';
 
+/** API base URL: EXPO_PUBLIC_API_URL (build-time env) wins over the value baked into app config. */
 const baseUrl: string =
   process.env.EXPO_PUBLIC_API_URL ?? (Constants.expoConfig?.extra?.apiUrl as string | undefined) ?? 'http://localhost:5103';
 
+/**
+ * Builds the absolute URL of a versioned API path.
+ * @param path Path starting with '/', e.g. '/properties'.
+ */
 export const apiUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/api/v1${path}`;
 
+/** Access to the session tokens owned by AuthProvider. */
 interface TokenStore {
   getTokens(): TokenResponse | null;
   setTokens(tokens: TokenResponse | null): Promise<void>;
 }
 
+/** Token store registered by AuthProvider; null until the provider mounts. */
 let tokenStore: TokenStore | null = null;
+/** Shared refresh promise, so parallel 401 responses trigger only one refresh. */
 let refreshInFlight: Promise<boolean> | null = null;
 
 /** Connects the HTTP client with the auth state (called once by AuthProvider). */
@@ -21,8 +29,17 @@ export function configureTokenStore(store: TokenStore) {
   tokenStore = store;
 }
 
+/** Request body: JSON-serialisable object or multipart form data. */
 type Body = object | FormData | undefined;
 
+/**
+ * Sends a request with the bearer token, maps errors to ApiError/NetworkError and retries once after a token refresh on 401.
+ * @param method HTTP method.
+ * @param path API path (without /api/v1).
+ * @param body Optional JSON object or FormData.
+ * @param retry Whether a 401 may trigger a refresh and retry.
+ * @returns Parsed JSON body, or undefined for empty responses.
+ */
 export async function request<T>(method: string, path: string, body?: Body, retry = true): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   const token = tokenStore?.getTokens()?.accessToken;
@@ -53,6 +70,7 @@ export async function request<T>(method: string, path: string, body?: Body, retr
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+/** Converts a failed response into an ApiError using its Problem Details body. */
 async function toApiError(response: Response): Promise<ApiError> {
   try {
     const problem = (await response.json()) as { title?: string; code?: string; errors?: Record<string, string[]> };
@@ -62,6 +80,7 @@ async function toApiError(response: Response): Promise<ApiError> {
   }
 }
 
+/** Polish message for responses without a Problem Details title. */
 function defaultMessage(status: number): string {
   if (status === 401) return 'Sesja wygasła. Zaloguj się ponownie.';
   if (status === 403) return 'Brak uprawnień.';
@@ -97,6 +116,7 @@ async function refreshTokens(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/** Shorthand HTTP helpers used by the endpoint modules. */
 export const http = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: Body) => request<T>('POST', path, body ?? {}),

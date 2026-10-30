@@ -11,6 +11,7 @@ import { useRequiredProperty } from '../../../state/PropertyContext';
 import { spacing, useTheme } from '../../../theme/theme';
 import { addDays, formatDate, formatDateTime, formatKwh, formatMoney, formatPercent, toIsoDate } from '../../../utils/format';
 
+/** Start tab: billing-period forecast, cost and consumption so far, budget, 30-day chart and forecast assumptions. */
 export default function Dashboard() {
   const property = useRequiredProperty();
   const { colors } = useTheme();

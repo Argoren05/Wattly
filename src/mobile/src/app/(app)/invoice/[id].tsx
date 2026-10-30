@@ -9,6 +9,7 @@ import { keys, useInvalidateEnergyData } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { formatDate, formatKwh, formatMoney, formatPercent } from '../../../utils/format';
 
+/** Invoice details with comparison against the estimate and deletion. */
 export default function InvoiceDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const property = useRequiredProperty();

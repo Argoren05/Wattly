@@ -5,6 +5,7 @@ import { propertyApi } from '../api/endpoints';
 import type { Property } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 
+/** Properties of the user and the selected one. */
 interface PropertyState {
   properties: Property[];
   property: Property | null;
@@ -14,13 +15,19 @@ interface PropertyState {
   refetch(): void;
 }
 
+/** React context of the property state. */
 const PropertyContext = createContext<PropertyState | null>(null);
 
+/** Query keys of property data. */
 export const queryKeys = {
   properties: ['properties'] as const,
   property: (id: string) => ['property', id] as const,
 };
 
+/**
+ * Loads the user's properties after sign-in and keeps the selection.
+ * @param props.children App content.
+ */
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const { isSignedIn } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -42,6 +49,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   return <PropertyContext.Provider value={value}>{children}</PropertyContext.Provider>;
 }
 
+/** Property state; must be used inside PropertyProvider. */
 export function useProperty(): PropertyState {
   const context = useContext(PropertyContext);
   if (!context) throw new Error('useProperty must be used inside PropertyProvider');

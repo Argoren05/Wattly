@@ -78,10 +78,19 @@
 - [ ] Fotowoltaika.
 - [ ] Integracje z urządzeniami/licznikami, jeśli dostępne.
 
+## Etap 7 – dystrybucja i utrzymanie
+
+- [x] Konfiguracja instalatora (EAS Build: APK, AAB, iOS).
+- [x] Automatyczne aktualizacje OTA i wykrywanie nowych instalatorów.
+- [x] Wymuszona dokumentacja kodu i testy jednostkowe wszystkich warstw.
+- [ ] Założenie projektu EAS i sekretów CI (`EXPO_TOKEN`, `EAS_PROJECT_ID`).
+- [ ] Publiczne środowisko API (adres w `WATTLY_API_URL`).
+- [ ] Publikacja w Google Play / App Store.
+
 ## Definicja ukończenia zadania
 
 Zadanie uznaje się za ukończone, gdy:
-- kod jest zgodny z architekturą i konwencjami;
+- kod jest zgodny z architekturą i konwencjami oraz udokumentowany (XML docs / JSDoc);
 - walidacja i obsługa błędów są dodane;
 - testy odpowiednie do zmiany przechodzą;
 - migracje są przygotowane, jeśli zmienia się baza;

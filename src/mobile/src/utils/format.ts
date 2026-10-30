@@ -1,22 +1,38 @@
 // Pure formatting helpers (pl-PL). No React Native imports so they can be unit-tested with Node.
 
+/** Locale of all user-visible formatting. */
 const LOCALE = 'pl-PL';
 
+/**
+ * Formats energy, e.g. "12,3 kWh"; '–' for missing values.
+ * @param value Value in kWh.
+ * @param fractionDigits Decimal places.
+ */
 export function formatKwh(value: number | null | undefined, fractionDigits = 1): string {
   if (value === null || value === undefined) return '–';
   return `${value.toLocaleString(LOCALE, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })} kWh`;
 }
 
+/**
+ * Formats an amount in the given currency, e.g. "1 234,50 zł".
+ * @param value Amount.
+ * @param currency ISO 4217 code.
+ */
 export function formatMoney(value: number | null | undefined, currency = 'PLN'): string {
   if (value === null || value === undefined) return '–';
   return value.toLocaleString(LOCALE, { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/**
+ * Formats a percentage with one decimal place.
+ * @param value Percentage (e.g. 12.5).
+ */
 export function formatPercent(value: number | null | undefined): string {
   if (value === null || value === undefined) return '–';
   return `${value.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%`;
 }
 
+/** Pads a number to two digits. */
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** "2026-10-30" -> "30.10.2026" */
@@ -77,12 +93,22 @@ export function toOffsetIso(date: Date): string {
   return `${toIsoDate(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
 }
 
+/**
+ * Returns a new date shifted by whole days.
+ * @param date Start date.
+ * @param days Number of days (may be negative).
+ */
 export function addDays(date: Date, days: number): Date {
   const copy = new Date(date);
   copy.setDate(copy.getDate() + days);
   return copy;
 }
 
+/**
+ * Returns a new date shifted by calendar months.
+ * @param date Start date.
+ * @param months Number of months (may be negative).
+ */
 export function addMonths(date: Date, months: number): Date {
   const copy = new Date(date);
   copy.setMonth(copy.getMonth() + months);
