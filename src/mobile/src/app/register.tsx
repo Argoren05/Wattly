@@ -5,7 +5,7 @@ import { ApiError, errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 import { SocialSignIn } from '../components/SocialSignIn';
 import { newPasswordAutofill, usernameAutofill } from '../auth/autofill';
-import { Body, Button, Card, Field, Notice, Screen } from '../components/ui';
+import { Body, Button, Card, Field, Notice, PasswordField, Screen } from '../components/ui';
 
 /** Registration screen. */
 export default function Register() {
@@ -43,8 +43,8 @@ export default function Register() {
     <Screen>
       <Card>
         <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" {...usernameAutofill} />
-        <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry {...newPasswordAutofill} hint="Min. 10 znaków, mała i wielka litera oraz cyfra." />
-        <Field label="Powtórz hasło" value={confirm} onChangeText={setConfirm} secureTextEntry {...newPasswordAutofill} />
+        <PasswordField label="Hasło" value={password} onChangeText={setPassword} {...newPasswordAutofill} hint="Min. 10 znaków, mała i wielka litera oraz cyfra." />
+        <PasswordField label="Powtórz hasło" value={confirm} onChangeText={setConfirm} {...newPasswordAutofill} />
         {error ? <Notice tone="danger">{error}</Notice> : null}
         <Button title="Załóż konto" onPress={submit} loading={busy} />
         <SocialSignIn />

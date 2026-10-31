@@ -4,7 +4,7 @@ import { Text } from 'react-native';
 
 import { ApiError, NetworkError } from '../api/errors';
 import {
-  Body, Button, Card, Chips, EmptyState, ErrorState, EstimateBadge, Field, KeyValue, Loading, Notice, Row, Screen, SectionTitle, Stat, Title,
+  Body, Button, Card, Chips, EmptyState, ErrorState, EstimateBadge, Field, KeyValue, Loading, Notice, PasswordField, Row, Screen, SectionTitle, Stat, Title,
 } from './ui';
 
 test('Button calls onPress and is disabled while loading', async () => {
@@ -87,4 +87,30 @@ test('layout and text primitives render their content', async () => {
 test('Screen without scrolling renders children', async () => {
   await render(<Screen scroll={false}><Text>Treść</Text></Screen>);
   expect(screen.getByText('Treść')).toBeOnTheScreen();
+});
+
+describe('PasswordField', () => {
+  test('hides the password by default and the eye button toggles it', async () => {
+    const onChangeText = jest.fn();
+    await render(<PasswordField label="Hasło" value="Tajne123" onChangeText={onChangeText} hint="Min. 10 znaków" />);
+
+    const input = screen.getByLabelText('Hasło');
+    expect(input).toHaveProp('secureTextEntry', true);
+    expect(screen.getByText('Min. 10 znaków')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Pokaż hasło' }));
+    expect(screen.getByLabelText('Hasło')).toHaveProp('secureTextEntry', false);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ukryj hasło' }));
+    expect(screen.getByLabelText('Hasło')).toHaveProp('secureTextEntry', true);
+
+    await fireEvent.changeText(screen.getByLabelText('Hasło'), 'Nowe');
+    expect(onChangeText).toHaveBeenCalledWith('Nowe');
+  });
+
+  test('shows the error instead of the hint', async () => {
+    await render(<PasswordField label="Hasło" value="" error="Za krótkie" hint="Min. 10 znaków" />);
+    expect(screen.getByText('Za krótkie')).toBeOnTheScreen();
+    expect(screen.queryByText('Min. 10 znaków')).toBeNull();
+  });
 });

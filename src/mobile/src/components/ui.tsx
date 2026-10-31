@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
   type TextInputProps, type ViewStyle,
@@ -112,6 +112,41 @@ export function Field({ label, error, hint, ...props }: TextInputProps & { label
         style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: error ? colors.danger : colors.border }]}
         {...props}
       />
+      {error ? <Text style={[styles.help, { color: colors.danger }]}>{error}</Text> : hint ? <Text style={[styles.help, { color: colors.textMuted }]}>{hint}</Text> : null}
+    </View>
+  );
+}
+
+/**
+ * Password field with a button that shows or hides the typed password ("eye" icon).
+ * The password is hidden by default; the button announces its action to screen readers.
+ */
+export function PasswordField({ label, error, hint, ...props }: Omit<TextInputProps, 'secureTextEntry'> & { label: string; error?: string; hint?: string }) {
+  const { colors } = useTheme();
+  const [visible, setVisible] = useState(false);
+  return (
+    <View style={styles.field}>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <View style={[styles.input, styles.passwordRow, { backgroundColor: colors.surface, borderColor: error ? colors.danger : colors.border }]}>
+        <TextInput
+          accessibilityLabel={label}
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={[styles.passwordInput, { color: colors.text }]}
+          {...props}
+          secureTextEntry={!visible}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={visible ? 'Ukryj hasło' : 'Pokaż hasło'}
+          hitSlop={8}
+          onPress={() => setVisible((v) => !v)}
+          style={styles.passwordToggle}
+        >
+          <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.textMuted} />
+        </Pressable>
+      </View>
       {error ? <Text style={[styles.help, { color: colors.danger }]}>{error}</Text> : hint ? <Text style={[styles.help, { color: colors.textMuted }]}>{hint}</Text> : null}
     </View>
   );
@@ -267,6 +302,9 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600' },
   input: { minHeight: 48, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md, fontSize: 16 },
   help: { fontSize: 13 },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 },
+  passwordInput: { flex: 1, minHeight: 46, paddingHorizontal: spacing.md, fontSize: 16 },
+  passwordToggle: { paddingHorizontal: spacing.md, minHeight: 46, justifyContent: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: { minHeight: 40, paddingHorizontal: spacing.md, borderRadius: 999, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   stat: { flex: 1, minWidth: 140, borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xs },

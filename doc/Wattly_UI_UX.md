@@ -27,6 +27,11 @@ Proponowane zakładki:
 
 ## 4. Ekrany
 
+### Logowanie i rejestracja
+- E-mail i hasło z podpowiedziami dla menedżerów haseł (Bitwarden, Google) – DEC-028.
+- Hasło domyślnie ukryte; przycisk z ikoną oka („Pokaż hasło” / „Ukryj hasło”) przy każdym polu hasła.
+- Logowanie kontami Google, Microsoft, Facebook i Apple, gdy są skonfigurowane (DEC-024).
+
 ### Dashboard
 - Wybrana nieruchomość.
 - Koszt w bieżącym okresie.
