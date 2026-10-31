@@ -17,6 +17,7 @@ beforeEach(() => {
   jest.mocked(catalogApi.suppliers).mockResolvedValue(data.suppliers);
   jest.mocked(catalogApi.tariffs).mockResolvedValue(data.tariffs);
   jest.mocked(propertyApi.create).mockResolvedValue(property({ billingAnchorDate: '2026-10-01' }));
+  jest.mocked(propertyApi.update).mockResolvedValue(property({ billingAnchorDate: '2026-10-01', ppeCode: '590322428100789765' }));
   jest.mocked(propertyApi.setContract).mockResolvedValue(contract());
   jest.mocked(meterApi.create).mockResolvedValue(meter());
   jest.mocked(propertyApi.createRatePlan).mockResolvedValue(ratePlan());
@@ -40,12 +41,17 @@ test('completes the whole wizard and saves each step', async () => {
 
   await fireEvent.press(screen.getByRole('radio', { name: /^.*G12$/ }));
   await fireEvent.changeText(screen.getByLabelText('Moc umowna kW (opcjonalnie)'), '7');
+  await fireEvent.changeText(screen.getByLabelText('Umowa obowiązuje od'), '2026-02-07');
   await press('Dalej');
   await screen.findByText('Krok 5 z 8');
-  expect(propertyApi.setContract).toHaveBeenCalledWith('p1', expect.objectContaining({ tariffId: 't12', operatorId: 'o1', supplierId: null, contractedPowerKw: 7, validFrom: '2026-10-01' }));
+  expect(propertyApi.setContract).toHaveBeenCalledWith('p1', expect.objectContaining({ tariffId: 't12', operatorId: 'o1', supplierId: null, contractedPowerKw: 7, validFrom: '2026-02-07' }));
 
+  await fireEvent.changeText(screen.getByLabelText('Numer PPE (opcjonalnie)'), '590322428100789765');
   await press('Dalej');
   await screen.findByText('Krok 6 z 8');
+  expect(propertyApi.update).toHaveBeenCalledWith('p1', expect.objectContaining({ ppeCode: '590322428100789765', billingAnchorDate: '2026-10-01' }));
+  // The rate plan starts with the contract by default.
+  expect(screen.getByLabelText('Obowiązuje od')).toBeOnTheScreen();
   expect(meterApi.create).toHaveBeenCalledWith('p1', expect.objectContaining({
     registers: [expect.objectContaining({ zoneCode: 'DAY' }), expect.objectContaining({ zoneCode: 'NIGHT' })],
   }));
@@ -69,10 +75,6 @@ test('completes the whole wizard and saves each step', async () => {
 test('validates the first step and reading values', async () => {
   await renderWithProviders(<Onboarding />, { properties: [], waitForProperty: false });
   await screen.findByText('Krok 1 z 8');
-
-  await fireEvent.changeText(screen.getByLabelText('Początek okresu rozliczeniowego'), '2026-13-01');
-  await press('Dalej');
-  expect(await screen.findByText(/RRRR-MM-DD/)).toBeOnTheScreen();
 
   await fireEvent.changeText(screen.getByLabelText('Początek okresu rozliczeniowego'), '2026-10-01');
   await fireEvent.changeText(screen.getByLabelText('Miesięczny budżet brutto (opcjonalnie)'), '-5');

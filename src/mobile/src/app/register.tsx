@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ApiError, errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 import { SocialSignIn } from '../components/SocialSignIn';
+import { newPasswordAutofill, usernameAutofill } from '../auth/autofill';
 import { Body, Button, Card, Field, Notice, Screen } from '../components/ui';
 
 /** Registration screen. */
@@ -41,9 +42,9 @@ export default function Register() {
   return (
     <Screen>
       <Card>
-        <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-        <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" hint="Min. 10 znaków, mała i wielka litera oraz cyfra." />
-        <Field label="Powtórz hasło" value={confirm} onChangeText={setConfirm} secureTextEntry autoComplete="new-password" />
+        <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" {...usernameAutofill} />
+        <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry {...newPasswordAutofill} hint="Min. 10 znaków, mała i wielka litera oraz cyfra." />
+        <Field label="Powtórz hasło" value={confirm} onChangeText={setConfirm} secureTextEntry {...newPasswordAutofill} />
         {error ? <Notice tone="danger">{error}</Notice> : null}
         <Button title="Załóż konto" onPress={submit} loading={busy} />
         <SocialSignIn />

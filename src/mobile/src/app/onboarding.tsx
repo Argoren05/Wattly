@@ -6,12 +6,15 @@ import { Text, View } from 'react-native';
 import { errorMessage, ValidationError } from '../api/errors';
 import { meterApi, propertyApi, readingApi } from '../api/endpoints';
 import type { Meter, Property, Tariff } from '../api/types';
+import { DateField } from '../components/DateField';
+import { PpeField, ppeError } from '../components/PpeField';
 import { RatePlanForm } from '../components/RatePlanForm';
 import { Body, Button, Card, Chips, ErrorState, Field, Loading, Notice, Screen, SectionTitle, Title } from '../components/ui';
 import { useCatalog } from '../hooks/queries';
-import { queryKeys } from '../state/PropertyContext';
+import { queryKeys, useProperty } from '../state/PropertyContext';
 import { spacing, useTheme } from '../theme/theme';
 import { parseDecimal, parseIsoDate, parseLocalDateTime, toIsoDate, toLocalDateTimeText } from '../utils/format';
+import { normalizePpe } from '../utils/gs1';
 
 const STEPS = ['Nieruchomość', 'Operator', 'Sprzedawca', 'Taryfa', 'Licznik', 'Stawki', 'Pierwszy odczyt', 'Gotowe'] as const;
 
@@ -19,6 +22,7 @@ const STEPS = ['Nieruchomość', 'Operator', 'Sprzedawca', 'Taryfa', 'Licznik', 
 export default function Onboarding() {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
+  const { select, properties } = useProperty();
   const catalog = useCatalog();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,9 @@ export default function Onboarding() {
   const [supplierId, setSupplierId] = useState<string | null>(null);
   const [tariff, setTariff] = useState<Tariff | null>(null);
   const [power, setPower] = useState('');
+  // Empty = same as the start of the billing period (the most common case); the user can pick another day.
+  const [contractFrom, setContractFrom] = useState('');
+  const [ppe, setPpe] = useState('');
   const [meter, setMeter] = useState<Meter | null>(null);
   const [serial, setSerial] = useState('');
   const [when, setWhen] = useState(toLocalDateTimeText(new Date()));
@@ -57,7 +64,7 @@ export default function Onboarding() {
     const date = parseIsoDate(anchor);
     const budgetValue = budget.trim() ? parseDecimal(budget) : null;
     if (!name.trim()) throw new ValidationError('Podaj nazwę nieruchomości.');
-    if (!date) throw new ValidationError('Podaj datę początku okresu w formacie RRRR-MM-DD.');
+    if (!date) throw new ValidationError('Wybierz datę początku okresu rozliczeniowego.');
     if (budget.trim() && (budgetValue === null || budgetValue <= 0)) throw new ValidationError('Budżet musi być dodatnią kwotą.');
     const body = { name: name.trim(), billingPeriodMonths: Number(months), billingAnchorDate: date, monthlyBudget: budgetValue };
     setProperty(property ? await propertyApi.update(property.id, body) : await propertyApi.create(body));
@@ -68,12 +75,22 @@ export default function Onboarding() {
     const powerValue = power.trim() ? parseDecimal(power) : null;
     if (power.trim() && (powerValue === null || powerValue <= 0)) throw new ValidationError('Moc umowna musi być dodatnią liczbą.');
     await propertyApi.setContract(property.id, {
-      tariffId: tariff.id, operatorId, supplierId, contractedPowerKw: powerValue, validFrom: property.billingAnchorDate, validTo: null,
+      tariffId: tariff.id, operatorId, supplierId, contractedPowerKw: powerValue, validFrom: contractFrom || property.billingAnchorDate, validTo: null,
     });
   });
 
   const saveMeter = () => run.mutate(async () => {
     if (!property || !tariff) return;
+    const ppeProblem = ppeError(ppe);
+    if (ppeProblem) throw new ValidationError(ppeProblem);
+    const ppeCode = normalizePpe(ppe) || null;
+    if (ppeCode !== property.ppeCode) {
+      setProperty(await propertyApi.update(property.id, {
+        name: property.name, city: property.city, billingPeriodMonths: property.billingPeriodMonths, billingAnchorDate: property.billingAnchorDate,
+        monthlyBudget: property.monthlyBudget, timeZoneId: property.timeZoneId, currencyCode: property.currencyCode, countryCode: property.countryCode,
+        ppeCode,
+      }));
+    }
     const registers = tariff.zones.length === 0
       ? [{ name: 'Pobór', registerType: 'Import' as const, zoneCode: null, code: '1.8.0' }]
       : tariff.zones.map((z, i) => ({ name: z.name, registerType: 'Import' as const, zoneCode: z.code, code: `1.8.${i + 1}` }));
@@ -85,7 +102,7 @@ export default function Onboarding() {
   const saveReadings = () => run.mutate(async () => {
     if (!meter) return;
     const readingAt = parseLocalDateTime(when);
-    if (!readingAt) throw new ValidationError('Użyj formatu daty RRRR-MM-DD GG:MM.');
+    if (!readingAt) throw new ValidationError('Wybierz datę i godzinę odczytu.');
     for (const register of meter.registers) {
       const value = parseDecimal(values[register.id] ?? '');
       if (value === null || value < 0) throw new ValidationError(`Podaj wskazanie rejestru „${register.name}”.`);
@@ -97,6 +114,8 @@ export default function Onboarding() {
 
   const finish = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.properties });
+    // When adding another property, switch the app to the one just configured.
+    if (property) select(property.id);
     router.replace('/(app)/(tabs)');
   };
 
@@ -120,9 +139,11 @@ export default function Onboarding() {
             <Field label="Nazwa" value={name} onChangeText={setName} />
             <Chips label="Okres rozliczeniowy" value={months} onChange={setMonths}
               options={[{ value: '1', label: '1 mies.' }, { value: '2', label: '2 mies.' }, { value: '6', label: '6 mies.' }, { value: '12', label: '12 mies.' }]} />
-            <Field label="Początek okresu rozliczeniowego" value={anchor} onChangeText={setAnchor} placeholder="RRRR-MM-DD" hint="Data z ostatniej faktury – od niej liczone są kolejne okresy." />
+            <DateField label="Początek okresu rozliczeniowego" value={anchor} onChange={setAnchor}
+              hint="Dzień po końcu okresu z ostatniej faktury rozliczeniowej – od niego liczone są kolejne okresy." />
             <Field label="Miesięczny budżet brutto (opcjonalnie)" value={budget} onChangeText={setBudget} keyboardType="decimal-pad" placeholder="np. 200" />
             <Button title="Dalej" onPress={saveProperty} loading={run.isPending} />
+            {properties.length > 0 && !property ? <Button title="Anuluj" variant="ghost" onPress={() => router.back()} /> : null}
           </>
         )}
 
@@ -150,6 +171,8 @@ export default function Onboarding() {
               options={tariffs.map((t) => ({ value: t.id, label: t.code }))} />
             {tariff ? <Body muted>{tariff.name}. {tariff.description}</Body> : <Body muted>Grupę taryfową (np. G11, G12) znajdziesz na fakturze.</Body>}
             <Field label="Moc umowna kW (opcjonalnie)" value={power} onChangeText={setPower} keyboardType="decimal-pad" />
+            <DateField label="Umowa obowiązuje od" value={contractFrom || property?.billingAnchorDate || anchor} onChange={setContractFrom}
+              hint="Data zawarcia umowy lub zmiany taryfy. Jeśli nie wiesz – zostaw początek okresu rozliczeniowego." />
             <Button title="Dalej" onPress={saveContract} disabled={!tariff} loading={run.isPending} />
           </>
         )}
@@ -162,6 +185,7 @@ export default function Onboarding() {
                 : `Licznik ${tariff.zones.length}-strefowy – rejestry: ${tariff.zones.map((z) => z.name).join(', ')}.`}
             </Body>
             <Field label="Numer licznika (opcjonalnie)" value={serial} onChangeText={setSerial} />
+            <PpeField value={ppe} onChange={setPpe} />
             <Button title="Dalej" onPress={saveMeter} loading={run.isPending} />
           </>
         )}
@@ -170,7 +194,7 @@ export default function Onboarding() {
           <>
             <SectionTitle>Twoje stawki</SectionTitle>
             <Body muted>Przepisz stawki z ostatniej faktury, aby Wattly mógł liczyć koszty. Możesz to zrobić później w Ustawieniach.</Body>
-            <RatePlanForm tariff={tariff} defaultValidFrom={property.billingAnchorDate} submitLabel="Zapisz stawki" busy={run.isPending}
+            <RatePlanForm tariff={tariff} defaultValidFrom={contractFrom || property.billingAnchorDate} submitLabel="Zapisz stawki" busy={run.isPending}
               onSubmit={(request) => run.mutate(async () => { await propertyApi.createRatePlan(property.id, request); })} />
             {skip}
           </>
@@ -179,7 +203,7 @@ export default function Onboarding() {
         {step === 6 && meter && (
           <>
             <Body muted>Wprowadź aktualne wskazanie licznika. To punkt startowy obliczeń.</Body>
-            <Field label="Data i godzina" value={when} onChangeText={setWhen} placeholder="RRRR-MM-DD GG:MM" />
+            <DateField label="Data i godzina" mode="datetime" value={when} onChange={setWhen} maximumDate={new Date()} />
             {meter.registers.map((r) => (
               <Field key={r.id} label={`${r.name} (kWh)`} value={values[r.id] ?? ''} keyboardType="decimal-pad"
                 onChangeText={(t) => setValues((v) => ({ ...v, [r.id]: t }))} />

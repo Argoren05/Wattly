@@ -34,6 +34,15 @@ public static class PropertyEndpoints
         properties.MapGet("/{propertyId:guid}/energy-contracts", (Guid propertyId, EnergyContractService s, CancellationToken ct) =>
             s.ListAsync(propertyId, ct)).WithTags("Contracts");
 
+        var contracts = api.MapGroup("/energy-contracts").WithTags("Contracts");
+        contracts.MapPut("/{contractId:guid}", (Guid contractId, EnergyContractRequest request, EnergyContractService s, CancellationToken ct) =>
+            s.UpdateAsync(contractId, request, ct));
+        contracts.MapDelete("/{contractId:guid}", async (Guid contractId, EnergyContractService s, CancellationToken ct) =>
+        {
+            await s.DeleteAsync(contractId, ct);
+            return Results.NoContent();
+        });
+
         properties.MapGet("/{propertyId:guid}/rate-plans", (Guid propertyId, RatePlanService s, CancellationToken ct) =>
             s.ListForPropertyAsync(propertyId, ct)).WithTags("Rate plans");
         properties.MapPost("/{propertyId:guid}/rate-plans", async (Guid propertyId, RatePlanRequest request, RatePlanService s, CancellationToken ct) =>
@@ -44,6 +53,13 @@ public static class PropertyEndpoints
 
         var plans = api.MapGroup("/rate-plans").WithTags("Rate plans");
         plans.MapGet("/{ratePlanId:guid}", (Guid ratePlanId, RatePlanService s, CancellationToken ct) => s.GetAsync(ratePlanId, ct));
+        plans.MapPut("/{ratePlanId:guid}", (Guid ratePlanId, RatePlanRequest request, RatePlanService s, CancellationToken ct) =>
+            s.UpdatePropertyPlanAsync(ratePlanId, request, ct));
+        plans.MapDelete("/{ratePlanId:guid}", async (Guid ratePlanId, RatePlanService s, CancellationToken ct) =>
+        {
+            await s.DeletePropertyPlanAsync(ratePlanId, ct);
+            return Results.NoContent();
+        });
         plans.MapPost("/{ratePlanId:guid}/end", (Guid ratePlanId, EndRatePlanRequest request, RatePlanService s, CancellationToken ct) =>
             s.EndAsync(ratePlanId, request, ct));
     }

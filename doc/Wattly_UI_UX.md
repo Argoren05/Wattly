@@ -11,7 +11,8 @@ Wattly ma być nowoczesną, spokojną i czytelną aplikacją użytkową. Najważ
 - Czytelne wartości liczbowe i jednostki.
 - Spójne formatowanie dat, kWh i walut.
 - Dostępność: kontrast, skalowanie tekstu, opisy ikon.
-- Jasny i ciemny motyw.
+- Jasny i ciemny motyw: tryb „Jak w telefonie” (domyślny), „Jasny” albo „Ciemny” oraz kolor motywu (zielony, niebieski, fioletowy, pomarańczowy) – Ustawienia → Wygląd (DEC-029). Każdy kolor ma kontrast WCAG AA (tekst przycisku ≥ 4,5:1, elementy interfejsu ≥ 3:1) sprawdzany testem.
+- Daty wybierane z kalendarza systemowego i wyświetlane w formacie z ustawień telefonu (DEC-028).
 - Kolor nie może być jedynym sposobem przekazywania informacji.
 - Każdy wykres powinien mieć opis, jednostkę, zakres i możliwość odczytania wartości.
 
@@ -66,7 +67,8 @@ Proponowane zakładki:
 - Porównanie prognozy z rzeczywistą kwotą.
 
 ### Ustawienia
-- Nieruchomości.
+- Nieruchomości: wybór, dodawanie (kreator konfiguracji), edycja z numerem PPE (wpisywanym lub skanowanym), usuwanie z potwierdzeniem.
+- Wygląd: tryb jasny/ciemny/systemowy i kolor motywu – zapisywane na telefonie.
 - Liczniki i rejestry.
 - Operator i sprzedawca.
 - Taryfa i stawki.

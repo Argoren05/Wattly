@@ -38,6 +38,59 @@ public class EnergyContractServiceTests
     }
 
     [Fact]
+    public async Task Update_corrects_start_date_of_existing_contract()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var tariff = t.AddTariff();
+        var service = new EnergyContractService(t.Db, t.User, t.Clock);
+        var wrong = await service.UpsertAsync(property.Id, new EnergyContractRequest(null, null, tariff.Id, 4m, new DateOnly(2026, 10, 1), null), CancellationToken.None);
+
+        var fixedContract = await service.UpdateAsync(wrong.Id, new EnergyContractRequest(null, null, tariff.Id, 4m, new DateOnly(2026, 2, 7), null), CancellationToken.None);
+
+        Assert.Equal(wrong.Id, fixedContract.Id);
+        Assert.Equal(new DateOnly(2026, 2, 7), Assert.Single(await service.ListAsync(property.Id, CancellationToken.None)).ValidFrom);
+    }
+
+    [Fact]
+    public async Task Update_reports_overlap_instead_of_shortening_other_contracts()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var tariff = t.AddTariff();
+        var service = new EnergyContractService(t.Db, t.User, t.Clock);
+        await service.UpsertAsync(property.Id, new EnergyContractRequest(null, null, tariff.Id, null, new DateOnly(2026, 1, 1), null), CancellationToken.None);
+        var later = await service.UpsertAsync(property.Id, new EnergyContractRequest(null, null, tariff.Id, null, new DateOnly(2026, 6, 1), null), CancellationToken.None);
+
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            service.UpdateAsync(later.Id, new EnergyContractRequest(null, null, tariff.Id, null, new DateOnly(2026, 3, 1), null), CancellationToken.None));
+
+        Assert.Equal("contract.overlap", conflict.Code);
+        Assert.Equal(new DateOnly(2026, 5, 31), (await service.ListAsync(property.Id, CancellationToken.None)).Single(c => c.Id != later.Id).ValidTo);
+    }
+
+    [Fact]
+    public async Task Delete_removes_contract_and_foreign_contracts_are_not_found()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var foreign = t.AddProperty(ownerId: Guid.NewGuid());
+        var tariff = t.AddTariff();
+        var service = new EnergyContractService(t.Db, t.User, t.Clock);
+        var own = await service.UpsertAsync(property.Id, new EnergyContractRequest(null, null, tariff.Id, null, new DateOnly(2026, 1, 1), null), CancellationToken.None);
+        var foreignContract = new Wattly.Domain.Households.EnergyContract { PropertyId = foreign.Id, TariffId = tariff.Id, ValidFrom = new DateOnly(2026, 1, 1) };
+        t.Db.EnergyContracts.Add(foreignContract);
+        await t.Db.SaveChangesAsync();
+
+        await service.DeleteAsync(own.Id, CancellationToken.None);
+
+        Assert.Empty(await service.ListAsync(property.Id, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => service.DeleteAsync(foreignContract.Id, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            service.UpdateAsync(foreignContract.Id, new EnergyContractRequest(null, null, tariff.Id, null, new DateOnly(2026, 1, 1), null), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Same_start_date_updates_existing_contract()
     {
         using var t = new TestContext();

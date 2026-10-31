@@ -169,6 +169,20 @@ describe('settings', () => {
     expect(screen.getByRole('radio', { name: /Dom/ })).toBeSelected();
   });
 
+  test('changes the mode and the theme colour and adds a property', async () => {
+    jest.mocked(authApi.me).mockResolvedValue({ id: 'u', email: 'jan@example.com', roles: [] });
+    await renderWithProviders(<Settings />);
+
+    expect(await screen.findByRole('radio', { name: /Jak w telefonie/ })).toBeSelected();
+    await fireEvent.press(screen.getByRole('radio', { name: /Ciemny/ }));
+    await fireEvent.press(screen.getByRole('radio', { name: /Niebieski/ }));
+    expect(screen.getByRole('radio', { name: /Ciemny/ })).toBeSelected();
+    expect(screen.getByRole('radio', { name: /Niebieski/ })).toBeSelected();
+
+    await fireEvent.press(screen.getByRole('button', { name: /Dodaj nieruchomość/ }));
+    expect(router.push).toHaveBeenCalledWith('/onboarding');
+  });
+
   test('sign out returns to the login screen', async () => {
     jest.mocked(authApi.me).mockResolvedValue({ id: 'u', email: 'jan@example.com', roles: [] });
     jest.mocked(authApi.logout).mockResolvedValue(undefined);

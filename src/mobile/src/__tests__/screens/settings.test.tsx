@@ -1,6 +1,7 @@
 /** Tests of the configuration screens: property, contract, rates and meters. */
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 
 import ContractSettings from '../../app/(app)/settings/contract';
 import MetersSettings from '../../app/(app)/settings/meters';
@@ -35,35 +36,87 @@ describe('property settings', () => {
     expect(propertyApi.update).toHaveBeenCalledWith('p1', expect.objectContaining({ name: 'Dom', billingPeriodMonths: 12, monthlyBudget: 150.5 }));
   });
 
-  test('shows local validation errors', async () => {
+  test('validates the PPE number and saves it without spaces', async () => {
+    jest.mocked(propertyApi.update).mockResolvedValue(property());
     await renderWithProviders(<PropertySettings />);
-    await fireEvent.changeText(screen.getByLabelText('Początek okresu rozliczeniowego'), 'zła');
-    await fireEvent.press(screen.getByRole('button', { name: /Zapisz/ }));
 
-    expect(await screen.findByText('Podaj datę w formacie RRRR-MM-DD.')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Numer PPE (opcjonalnie)'), '590322428100789766');
+    expect(screen.getByText(/18 cyfr i cyfrę kontrolną/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: /^Zapisz$/ }));
     expect(propertyApi.update).not.toHaveBeenCalled();
+
+    await fireEvent.changeText(screen.getByLabelText('Numer PPE (opcjonalnie)'), '5903 2242 8100 789765');
+    await fireEvent.changeText(screen.getByLabelText('Początek okresu rozliczeniowego'), '2026-02-07');
+    await fireEvent.press(screen.getByRole('button', { name: /^Zapisz$/ }));
+    await waitFor(() => expect(propertyApi.update).toHaveBeenCalledWith('p1', expect.objectContaining({
+      ppeCode: '590322428100789765', billingAnchorDate: '2026-02-07',
+    })));
+  });
+
+  test('deletes the property only after confirmation', async () => {
+    const alert = jest.spyOn(Alert, 'alert');
+    jest.mocked(propertyApi.remove).mockResolvedValue(undefined);
+    await renderWithProviders(<PropertySettings />, { properties: [property(), property({ id: 'p2', name: 'Dom' })] });
+
+    alert.mockImplementationOnce((_t, _m, buttons) => buttons?.[0]?.onPress?.()); // "Anuluj"
+    await fireEvent.press(screen.getByRole('button', { name: /Usuń nieruchomość/ }));
+    await waitFor(() => expect(alert).toHaveBeenCalledTimes(1));
+    expect(propertyApi.remove).not.toHaveBeenCalled();
+
+    alert.mockImplementationOnce((_t, _m, buttons) => buttons?.[1]?.onPress?.()); // "Usuń"
+    await fireEvent.press(screen.getByRole('button', { name: /Usuń nieruchomość/ }));
+    await waitFor(() => expect(propertyApi.remove).toHaveBeenCalledWith('p1'));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/(app)/(tabs)/settings'));
   });
 });
 
 describe('contract settings', () => {
-  test('is prefilled from the current contract and saves changes', async () => {
+  test('corrects the start date of a saved contract', async () => {
+    jest.mocked(propertyApi.contracts).mockResolvedValue([contract({ validFrom: '2026-10-01' })]);
+    jest.mocked(propertyApi.updateContract).mockResolvedValue(contract());
+    await renderWithProviders(<ContractSettings />);
+
+    expect(await screen.findByText(/G12 · od/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: /Popraw/ }));
+    expect(screen.getByDisplayValue('7')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Obowiązuje od'), '2026-02-07');
+    await fireEvent.press(screen.getByRole('button', { name: /Zapisz poprawki/ }));
+
+    await waitFor(() => expect(propertyApi.updateContract).toHaveBeenCalledWith('c1', expect.objectContaining({ validFrom: '2026-02-07', contractedPowerKw: 7 })));
+    expect(propertyApi.setContract).not.toHaveBeenCalled();
+  });
+
+  test('adds a new contract pre-filled from the latest one', async () => {
+    jest.mocked(propertyApi.contracts).mockResolvedValue([contract()]);
     jest.mocked(propertyApi.setContract).mockResolvedValue(contract());
     await renderWithProviders(<ContractSettings />);
 
-    expect(await screen.findByDisplayValue('7')).toBeOnTheScreen();
+    await fireEvent.press(await screen.findByRole('button', { name: /Nowa umowa od/ }));
     expect(screen.getByRole('radio', { name: /^.*G12$/ })).toBeSelected();
     await fireEvent.press(screen.getByRole('radio', { name: /^.*G11$/ }));
+    await fireEvent.changeText(screen.getByLabelText('Obowiązuje od'), '2026-11-01');
     await fireEvent.press(screen.getByRole('button', { name: /Zapisz umowę/ }));
 
-    await waitFor(() => expect(propertyApi.setContract).toHaveBeenCalledWith('p1', expect.objectContaining({ tariffId: 't11', contractedPowerKw: 7 })));
+    await waitFor(() => expect(propertyApi.setContract).toHaveBeenCalledWith('p1', expect.objectContaining({ tariffId: 't11', validFrom: '2026-11-01' })));
   });
 
-  test('without contract requires a tariff', async () => {
-    jest.mocked(propertyApi.contract).mockRejectedValue(new ApiError(404, 'Brak'));
+  test('deletes a contract after confirmation', async () => {
+    jest.spyOn(Alert, 'alert').mockImplementationOnce((_t, _m, buttons) => buttons?.[1]?.onPress?.());
+    jest.mocked(propertyApi.contracts).mockResolvedValue([contract()]);
+    jest.mocked(propertyApi.removeContract).mockResolvedValue(undefined);
+    await renderWithProviders(<ContractSettings />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: /Usuń/ }));
+    await waitFor(() => expect(propertyApi.removeContract).toHaveBeenCalledWith('c1'));
+  });
+
+  test('without contract shows the form and requires a tariff', async () => {
+    jest.mocked(propertyApi.contracts).mockResolvedValue([]);
     await renderWithProviders(<ContractSettings />);
 
     await fireEvent.press(await screen.findByRole('button', { name: /Zapisz umowę/ }));
     expect(await screen.findByText('Wybierz taryfę.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Anuluj/ })).toBeNull();
   });
 });
 
@@ -77,7 +130,7 @@ describe('rate settings', () => {
     expect(await screen.findByText('Moje stawki')).toBeOnTheScreen();
     expect(screen.getByText(/0,5 zł\/kWh \+ 23% VAT/)).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByRole('button', { name: /Dodaj nowe stawki/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Nowe stawki od/ }));
     await fireEvent.changeText(screen.getByLabelText('Obowiązuje od'), '2026-11-01');
     await fireEvent.changeText(screen.getAllByLabelText(/Stawka netto/)[0]!, '0,7');
     await fireEvent.changeText(screen.getByLabelText('Źródło stawek'), 'Nowy cennik');
@@ -85,6 +138,32 @@ describe('rate settings', () => {
 
     await waitFor(() => expect(propertyApi.createRatePlan).toHaveBeenCalled());
     expect(propertyApi.endRatePlan).toHaveBeenCalledWith('rp1', '2026-10-31');
+  });
+
+  test('corrects a saved plan in place, keeping its rates in the form', async () => {
+    jest.mocked(propertyApi.ratePlans).mockResolvedValue([ratePlan()]);
+    jest.mocked(propertyApi.updateRatePlan).mockResolvedValue(ratePlan());
+    await renderWithProviders(<RatesSettings />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: /Popraw/ }));
+    expect(screen.getByDisplayValue('0,5')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Obowiązuje od'), '2026-01-01');
+    await fireEvent.press(screen.getByRole('button', { name: /Zapisz poprawki/ }));
+
+    await waitFor(() => expect(propertyApi.updateRatePlan).toHaveBeenCalledWith('rp1', expect.objectContaining({
+      validFrom: '2026-01-01', components: [expect.objectContaining({ netRate: 0.5, taxRate: 0.23 })],
+    })));
+    expect(propertyApi.endRatePlan).not.toHaveBeenCalled();
+  });
+
+  test('deletes a plan after confirmation', async () => {
+    jest.spyOn(Alert, 'alert').mockImplementationOnce((_t, _m, buttons) => buttons?.[1]?.onPress?.());
+    jest.mocked(propertyApi.ratePlans).mockResolvedValue([ratePlan()]);
+    jest.mocked(propertyApi.removeRatePlan).mockResolvedValue(undefined);
+    await renderWithProviders(<RatesSettings />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: /Usuń/ }));
+    await waitFor(() => expect(propertyApi.removeRatePlan).toHaveBeenCalledWith('rp1'));
   });
 
   test('without contract explains that a tariff is needed', async () => {

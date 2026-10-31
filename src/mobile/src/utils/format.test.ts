@@ -1,6 +1,6 @@
 /** Tests of the pure formatting and parsing helpers. */
 import {
-  addDays, addMonths, formatDate, formatDateTime, formatKwh, formatMoney, formatPercent, parseDecimal, parseIsoDate,
+  addDays, addMonths, formatDate, formatDateTime, formatKwh, formatMoney, formatPercent, parseDecimal, parseFieldDate, parseIsoDate,
   parseLocalDateTime, toIsoDate, toLocalDateTimeText, toOffsetIso,
 } from './format';
 
@@ -47,11 +47,21 @@ describe('dates', () => {
 });
 
 describe('formatting', () => {
-  test('formats dates in Polish style', () => {
-    expect(formatDate('2026-10-30')).toBe('30.10.2026');
+  test('formats dates in the format of the given locale (the phone setting by default)', () => {
+    expect(formatDate('2026-10-30', 'pl-PL')).toBe('30.10.2026');
+    expect(formatDate('2026-10-30', 'en-US')).toBe('10/30/2026');
+    expect(formatDate('2026-10-30')).toBe(new Date(2026, 9, 30).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' }));
     expect(formatDate(null)).toBe('–');
-    expect(formatDateTime(new Date(2026, 9, 30, 8, 5).toISOString())).toBe('30.10.2026, 08:05');
+    expect(formatDateTime(new Date(2026, 9, 30, 8, 5).toISOString(), 'pl-PL')).toBe('30.10.2026, 08:05');
     expect(formatDateTime(undefined)).toBe('–');
+  });
+
+  test('parses the text of date fields', () => {
+    expect(parseFieldDate('2026-02-07')).toEqual(new Date(2026, 1, 7));
+    expect(parseFieldDate('2026-02-07 18:30')).toEqual(new Date(2026, 1, 7, 18, 30));
+    expect(parseFieldDate('2026-02-31')).toBeNull();
+    expect(parseFieldDate('2026-02-07 24:00')).toBeNull();
+    expect(parseFieldDate('wczoraj')).toBeNull();
   });
 
   test('formats numbers with units and placeholders', () => {

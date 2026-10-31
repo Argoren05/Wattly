@@ -12,6 +12,7 @@ namespace Wattly.Application.Properties;
 /// <param name="BillingPeriodMonths">Billing period length in months.</param>
 /// <param name="BillingAnchorDate">First day of a billing period.</param>
 /// <param name="MonthlyBudget">Optional monthly gross budget.</param>
+/// <param name="PpeCode">Metering point number (PPE, 18-digit GS1 GSRN).</param>
 /// <param name="CreatedAt">Creation time.</param>
 /// <param name="UpdatedAt">Last modification time.</param>
 public sealed record PropertyDto(
@@ -26,6 +27,7 @@ public sealed record PropertyDto(
     int BillingPeriodMonths,
     DateOnly BillingAnchorDate,
     decimal? MonthlyBudget,
+    string? PpeCode,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -40,6 +42,7 @@ public sealed record PropertyDto(
 /// <param name="BillingPeriodMonths">1, 2, 3, 6 or 12.</param>
 /// <param name="BillingAnchorDate">First day of a billing period (default: first day of the current month).</param>
 /// <param name="MonthlyBudget">Monthly gross budget; null removes it.</param>
+/// <param name="PpeCode">Metering point number (PPE); spaces are ignored, null removes it.</param>
 public sealed record PropertyRequest(
     string Name,
     string? AddressLine,
@@ -50,7 +53,8 @@ public sealed record PropertyRequest(
     string? CurrencyCode,
     int? BillingPeriodMonths,
     DateOnly? BillingAnchorDate,
-    decimal? MonthlyBudget);
+    decimal? MonthlyBudget,
+    string? PpeCode = null);
 
 /// <summary>Energy contract returned by the API.</summary>
 /// <param name="Id">Identifier.</param>

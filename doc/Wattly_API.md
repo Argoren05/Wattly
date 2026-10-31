@@ -46,9 +46,10 @@ Endpointy ASP.NET Core Identity (`MapIdentityApi`):
 ## 3. Nieruchomości
 
 - `GET /properties`
-- `POST /properties` `{ name, addressLine?, postalCode?, city?, countryCode?, timeZoneId?, currencyCode?, billingPeriodMonths?, billingAnchorDate?, monthlyBudget? }`
+- `POST /properties` `{ name, addressLine?, postalCode?, city?, countryCode?, timeZoneId?, currencyCode?, billingPeriodMonths?, billingAnchorDate?, monthlyBudget?, ppeCode? }`
+  - `ppeCode` – numer PPE (18 cyfr, kod GS1 GSRN); spacje i myślniki są usuwane, a błędna cyfra kontrolna daje 400 z błędem pola `PpeCode`
 - `GET /properties/{propertyId}`
-- `PUT /properties/{propertyId}`
+- `PUT /properties/{propertyId}` – pełna aktualizacja; pominięte `monthlyBudget` i `ppeCode` są usuwane, więc klient wysyła bieżące wartości
 - `DELETE /properties/{propertyId}` – usuwa nieruchomość wraz z licznikami, odczytami, umowami, cennikami własnymi, fakturami i załącznikami
 
 ## 4. Katalog, umowy i cenniki
@@ -58,9 +59,13 @@ Endpointy ASP.NET Core Identity (`MapIdentityApi`):
 - `GET /properties/{propertyId}/energy-contract` – umowa obowiązująca dziś (lub ostatnia)
 - `PUT /properties/{propertyId}/energy-contract` `{ supplierId?, operatorId?, tariffId, contractedPowerKw?, validFrom, validTo? }` – umowa z tym samym `validFrom` jest aktualizowana, wcześniejsza otwarta umowa zamykana dzień wcześniej
 - `GET /properties/{propertyId}/energy-contracts` – historia umów
+- `PUT /energy-contracts/{contractId}` (body jak wyżej) – poprawka istniejącej umowy, np. błędnej daty początku; inne umowy nie są skracane, nakładanie się okresów daje 409 `contract.overlap` (DEC-028)
+- `DELETE /energy-contracts/{contractId}` – usunięcie umowy wpisanej przez pomyłkę
 - `GET /properties/{propertyId}/rate-plans`, `POST /properties/{propertyId}/rate-plans` – cenniki własne użytkownika
 - `GET /rate-plans/{ratePlanId}`
-- `POST /rate-plans/{ratePlanId}/end` `{ validTo }` – skrócenie okresu obowiązywania (cenniki są niezmienne)
+- `PUT /rate-plans/{ratePlanId}` (body jak przy tworzeniu) – poprawka własnego cennika: nazwa, daty, źródło i wszystkie składniki są zastępowane; cenniki katalogowe → 403 (DEC-028)
+- `DELETE /rate-plans/{ratePlanId}` – usunięcie własnego cennika; cenniki katalogowe → 403
+- `POST /rate-plans/{ratePlanId}/end` `{ validTo }` – skrócenie okresu obowiązywania (jedyna zmiana dozwolona dla cenników katalogowych)
 
 Przykład cennika:
 ```json

@@ -66,7 +66,7 @@ cd src/backend && dotnet test                                     # backend (tes
 cd src/mobile && npm run typecheck && npm run lint && npm test    # mobile
 ```
 
-Szczegóły – konfiguracja, migracje, sekrety CI, wydawanie wersji – są w [instrukcji dla deweloperów](doc/Wattly_Development.md). Serwer produkcyjny działa na Google Cloud Run z bazą Neon – [instrukcja wdrożenia](doc/Wattly_Deployment_CloudRun.md).
+Szczegóły – konfiguracja, migracje, sekrety CI, wydawanie wersji – są w [instrukcji dla deweloperów](doc/Wattly_Development.md). Serwer produkcyjny działa na Google Cloud Run z bazą Neon – [jak to działa](doc/Wattly_Deployment_CloudRun.md) i [konfiguracja krok po kroku](doc/Wattly_Konfiguracja_Neon_GoogleCloud.md).
 
 ## Dokumentacja
 
@@ -80,4 +80,5 @@ Szczegóły – konfiguracja, migracje, sekrety CI, wydawanie wersji – są w [
 - [Rejestr decyzji](doc/Wattly_Decisions.md)
 - [Uruchomienie i development](doc/Wattly_Development.md)
 - [Wdrożenie serwera na Google Cloud Run + Neon](doc/Wattly_Deployment_CloudRun.md)
+- [Konfiguracja Neon + Google Cloud krok po kroku](doc/Wattly_Konfiguracja_Neon_GoogleCloud.md)
 - [Wdrożenie na Railway (alternatywa, nieaktualne)](doc/Wattly_Deployment_Railway.md)

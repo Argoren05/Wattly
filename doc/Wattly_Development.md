@@ -119,6 +119,7 @@ Aplikacja aktualizuje się na dwóch poziomach (DEC-022):
    - Workflow **Mobile OTA update** publikuje aktualizację po każdym pushu do `main`, który zmienia `src/mobile`. Wcześniej uruchamia typecheck, lint i testy.
    - Aplikacja sprawdza aktualizacje przy każdym uruchomieniu i po powrocie na pierwszy plan (najczęściej co 30 min). Pobiera je w tle, a następnie pokazuje baner „Nowa wersja aplikacji jest gotowa – Uruchom ponownie”. Restart jest decyzją użytkownika, więc niezapisane formularze nie przepadają.
    - `runtimeVersion` używa polityki `fingerprint`: aktualizacja trafia wyłącznie do instalacji ze zgodnym kodem natywnym.
+     Po dodaniu modułu natywnego (np. `expo-camera`, kalendarz) starsze instalatory przestają dostawać aktualizacje – trzeba zbudować nowy instalator (*Actions → Mobile build*), podnieść `version` i `android.versionCode` w `app.json` i zainstalować go na telefonach.
 2. **Nowy instalator (zmiany natywne)** – endpoint `GET /api/v1/app/release` porównuje zainstalowaną wersję z konfiguracją API (`MobileApp:Android|Ios`):
    - `LatestVersion` nowsza od zainstalowanej → baner „Dostępna wersja X” z przyciskiem pobrania;
    - `MinimumVersion` nowsza od zainstalowanej → ekran blokujący „Wymagana aktualizacja”;
@@ -150,7 +151,7 @@ Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środow
 
 ## Wdrożenie produkcyjne
 
-Serwer na Google Cloud Run + baza Neon: [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md). Konfiguracja budowania i wdrożenia: `src/backend/cloudbuild.yaml`.
+Serwer na Google Cloud Run + baza Neon: [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md), konfiguracja krok po kroku: [Wattly_Konfiguracja_Neon_GoogleCloud.md](Wattly_Konfiguracja_Neon_GoogleCloud.md). Konfiguracja budowania i wdrożenia: `src/backend/cloudbuild.yaml`.
 
 Klucze szyfrujące tokeny logowania (ASP.NET Data Protection) są w tabeli `DataProtectionKeys`, więc restart lub uśpienie serwera nie wylogowuje użytkowników.
 

@@ -12,6 +12,7 @@ import { propertyApi } from '../api/endpoints';
 import type { Property } from '../api/types';
 import { AuthProvider } from '../auth/AuthContext';
 import { PropertyProvider, useProperty } from '../state/PropertyContext';
+import { AppearanceProvider } from '../theme/theme';
 import { UpdateProvider, type UpdateProviderDeps } from '../updates/UpdateContext';
 import { property as sampleProperty, tokens } from './fixtures';
 
@@ -55,15 +56,17 @@ export async function renderWithProviders(ui: ReactElement, options: RenderOptio
 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } } });
   await render(
-    <QueryClientProvider client={client}>
-      <AuthProvider>
-        <PropertyProvider>
-          <UpdateProvider deps={updates}>
-            {waitForProperty ? <PropertyGate>{ui}</PropertyGate> : ui}
-          </UpdateProvider>
-        </PropertyProvider>
-      </AuthProvider>
-    </QueryClientProvider>,
+    <AppearanceProvider>
+      <QueryClientProvider client={client}>
+        <AuthProvider>
+          <PropertyProvider>
+            <UpdateProvider deps={updates}>
+              {waitForProperty ? <PropertyGate>{ui}</PropertyGate> : ui}
+            </UpdateProvider>
+          </PropertyProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppearanceProvider>,
   );
 
   // Wait until the session is restored and the property list is loaded.

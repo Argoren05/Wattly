@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Alert, Platform, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ApiError, errorMessage } from '../api/errors';
 import { readingApi } from '../api/endpoints';
@@ -9,18 +9,9 @@ import type { RegisterOption } from '../hooks/queries';
 import { keys } from '../hooks/queries';
 import { formatDateTime, formatKwh, parseDecimal, parseLocalDateTime, toLocalDateTimeText } from '../utils/format';
 import { spacing } from '../theme/theme';
+import { confirmAsync } from './confirm';
+import { DateField } from './DateField';
 import { Button, Card, Chips, Field, KeyValue, Notice } from './ui';
-
-/** Asks the user to confirm an unusual reading; resolves true for "save anyway". */
-function confirmAsync(title: string, message: string): Promise<boolean> {
-  if (Platform.OS === 'web') return Promise.resolve(globalThis.confirm?.(`${title}\n\n${message}`) ?? false);
-  return new Promise((resolve) =>
-    Alert.alert(title, message, [
-      { text: 'Popraw', style: 'cancel', onPress: () => resolve(false) },
-      { text: 'Zapisz mimo to', onPress: () => resolve(true) },
-    ]),
-  );
-}
 
 /** Shared form for new readings and corrections, with preview against the previous reading and anomaly confirmation. */
 export function ReadingForm({ registers, initialRegisterId, initial, submitLabel, save, onSaved }: {
@@ -64,7 +55,7 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
       onSaved(await save(registerId, request));
     } catch (e) {
       if (e instanceof ApiError && e.code === 'reading.anomaly_requires_confirmation') {
-        if (await confirmAsync('Nietypowy odczyt', e.message.replace(/ Aby zapisać.*$/, ''))) {
+        if (await confirmAsync('Nietypowy odczyt', e.message.replace(/ Aby zapisać.*$/, ''), 'Zapisz mimo to', { cancelLabel: 'Popraw' })) {
           try {
             onSaved(await save(registerId, { ...request, confirmAnomaly: true }));
           } catch (e2) {
@@ -87,7 +78,7 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
         <Chips label="Licznik i rejestr" value={registerId} onChange={setRegisterId}
           options={registers.map((r) => ({ value: r.id, label: `${r.meterName}: ${r.name}` }))} />
       ) : null}
-      <Field label="Data i godzina" value={when} onChangeText={setWhen} error={errors.when} placeholder="RRRR-MM-DD GG:MM" autoCorrect={false} />
+      <DateField label="Data i godzina" mode="datetime" value={when} onChange={setWhen} error={errors.when} maximumDate={new Date()} />
       <Field
         label={`Wskazanie (${register?.unit ?? 'kWh'})`}
         value={value}

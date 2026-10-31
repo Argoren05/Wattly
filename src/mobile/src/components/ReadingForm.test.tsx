@@ -43,11 +43,9 @@ test('warns about values lower than the last reading and validates input', async
   await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '100');
   expect(await screen.findByText('Wskazanie jest niższe niż ostatni odczyt.')).toBeOnTheScreen();
 
-  await fireEvent.changeText(screen.getByLabelText('Data i godzina'), 'wczoraj');
   await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '');
   await fireEvent.press(screen.getByRole('button', { name: /Zapisz odczyt/ }));
 
-  expect(screen.getByText('Użyj formatu RRRR-MM-DD GG:MM.')).toBeOnTheScreen();
   expect(screen.getByText('Podaj wskazanie licznika.')).toBeOnTheScreen();
   expect(save).not.toHaveBeenCalled();
 });
@@ -74,7 +72,7 @@ test('anomaly is saved after the user confirms it', async () => {
 
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   expect(save.mock.calls[1][1]).toEqual(expect.objectContaining({ confirmAnomaly: true }));
-  expect(Alert.alert).toHaveBeenCalledWith('Nietypowy odczyt', 'Nietypowo duży wzrost.', expect.any(Array));
+  expect(Alert.alert).toHaveBeenCalledWith('Nietypowy odczyt', 'Nietypowo duży wzrost.', expect.any(Array), expect.objectContaining({ cancelable: true }));
 });
 
 test('anomaly is not saved when the user wants to fix it', async () => {

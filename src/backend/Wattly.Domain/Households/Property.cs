@@ -40,6 +40,11 @@ public class Property : Entity
     /// <summary>First day of any billing period; subsequent periods start every <see cref="BillingPeriodMonths"/>.</summary>
     public DateOnly BillingAnchorDate { get; set; }
 
+    /// <summary>
+    /// Metering point number (PPE) printed on invoices: an 18-digit GS1 GSRN code with a check digit (optional).
+    /// </summary>
+    public string? PpeCode { get; set; }
+
     /// <summary>Optional monthly budget (gross) used by the dashboard.</summary>
     public decimal? MonthlyBudget { get; set; }
 

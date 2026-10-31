@@ -57,6 +57,8 @@ export interface Property {
   billingPeriodMonths: number;
   billingAnchorDate: string;
   monthlyBudget: number | null;
+  /** Metering point number (PPE) – 18-digit GS1 code from the invoice. */
+  ppeCode: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,6 +75,8 @@ export interface PropertyRequest {
   billingPeriodMonths?: number | null;
   billingAnchorDate?: string | null;
   monthlyBudget?: number | null;
+  /** Omitted or null removes the stored number – send the current value when editing other fields. */
+  ppeCode?: string | null;
 }
 
 /** Operator or supplier from the catalog. */

@@ -6,7 +6,9 @@ namespace Wattly.Application.Catalog;
 
 /// <summary>
 /// Price lists. Catalog plans are managed by administrators; users may enter their own rates for a property
-/// (e.g. copied from an invoice). Plans are immutable – only the end of validity can be set, so history is preserved.
+/// (e.g. copied from an invoice). Catalog plans are immutable – only the end of validity can be set. The user's own
+/// plans can also be corrected or deleted (typing errors, wrong dates – DEC-028); saved calculations keep a copy of the
+/// rates they used, so corrections never change past results.
 /// </summary>
 /// <param name="db">Database context.</param>
 /// <param name="currentUser">Signed-in user.</param>
@@ -84,8 +86,87 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         return ToDto(await Query().FirstAsync(p => p.Id == id, ct));
     }
 
+    /// <summary>
+    /// Corrects the user's own rate plan in place: name, dates, source and all components are replaced.
+    /// </summary>
+    /// <param name="id">Rate plan.</param>
+    /// <param name="request">Corrected plan.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task<RatePlanDto> UpdatePropertyPlanAsync(Guid id, RatePlanRequest request, CancellationToken ct)
+    {
+        var plan = await GetOwnPlanAsync(id, ct);
+        var (currency, components) = await ValidateAsync(request, ct);
+        await EnsureNoOverlapAsync(request, plan.PropertyId, excludeId: id, ct);
+
+        // Components are value objects of the plan: replacing them is simpler and safer than diffing.
+        // Removed from the tracked collection, they are deleted as orphans of the required relationship. New rows are
+        // added explicitly: their ids are generated in code, so via the navigation EF would treat them as existing rows.
+        plan.Components.Clear();
+        db.TariffRateComponents.AddRange(components.Select(c => ToEntity(c, id)));
+        plan.TariffId = request.TariffId;
+        plan.SupplierId = request.SupplierId;
+        plan.OperatorId = request.OperatorId;
+        plan.Name = request.Name.Trim();
+        plan.ValidFrom = request.ValidFrom;
+        plan.ValidTo = request.ValidTo;
+        plan.CurrencyCode = currency;
+        plan.SourceReference = request.SourceReference.Trim();
+        plan.PublishedAt = request.PublishedAt;
+
+        await db.SaveChangesAsync(ct);
+        return ToDto(await Query().FirstAsync(p => p.Id == id, ct));
+    }
+
+    /// <summary>Deletes the user's own rate plan (components are removed with it).</summary>
+    /// <param name="id">Rate plan.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task DeletePropertyPlanAsync(Guid id, CancellationToken ct)
+    {
+        var plan = await GetOwnPlanAsync(id, ct);
+        db.TariffRatePlans.Remove(plan);
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Loads a plan that belongs to a property of the current user; catalog plans cannot be corrected.</summary>
+    private async Task<TariffRatePlan> GetOwnPlanAsync(Guid id, CancellationToken ct)
+    {
+        var plan = await db.TariffRatePlans.Include(p => p.Components).FirstOrDefaultAsync(p => p.Id == id, ct)
+                   ?? throw new NotFoundException("Cennik");
+        if (plan.PropertyId is not { } propertyId)
+            throw new ForbiddenException();
+        await db.EnsurePropertyAccessAsync(currentUser.UserId, propertyId, ct);
+        return plan;
+    }
+
     /// <summary>Validates and stores a plan; rejects overlaps within the same scope.</summary>
     private async Task<RatePlanDto> CreateAsync(RatePlanRequest request, Guid? propertyId, CancellationToken ct)
+    {
+        var (currency, components) = await ValidateAsync(request, ct);
+        await EnsureNoOverlapAsync(request, propertyId, excludeId: null, ct);
+
+        var plan = new TariffRatePlan
+        {
+            TariffId = request.TariffId,
+            SupplierId = request.SupplierId,
+            OperatorId = request.OperatorId,
+            PropertyId = propertyId,
+            Name = request.Name.Trim(),
+            ValidFrom = request.ValidFrom,
+            ValidTo = request.ValidTo,
+            CurrencyCode = currency,
+            SourceReference = request.SourceReference.Trim(),
+            PublishedAt = request.PublishedAt,
+            CreatedAt = clock.GetUtcNow(),
+        };
+        plan.Components = components.Select(c => ToEntity(c, plan.Id)).ToList();
+
+        db.TariffRatePlans.Add(plan);
+        await db.SaveChangesAsync(ct);
+        return ToDto(await Query().FirstAsync(p => p.Id == plan.Id, ct));
+    }
+
+    /// <summary>Validates the request (tariff, texts, dates, currency, components) and returns normalized values.</summary>
+    private async Task<(string Currency, IReadOnlyList<RateComponentRequest> Components)> ValidateAsync(RatePlanRequest request, CancellationToken ct)
     {
         var tariff = await db.Tariffs.AsNoTracking().FirstOrDefaultAsync(t => t.Id == request.TariffId, ct);
         var currency = (Validation.Clean(request.CurrencyCode) ?? "PLN").ToUpperInvariant();
@@ -107,43 +188,33 @@ public sealed class RatePlanService(IWattlyDbContext db, ICurrentUser currentUse
         for (var i = 0; i < components.Count; i++)
             ValidateComponent(validation, components[i], $"Components[{i}]", zoneCodes);
         validation.ThrowIfInvalid();
+        return (currency, components);
+    }
 
+    /// <summary>Two plans of the same scope (tariff, supplier, operator, property) must not be valid on the same day.</summary>
+    private async Task EnsureNoOverlapAsync(RatePlanRequest request, Guid? propertyId, Guid? excludeId, CancellationToken ct)
+    {
         var sameScope = await db.TariffRatePlans
-            .Where(p => p.TariffId == request.TariffId && p.SupplierId == request.SupplierId && p.OperatorId == request.OperatorId && p.PropertyId == propertyId)
+            .Where(p => p.TariffId == request.TariffId && p.SupplierId == request.SupplierId && p.OperatorId == request.OperatorId
+                        && p.PropertyId == propertyId && p.Id != excludeId)
             .ToListAsync(ct);
         var overlapping = sameScope.FirstOrDefault(p => p.Overlaps(request.ValidFrom, request.ValidTo));
         if (overlapping is not null)
             throw new ConflictException("rate_plan.overlap",
-                $"Cennik „{overlapping.Name}” ({overlapping.ValidFrom:yyyy-MM-dd} – {overlapping.ValidTo?.ToString("yyyy-MM-dd") ?? "bezterminowo"}) obowiązuje w tym samym okresie. Najpierw zakończ jego obowiązywanie.");
-
-        var plan = new TariffRatePlan
-        {
-            TariffId = request.TariffId,
-            SupplierId = request.SupplierId,
-            OperatorId = request.OperatorId,
-            PropertyId = propertyId,
-            Name = request.Name.Trim(),
-            ValidFrom = request.ValidFrom,
-            ValidTo = request.ValidTo,
-            CurrencyCode = currency,
-            SourceReference = request.SourceReference.Trim(),
-            PublishedAt = request.PublishedAt,
-            CreatedAt = clock.GetUtcNow(),
-            Components = components.Select(c => new TariffRateComponent
-            {
-                ComponentType = c.ComponentType,
-                Name = c.Name.Trim(),
-                ZoneCode = Validation.Clean(c.ZoneCode)?.ToUpperInvariant(),
-                Unit = c.Unit,
-                NetRate = c.NetRate,
-                TaxRate = c.TaxRate,
-            }).ToList(),
-        };
-
-        db.TariffRatePlans.Add(plan);
-        await db.SaveChangesAsync(ct);
-        return ToDto(await Query().FirstAsync(p => p.Id == plan.Id, ct));
+                $"Cennik „{overlapping.Name}” ({overlapping.ValidFrom:yyyy-MM-dd} – {overlapping.ValidTo?.ToString("yyyy-MM-dd") ?? "bezterminowo"}) obowiązuje w tym samym okresie. Zakończ jego obowiązywanie albo popraw daty.");
     }
+
+    /// <summary>Creates a component entity from a validated request.</summary>
+    private static TariffRateComponent ToEntity(RateComponentRequest c, Guid planId) => new()
+    {
+        TariffRatePlanId = planId,
+        ComponentType = c.ComponentType,
+        Name = c.Name.Trim(),
+        ZoneCode = Validation.Clean(c.ZoneCode)?.ToUpperInvariant(),
+        Unit = c.Unit,
+        NetRate = c.NetRate,
+        TaxRate = c.TaxRate,
+    };
 
     /// <summary>Validates one component: rates, VAT, unit allowed for the type and zone of the tariff.</summary>
     private static void ValidateComponent(Validation validation, RateComponentRequest c, string prefix, IReadOnlySet<string> zoneCodes)
