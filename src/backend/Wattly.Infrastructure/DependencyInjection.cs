@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wattly.Application.Common;
+using Wattly.Infrastructure.Hosting;
 using Wattly.Infrastructure.Identity;
 using Wattly.Infrastructure.Identity.External;
 using Wattly.Infrastructure.Persistence;
@@ -18,8 +19,8 @@ public static class DependencyInjection
     /// <param name="configuration">Application configuration.</param>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Wattly")
-                               ?? throw new InvalidOperationException("Connection string 'ConnectionStrings:Wattly' is not configured.");
+        var connectionString = DatabaseConnection.Resolve(configuration)
+                               ?? throw new InvalidOperationException("Database is not configured: set ConnectionStrings:Wattly or DATABASE_URL.");
 
         services.AddDbContext<WattlyDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IWattlyDbContext>(sp => sp.GetRequiredService<WattlyDbContext>());
@@ -40,7 +41,11 @@ public static class DependencyInjection
         services.AddExternalAuthentication(configuration);
 
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        var storageProvider = configuration[$"{StorageOptions.SectionName}:Provider"] ?? "Local";
+        if (storageProvider.Equals("Database", StringComparison.OrdinalIgnoreCase))
+            services.AddScoped<IFileStorage, DatabaseFileStorage>();
+        else
+            services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddHealthChecks().AddDbContextCheck<WattlyDbContext>("database", tags: ["ready"]);

@@ -87,7 +87,8 @@
 - [x] Token robota Expo w sekrecie CI `EXPO_TOKEN`.
 - [x] Logowanie kontami Google, Microsoft, Facebook i Apple (kod).
 - [ ] Rejestracja aplikacji u dostawców logowania i ustawienie identyfikatorów (EAS + API).
-- [ ] Publiczne środowisko API (adres w zmiennej EAS `EXPO_PUBLIC_API_URL`).
+- [x] Przygotowanie serwera do wdrożenia na Railway (DEC-026).
+- [ ] Uruchomienie serwera na Railway i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
 - [ ] Publikacja w Google Play / App Store.
 
 ## Definicja ukończenia zadania

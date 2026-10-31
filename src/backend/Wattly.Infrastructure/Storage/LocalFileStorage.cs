@@ -10,6 +10,9 @@ public sealed class StorageOptions
     /// <summary>Configuration section name.</summary>
     public const string SectionName = "Storage";
 
+    /// <summary>Where attachments are kept: <c>Local</c> (directory, default) or <c>Database</c> (PostgreSQL).</summary>
+    public string Provider { get; set; } = "Local";
+
     /// <summary>Root directory for attachments; must be outside the web root and not publicly served.</summary>
     public string LocalPath { get; set; } = "App_Data/attachments";
 }

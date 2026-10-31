@@ -1,5 +1,5 @@
 /** Tests of the HTTP client: headers, error mapping and token refresh. */
-import { apiUrl, configureTokenStore, http } from './client';
+import { apiUrl, configureTokenStore, http, wakeUp } from './client';
 import { ApiError, NetworkError } from './errors';
 import type { TokenResponse } from './types';
 
@@ -12,6 +12,7 @@ describe('http client', () => {
   const fetchMock = jest.fn();
 
   beforeEach(() => {
+    wakeUp.delayMs = 0;
     tokens = { tokenType: 'Bearer', accessToken: 'old', expiresIn: 1, refreshToken: 'r1' };
     configureTokenStore({ getTokens: () => tokens, setTokens: async (t) => void (tokens = t) });
     global.fetch = fetchMock;
@@ -50,6 +51,28 @@ describe('http client', () => {
   test('uses default messages when the body is not JSON', async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 429, json: async () => { throw new Error(); } } as unknown as Response);
     await expect(http.get('/x')).rejects.toThrow('Zbyt wiele prób');
+  });
+
+  test('repeats a request once when the sleeping server is waking up', async () => {
+    fetchMock.mockResolvedValueOnce(response(502)).mockResolvedValueOnce(response(200, { ok: true }));
+
+    await expect(http.post('/auth/login', { email: 'a' })).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][1].body).toBe('{"email":"a"}');
+  });
+
+  test('reports the error when the server is still unavailable after the retry', async () => {
+    fetchMock.mockResolvedValue(response(503));
+
+    await expect(http.get('/x')).rejects.toBeInstanceOf(ApiError);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('other server errors are not repeated', async () => {
+    fetchMock.mockResolvedValueOnce(response(500, { title: 'Błąd' }));
+
+    await expect(http.get('/x')).rejects.toThrow('Błąd');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test('wraps network failures', async () => {

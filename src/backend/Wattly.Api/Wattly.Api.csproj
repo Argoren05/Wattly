@@ -2,7 +2,20 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--
+      Low-memory runtime settings for a small deployment (a few users, billed per GB of RAM – DEC-026):
+      workstation GC instead of server GC (one small heap instead of one per CPU core), no background GC thread,
+      and invariant globalization (no ICU data loaded; texts and formats used by the API are culture-independent).
+    -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ask the GC to compact more aggressively to return memory (0–9; 5 is a moderate trade-off for CPU). -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Wattly.Infrastructure\Wattly.Infrastructure.csproj" />

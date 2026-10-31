@@ -12,6 +12,7 @@ using Wattly.Domain.Invoices;
 using Wattly.Domain.Metering;
 using Wattly.Domain.Tariffs;
 using Wattly.Infrastructure.Identity;
+using Wattly.Infrastructure.Storage;
 
 namespace Wattly.Infrastructure.Persistence;
 
@@ -52,6 +53,9 @@ public class WattlyDbContext(DbContextOptions<WattlyDbContext> options, ICurrent
     public DbSet<Attachment> Attachments => Set<Attachment>();
     /// <inheritdoc />
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+
+    /// <summary>Attachment contents when <c>Storage:Provider</c> is <c>Database</c>.</summary>
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
 
     /// <summary>Default precision for decimals (money and readings must never be floating point).</summary>
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

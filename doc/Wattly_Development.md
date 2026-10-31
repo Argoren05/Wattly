@@ -139,10 +139,18 @@ W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawien
 | `Storage:LocalPath` | Katalog załączników (poza web root) |
 | `Cors:AllowedOrigins` | Dozwolone originy (tylko dla wersji web) |
 | `Http:RedirectToHttps` | Przekierowanie na HTTPS (gdy TLS nie kończy się na proxy) |
+| `DATABASE_URL` | Alternatywa dla `ConnectionStrings:Wattly` w formacie `postgresql://…` (Railway) |
+| `PORT` | Port nasłuchu ustawiany przez platformę hostingową |
+| `Storage:Provider` | `Local` (katalog, domyślnie) lub `Database` (załączniki w PostgreSQL) |
+| `Http:TrustForwardedHeaders` | `true` za zaufanym proxy (Railway) – prawdziwy adres IP klienta dla limitów logowań |
 | `MobileApp:Android:*`, `MobileApp:Ios:*` | Najnowsza i minimalna wersja instalatora, link do pobrania, opis zmian |
 | `Auth:External:*` | Logowanie Google, Microsoft, Apple, Facebook (identyfikatory klientów; sekret Facebooka) |
 
 Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środowiskowe lub menedżer sekretów – nigdy przez repozytorium.
+
+## Wdrożenie produkcyjne
+
+Serwer na Railway: [Wattly_Deployment_Railway.md](Wattly_Deployment_Railway.md).
 
 ## Znane ograniczenia MVP
 
@@ -150,7 +158,7 @@ Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środow
 - Powiadomienia, OCR, eksport, tryb offline – kolejne etapy roadmapy.
 - Rejestry oddawania energii (PV) są przechowywane, ale nie wchodzą do kalkulacji kosztów.
 - Godziny stref taryfowych nie są modelowane – zużycie stref pochodzi z rejestrów licznika.
-- Storage załączników jest lokalny (jedna instancja API); przy skalowaniu potrzebny storage obiektowy zgodny z `IFileStorage`.
+- Załączniki: katalog lokalny albo baza danych (`Storage:Provider`). Przy dużej liczbie użytkowników lepszy będzie magazyn obiektowy zgodny z `IFileStorage`.
 
 ## Standard komentarzy i testów (DEC-023)
 
