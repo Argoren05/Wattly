@@ -87,7 +87,9 @@ describe('readings', () => {
     await fireEvent.press(screen.getByRole('radio', { name: /Z historią zmian/ }));
     await waitFor(() => expect(readingApi.list).toHaveBeenCalledWith('rNight', 1, true));
 
-    await fireEvent.press(screen.getAllByRole('button', { name: /Odczyt/ })[0]!);
+    // Switching the filter reloads the list – wait until the rows are rendered again.
+    const rows = await screen.findAllByRole('button', { name: /Odczyt/ });
+    await fireEvent.press(rows[0]!);
     expect(router.push).toHaveBeenCalledWith({ pathname: '/reading/[id]', params: { id: 'read1' } });
   });
 
