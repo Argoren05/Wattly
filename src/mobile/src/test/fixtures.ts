@@ -7,7 +7,7 @@ export const tokens: TokenResponse = { tokenType: 'Bearer', accessToken: 'access
 
 export const property = (o: Partial<Property> = {}): Property => ({
   id: 'p1', name: 'Mieszkanie', addressLine: null, postalCode: null, city: null, countryCode: 'PL', timeZoneId: 'Europe/Warsaw',
-  currencyCode: 'PLN', billingPeriodMonths: 2, billingAnchorDate: '2026-09-01', monthlyBudget: null,
+  currencyCode: 'PLN', billingPeriodMonths: 2, billingAnchorDate: '2026-09-01', monthlyBudget: null, ppeCode: null,
   createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z', ...o,
 });
 

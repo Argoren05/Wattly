@@ -44,9 +44,6 @@ test('requires source, at least one rate and valid numbers', async () => {
   await submit();
   expect(screen.getByText(/Nieprawidłowa stawka/)).toBeOnTheScreen();
 
-  await fireEvent.changeText(screen.getByLabelText('Obowiązuje od'), '2026-02-31');
-  await submit();
-  expect(screen.getByText(/RRRR-MM-DD/)).toBeOnTheScreen();
   expect(onSubmit).not.toHaveBeenCalled();
 });
 

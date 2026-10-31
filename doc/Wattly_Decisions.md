@@ -79,7 +79,7 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 ## DEC-017 – Źródła cen (realizacja DEC-008)
 - Data: 2026-10-30
 - Status: Propozycja
-- Decyzja: obsługiwane są cenniki katalogowe (administrator) oraz własne cenniki użytkownika dla nieruchomości. Jeżeli nieruchomość ma własny cennik dla taryfy z umowy obowiązujący danego dnia – używany jest wyłącznie on; w przeciwnym razie sumowane są cenniki katalogowe pasujące do taryfy, sprzedawcy i operatora. Seed nie zawiera żadnych stawek. Cenniki są niezmienne – zmiana cen = zakończenie obowiązywania i nowy cennik. Zapisane kalkulacje przechowują migawkę stawek.
+- Decyzja: obsługiwane są cenniki katalogowe (administrator) oraz własne cenniki użytkownika dla nieruchomości. Jeżeli nieruchomość ma własny cennik dla taryfy z umowy obowiązujący danego dnia – używany jest wyłącznie on; w przeciwnym razie sumowane są cenniki katalogowe pasujące do taryfy, sprzedawcy i operatora. Seed nie zawiera żadnych stawek. Cenniki są niezmienne – zmiana cen = zakończenie obowiązywania i nowy cennik. Zapisane kalkulacje przechowują migawkę stawek. *(Własne cenniki użytkownika można poprawiać i usuwać – zob. DEC-028.)*
 - Do decyzji: czy dopuszczać łączenie własnych stawek energii z katalogowymi stawkami dystrybucji.
 
 ## DEC-018 – Układ repozytorium
@@ -155,6 +155,18 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
   - obsługa `channel_binding` w adresie bazy (format Neona).
 - Odrzucone: `min-instances=1` (stały koszt bez zysku dla 3 osób); pooler Neona (tryb transakcyjny, problemy z migracjami); Cloud SQL (stała opłata za instancję); osobne uruchamianie migracji przez Cloud Run Jobs (dodatkowa konfiguracja – migracje przy starcie trwają ułamek sekundy).
 - Konsekwencje: pierwsze zapytanie po przerwie trwa kilka sekund (start serwera i wybudzenie bazy); Google wymaga karty – limitem kosztów jest jedna instancja i alert budżetu; klucze szyfrujące są w bazie niezaszyfrowane, więc dostęp do bazy chroni także tokeny.
+
+## DEC-028 – Poprawianie umów i cenników, numer PPE, kalendarz
+- Data: 2026-10-31
+- Status: Zatwierdzona
+- Kontekst: przy konfiguracji umowa dostała błędną datę początku, a ekran pozwalał tylko dodać kolejną umowę, co kończyło się konfliktem dat. Cenniki własne były niezmienne (DEC-017), więc nie dało się też poprawić literówki w stawkach.
+- Decyzja:
+  - umowy i **własne** cenniki mają dwie ścieżki: „Popraw” (`PUT /energy-contracts/{id}`, `PUT /rate-plans/{id}`) zmienia zapis w miejscu, a „Nowa … od” dodaje kolejną wersję i zamyka poprzednią. Błędne wpisy można usunąć. Cenniki katalogowe zostają niezmienne;
+  - poprawka nigdy nie skraca innych umów ani cenników – nakładanie się okresów jest zgłaszane (409), żeby nic nie zmieniło się po cichu;
+  - numer PPE (kod GS1 GSRN, 18 cyfr z cyfrą kontrolną) jest polem nieruchomości `Property.PpeCode`, sprawdzanym na serwerze i w aplikacji, wpisywanym ręcznie lub skanowanym aparatem (`expo-camera`, kody GS1-128/DataMatrix z identyfikatorem 8018, QR);
+  - daty wybiera się z natywnego kalendarza (`@react-native-community/datetimepicker`) i wyświetla w formacie ustawionym w telefonie (język i region systemu);
+  - pola logowania mają podpowiedzi autouzupełniania rozpoznawane przez Androida (`username`, `password`, `password-new`), dzięki czemu działają menedżery haseł (np. Bitwarden).
+- Konsekwencje: zapisane kalkulacje przechowują kopię stawek, więc poprawki zmieniają tylko prognozy i nowe kalkulacje. Aparat i kalendarz to moduły natywne, dlatego potrzebny był nowy instalator (wersja 1.1.0, `versionCode` 2) – kolejne zmiany znów przychodzą jako aktualizacje OTA.
 
 ## Szablon nowej decyzji
 

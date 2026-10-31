@@ -31,6 +31,26 @@ jest.mock('expo-constants', () => ({ __esModule: true, default: { expoConfig: { 
 
 jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 
+// Native date picker: the iOS control (the platform used by jest-expo) becomes a text input that accepts
+// "YYYY-MM-DD" or "YYYY-MM-DD HH:mm", so tests "pick" a date by typing it. Invalid text is ignored like a cancelled picker.
+jest.mock('@react-native-community/datetimepicker', () => {
+  const { TextInput } = jest.requireActual('react-native');
+  const { parseFieldDate } = jest.requireActual('./src/utils/format');
+  const Picker = ({ accessibilityLabel, onValueChange }: { accessibilityLabel?: string; onValueChange?: (event: unknown, date: Date) => void }) => (
+    <TextInput accessibilityLabel={accessibilityLabel} onChangeText={(text: string) => {
+      const date = parseFieldDate(text);
+      if (date) onValueChange?.({ nativeEvent: { timestamp: date.getTime(), utcOffset: 0 } }, date);
+    }} />
+  );
+  return { __esModule: true, default: Picker, DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() } };
+});
+
+// Barcode scanner camera: permission granted, no camera view in Node.
+jest.mock('expo-camera', () => ({
+  CameraView: jest.fn(() => null),
+  useCameraPermissions: jest.fn(() => [{ granted: true, canAskAgain: true }, jest.fn()]),
+}));
+
 // Icons render as plain text so they do not need fonts.
 jest.mock('@expo/vector-icons/Ionicons', () => {
   const { Text } = jest.requireActual('react-native');

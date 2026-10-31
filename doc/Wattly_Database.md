@@ -185,7 +185,7 @@ Składnik stawki:
 Model został zaimplementowany w EF Core z następującymi uzupełnieniami i odstępstwami od propozycji:
 
 - **EnergyContract** (nowa encja) – umowa nieruchomości: `SupplierId`, `OperatorId`, `TariffId`, `ContractedPowerKw`, `ValidFrom`, `ValidTo` (włącznie). Unikalny indeks (`PropertyId`, `ValidFrom`).
-- **Property** – dodatkowo `BillingPeriodMonths`, `BillingAnchorDate`, `MonthlyBudget`; okresy rozliczeniowe są wyliczane z tych pól (encja `BillingPeriod` nie została utworzona).
+- **Property** – dodatkowo `BillingPeriodMonths`, `BillingAnchorDate`, `MonthlyBudget`; okresy rozliczeniowe są wyliczane z tych pól (encja `BillingPeriod` nie została utworzona). `PpeCode varchar(18)` (migracja `PropertyPpeCode`) – numer punktu poboru (GS1 GSRN, sprawdzana cyfra kontrolna; DEC-028).
 - **Tariff** – strefy przechowywane jako JSON (`Zones`: kod, nazwa, opis harmonogramu); seed: G11, G12, G12W, G13 bez stawek.
 - **TariffRatePlan** – `SupplierId`, `OperatorId`, `PropertyId` (cennik własny użytkownika), `ValidTo` włącznie. Pola `TaxMode`, `CalculationMethod`, `ConditionsJson` pominięto – stawki są netto, a warunki niestandardowe nie są jeszcze obsługiwane.
 - **TariffRateComponent** – `Name`, `ComponentType` (Energy, VariableDistribution, FixedDistribution, Subscription, Capacity, Other), `Unit` (Kwh, Month, Day, Kw), `NetRate numeric(18,6)`, `TaxRate numeric(5,4)` jako ułamek.

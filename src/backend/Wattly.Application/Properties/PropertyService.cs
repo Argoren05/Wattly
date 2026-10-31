@@ -89,6 +89,7 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
         var currencyCode = (Validation.Clean(request.CurrencyCode) ?? property.CurrencyCode).ToUpperInvariant();
         var timeZoneId = Validation.Clean(request.TimeZoneId) ?? property.TimeZoneId;
         var billingMonths = request.BillingPeriodMonths ?? property.BillingPeriodMonths;
+        var ppe = Gs1.Normalize(request.PpeCode);
 
         new Validation()
             .RequireText(request.Name, nameof(request.Name), 100)
@@ -100,6 +101,8 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
             .Require(TimeZones.TryResolve(timeZoneId, out _), nameof(request.TimeZoneId), "Nieznana strefa czasowa.")
             .Require(Property.AllowedBillingPeriodMonths.Contains(billingMonths), nameof(request.BillingPeriodMonths), "Dozwolone długości okresu: 1, 2, 3, 6 lub 12 miesięcy.")
             .Require(request.MonthlyBudget is null or > 0, nameof(request.MonthlyBudget), "Budżet musi być większy od zera.")
+            .Require(ppe is null || Gs1.IsValidGsrn(ppe), nameof(request.PpeCode),
+                "Numer PPE musi mieć 18 cyfr i poprawną cyfrę kontrolną – sprawdź, czy nie ma literówki.")
             .ThrowIfInvalid();
 
         property.Name = request.Name.Trim();
@@ -113,11 +116,12 @@ public sealed class PropertyService(IWattlyDbContext db, ICurrentUser currentUse
         property.BillingAnchorDate = request.BillingAnchorDate
             ?? (property.BillingAnchorDate == default ? new DateOnly(now.Year, now.Month, 1) : property.BillingAnchorDate);
         property.MonthlyBudget = request.MonthlyBudget;
+        property.PpeCode = ppe;
         property.UpdatedAt = now;
     }
 
     /// <summary>Maps a property.</summary>
     internal static PropertyDto ToDto(Property p) => new(
         p.Id, p.Name, p.AddressLine, p.PostalCode, p.City, p.CountryCode, p.TimeZoneId, p.CurrencyCode,
-        p.BillingPeriodMonths, p.BillingAnchorDate, p.MonthlyBudget, p.CreatedAt, p.UpdatedAt);
+        p.BillingPeriodMonths, p.BillingAnchorDate, p.MonthlyBudget, p.PpeCode, p.CreatedAt, p.UpdatedAt);
 }

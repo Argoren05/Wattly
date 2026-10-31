@@ -7,6 +7,7 @@ import type { Meter, Register } from '../api/types';
 export const keys = {
   meters: (propertyId: string) => ['meters', propertyId] as const,
   contract: (propertyId: string) => ['contract', propertyId] as const,
+  contracts: (propertyId: string) => ['contracts', propertyId] as const,
   ratePlans: (propertyId: string) => ['ratePlans', propertyId] as const,
   forecast: (propertyId: string) => ['forecast', propertyId] as const,
   readings: (registerId: string) => ['readings', registerId] as const,

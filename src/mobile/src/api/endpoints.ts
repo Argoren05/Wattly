@@ -33,9 +33,16 @@ export const propertyApi = {
   remove: (id: string) => http.delete(`/properties/${id}`),
   contract: (id: string) => http.get<EnergyContract>(`/properties/${id}/energy-contract`),
   setContract: (id: string, body: EnergyContractRequest) => http.put<EnergyContract>(`/properties/${id}/energy-contract`, body),
+  contracts: (id: string) => http.get<EnergyContract[]>(`/properties/${id}/energy-contracts`),
+  /** Corrects an existing contract in place (e.g. a wrong start date). */
+  updateContract: (contractId: string, body: EnergyContractRequest) => http.put<EnergyContract>(`/energy-contracts/${contractId}`, body),
+  removeContract: (contractId: string) => http.delete(`/energy-contracts/${contractId}`),
   ratePlans: (id: string) => http.get<RatePlan[]>(`/properties/${id}/rate-plans`),
   createRatePlan: (id: string, body: RatePlanRequest) => http.post<RatePlan>(`/properties/${id}/rate-plans`, body),
   endRatePlan: (planId: string, validTo: string) => http.post<RatePlan>(`/rate-plans/${planId}/end`, { validTo }),
+  /** Corrects the user's own rate plan (dates and all rates are replaced). */
+  updateRatePlan: (planId: string, body: RatePlanRequest) => http.put<RatePlan>(`/rate-plans/${planId}`, body),
+  removeRatePlan: (planId: string) => http.delete(`/rate-plans/${planId}`),
 };
 
 /** Meters and their registers. */

@@ -106,6 +106,62 @@ public class RatePlanServiceTests
     }
 
     [Fact]
+    public async Task Own_plan_can_be_corrected_in_place()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var tariff = t.AddTariff();
+        var service = new RatePlanService(t.Db, t.User, t.Clock);
+        var plan = await service.CreatePropertyPlanAsync(property.Id, Plan(tariff.Id, new DateOnly(2026, 2, 7)), CancellationToken.None);
+
+        var corrected = await service.UpdatePropertyPlanAsync(plan.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1), null,
+            new RateComponentRequest(RateComponentType.Energy, "Energia", "DAY", RateUnit.Kwh, 0.579m, 0.23m),
+            new RateComponentRequest(RateComponentType.Subscription, "Opłata handlowa", null, RateUnit.Month, 25.61m, 0.23m)), CancellationToken.None);
+
+        Assert.Equal(plan.Id, corrected.Id);
+        Assert.Equal(new DateOnly(2026, 1, 1), corrected.ValidFrom);
+        Assert.Equal(2, corrected.Components.Count);
+        Assert.Equal(0.579m, corrected.Components.Single(c => c.Unit == RateUnit.Kwh).NetRate);
+        Assert.Equal(2, t.NewDbContext().TariffRateComponents.Count(c => c.TariffRatePlanId == plan.Id));
+    }
+
+    [Fact]
+    public async Task Correction_must_not_overlap_another_plan_but_may_keep_its_own_dates()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var tariff = t.AddTariff();
+        var service = new RatePlanService(t.Db, t.User, t.Clock);
+        await service.CreatePropertyPlanAsync(property.Id, Plan(tariff.Id, new DateOnly(2025, 1, 1), new DateOnly(2025, 12, 31)), CancellationToken.None);
+        var current = await service.CreatePropertyPlanAsync(property.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None);
+
+        await service.UpdatePropertyPlanAsync(current.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None);
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            service.UpdatePropertyPlanAsync(current.Id, Plan(tariff.Id, new DateOnly(2025, 6, 1)), CancellationToken.None));
+        Assert.Equal("rate_plan.overlap", conflict.Code);
+    }
+
+    [Fact]
+    public async Task Own_plan_can_be_deleted_but_catalog_plans_cannot_be_corrected()
+    {
+        using var t = new TestContext();
+        var property = t.AddProperty();
+        var tariff = t.AddTariff();
+        var service = new RatePlanService(t.Db, t.User, t.Clock);
+        var own = await service.CreatePropertyPlanAsync(property.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None);
+        t.User.IsAdmin = true;
+        var catalog = await service.CreateCatalogPlanAsync(Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None);
+        t.User.IsAdmin = false;
+
+        await service.DeletePropertyPlanAsync(own.Id, CancellationToken.None);
+
+        Assert.Empty(await service.ListForPropertyAsync(property.Id, CancellationToken.None));
+        Assert.Empty(t.NewDbContext().TariffRateComponents.Where(c => c.TariffRatePlanId == own.Id));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.UpdatePropertyPlanAsync(catalog.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.DeletePropertyPlanAsync(catalog.Id, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Own_plans_are_private_to_property_owner()
     {
         using var t = new TestContext();
@@ -117,5 +173,7 @@ public class RatePlanServiceTests
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetAsync(plan.Id, CancellationToken.None));
         await Assert.ThrowsAsync<NotFoundException>(() => service.EndAsync(plan.Id, new EndRatePlanRequest(new DateOnly(2026, 2, 1)), CancellationToken.None));
         await Assert.ThrowsAsync<NotFoundException>(() => service.ListForPropertyAsync(foreignProperty.Id, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => service.UpdatePropertyPlanAsync(plan.Id, Plan(tariff.Id, new DateOnly(2026, 1, 1)), CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => service.DeletePropertyPlanAsync(plan.Id, CancellationToken.None));
     }
 }

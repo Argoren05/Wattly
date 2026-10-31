@@ -45,12 +45,14 @@ export default function Settings() {
 
   return (
     <Screen>
-      {properties.length > 1 ? (
-        <Card>
-          <SectionTitle>Wybrana nieruchomość</SectionTitle>
-          <Chips value={property?.id ?? null} onChange={select} options={properties.map((p) => ({ value: p.id, label: p.name }))} />
-        </Card>
-      ) : null}
+      <Card>
+        <SectionTitle>{properties.length > 1 ? 'Wybrana nieruchomość' : 'Nieruchomość'}</SectionTitle>
+        {properties.length > 1
+          ? <Chips value={property?.id ?? null} onChange={select} options={properties.map((p) => ({ value: p.id, label: p.name }))} />
+          : <Body>{property?.name ?? ''}</Body>}
+        <Button title="Dodaj nieruchomość" variant="secondary" icon="add-circle-outline" onPress={() => router.push('/onboarding')}
+          accessibilityHint="Otwiera kreator konfiguracji nowej nieruchomości" />
+      </Card>
       <Card>
         <Item icon="home-outline" title="Nieruchomość" subtitle="Nazwa, okres rozliczeniowy, budżet" href="/settings/property" />
         <Item icon="flash-outline" title="Umowa i taryfa" subtitle="Operator, sprzedawca, grupa taryfowa" href="/settings/contract" />

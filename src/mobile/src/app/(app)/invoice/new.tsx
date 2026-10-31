@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 
 import { errorMessage } from '../../../api/errors';
 import { invoiceApi } from '../../../api/endpoints';
+import { DateField } from '../../../components/DateField';
 import { Body, Button, Card, Field, Notice, Screen } from '../../../components/ui';
 import { useInvalidateEnergyData } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
@@ -54,7 +55,7 @@ export default function NewInvoice() {
     const total = parseDecimal(gross);
     const kwh = consumption.trim() ? parseDecimal(consumption) : null;
     if (!number.trim()) return setError('Podaj numer faktury.');
-    if (!issue || !start || !end) return setError('Daty podaj w formacie RRRR-MM-DD.');
+    if (!issue || !start || !end) return setError('Wybierz datę wystawienia i okres faktury.');
     if (end < start) return setError('Koniec okresu nie może być przed początkiem.');
     if (total === null) return setError('Podaj kwotę brutto.');
     if (consumption.trim() && (kwh === null || kwh < 0)) return setError('Nieprawidłowe zużycie.');
@@ -80,9 +81,9 @@ export default function NewInvoice() {
     <Screen>
       <Card>
         <Field label="Numer faktury" value={number} onChangeText={setNumber} />
-        <Field label="Data wystawienia" value={issueDate} onChangeText={setIssueDate} placeholder="RRRR-MM-DD" />
-        <Field label="Okres od" value={periodStart} onChangeText={setPeriodStart} placeholder="RRRR-MM-DD" />
-        <Field label="Okres do (włącznie)" value={periodEnd} onChangeText={setPeriodEnd} placeholder="RRRR-MM-DD" />
+        <DateField label="Data wystawienia" value={issueDate} onChange={setIssueDate} />
+        <DateField label="Okres od" value={periodStart} onChange={setPeriodStart} />
+        <DateField label="Okres do (włącznie)" value={periodEnd} onChange={setPeriodEnd} />
         <Field label={`Kwota brutto (${property.currencyCode})`} value={gross} onChangeText={setGross} keyboardType="decimal-pad" />
         <Field label="Zużycie kWh (opcjonalnie)" value={consumption} onChangeText={setConsumption} keyboardType="decimal-pad" />
         <Field label="Notatki (opcjonalnie)" value={notes} onChangeText={setNotes} multiline />

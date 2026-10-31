@@ -35,18 +35,43 @@ export function formatPercent(value: number | null | undefined): string {
 /** Pads a number to two digits. */
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** "2026-10-30" -> "30.10.2026" */
-export function formatDate(isoDate: string | null | undefined): string {
+/** Numeric day, month and year – the order and separators come from the locale (e.g. 30.10.2026 or 10/30/2026). */
+const DATE_PARTS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+
+/**
+ * Formats a calendar date in the phone's format: dates follow the system language and region settings.
+ * "2026-10-30" -> "30.10.2026" for Polish.
+ * @param isoDate Date "YYYY-MM-DD" (a longer ISO string is cut to the date).
+ * @param locale BCP 47 locale; undefined = the device setting.
+ */
+export function formatDate(isoDate: string | null | undefined, locale?: string): string {
   if (!isoDate) return '–';
-  const [y, m, d] = isoDate.slice(0, 10).split('-');
-  return `${d}.${m}.${y}`;
+  const [y, m, d] = isoDate.slice(0, 10).split('-').map(Number) as [number, number, number];
+  return new Date(y, m - 1, d).toLocaleDateString(locale, DATE_PARTS);
 }
 
-/** Instant -> local "30.10.2026, 18:00" in the device time zone. */
-export function formatDateTime(iso: string | null | undefined): string {
+/**
+ * Formats an instant as local date and time in the phone's format (12/24-hour clock from the device).
+ * @param iso ISO 8601 instant.
+ * @param locale BCP 47 locale; undefined = the device setting.
+ */
+export function formatDateTime(iso: string | null | undefined, locale?: string): string {
   if (!iso) return '–';
-  const date = new Date(iso);
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}, ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return new Date(iso).toLocaleString(locale, { ...DATE_PARTS, hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Parses the local "YYYY-MM-DD" or "YYYY-MM-DD HH:mm" text used by date fields into a Date (device time zone).
+ * @param text Field value.
+ * @returns The date, or null when the text is not a real calendar date/time.
+ */
+export function parseFieldDate(text: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?$/.exec(text.trim());
+  if (!match) return null;
+  const [y, mo, d, h, mi] = [match[1], match[2], match[3], match[4] ?? '0', match[5] ?? '0'].map(Number) as [number, number, number, number, number];
+  const date = new Date(y, mo - 1, d, h, mi);
+  const valid = date.getFullYear() === y && date.getMonth() === mo - 1 && date.getDate() === d && h <= 23 && mi <= 59;
+  return valid ? date : null;
 }
 
 /** Parses a decimal typed with comma or dot. Returns null for empty or invalid input. */

@@ -2,28 +2,46 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import type { RatePlanRequest, Tariff } from '../api/types';
+import type { RatePlan, RatePlanRequest, Tariff } from '../api/types';
 import { parseDecimal, parseIsoDate } from '../utils/format';
 import { componentTemplate, unitLabel, type ComponentDraft } from '../utils/rateTemplates';
 import { radius, spacing, useTheme } from '../theme/theme';
+import { DateField } from './DateField';
 import { Body, Button, Field, Notice } from './ui';
 
+/** Number shown in an input: decimal comma, no trailing zeros. */
+const toInput = (value: number) => String(Number(value.toFixed(6))).replace('.', ',');
+
 /**
- * Editor for the user's own price list. The structure is pre-filled from the tariff, the rates are typed in
- * from an invoice or price list – rows left empty are omitted.
+ * Turns saved components into editable rows (VAT fraction -> percent).
+ * @param plan Saved plan.
  */
-export function RatePlanForm({ tariff, defaultValidFrom, submitLabel, onSubmit, busy }: {
+export function draftsFromPlan(plan: RatePlan): ComponentDraft[] {
+  return plan.components.map((c) => ({
+    key: c.id, componentType: c.componentType, name: c.name, zoneCode: c.zoneCode, unit: c.unit,
+    netRate: toInput(c.netRate), taxRate: toInput(c.taxRate * 100),
+  }));
+}
+
+/**
+ * Editor for the user's own price list. A new plan is pre-filled with the typical structure of the tariff; when
+ * `initial` is given the saved plan is loaded for correction. Rates are typed in from an invoice or price list –
+ * rows left empty are omitted.
+ */
+export function RatePlanForm({ tariff, defaultValidFrom, submitLabel, onSubmit, busy, initial }: {
   tariff: Tariff;
   defaultValidFrom: string;
   submitLabel: string;
   onSubmit: (request: RatePlanRequest) => void;
   busy?: boolean;
+  /** Saved plan to correct (its end date is kept). */
+  initial?: RatePlan;
 }) {
   const { colors } = useTheme();
-  const [name, setName] = useState(`Moje stawki ${tariff.code}`);
-  const [validFrom, setValidFrom] = useState(defaultValidFrom);
-  const [source, setSource] = useState('');
-  const [rows, setRows] = useState<ComponentDraft[]>(() => componentTemplate(tariff.zones));
+  const [name, setName] = useState(initial?.name ?? `Moje stawki ${tariff.code}`);
+  const [validFrom, setValidFrom] = useState(initial?.validFrom ?? defaultValidFrom);
+  const [source, setSource] = useState(initial?.sourceReference ?? '');
+  const [rows, setRows] = useState<ComponentDraft[]>(() => (initial ? draftsFromPlan(initial) : componentTemplate(tariff.zones)));
   const [error, setError] = useState<string | null>(null);
 
   const update = (key: string, patch: Partial<ComponentDraft>) => setRows((r) => r.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -31,7 +49,8 @@ export function RatePlanForm({ tariff, defaultValidFrom, submitLabel, onSubmit, 
   /** Validates the form and passes a rate plan request (VAT converted from percent to fraction) to onSubmit. */
   function submit() {
     const date = parseIsoDate(validFrom);
-    if (!date) return setError('Podaj datę obowiązywania w formacie RRRR-MM-DD.');
+    if (!date) return setError('Wybierz datę początku obowiązywania stawek.');
+    if (initial?.validTo && date > initial.validTo) return setError('Początek obowiązywania nie może być późniejszy niż jego koniec.');
     if (!source.trim()) return setError('Wskaż źródło stawek, np. numer faktury lub nazwę cennika.');
 
     const filled = rows.filter((r) => r.netRate.trim() !== '');
@@ -47,13 +66,14 @@ export function RatePlanForm({ tariff, defaultValidFrom, submitLabel, onSubmit, 
     }
 
     setError(null);
-    onSubmit({ tariffId: tariff.id, name: name.trim(), validFrom: date, sourceReference: source.trim(), components });
+    onSubmit({ tariffId: tariff.id, name: name.trim(), validFrom: date, validTo: initial?.validTo ?? null, sourceReference: source.trim(), components });
   }
 
   return (
     <View style={{ gap: spacing.md }}>
       <Field label="Nazwa cennika" value={name} onChangeText={setName} />
-      <Field label="Obowiązuje od" value={validFrom} onChangeText={setValidFrom} placeholder="RRRR-MM-DD" />
+      <DateField label="Obowiązuje od" value={validFrom} onChange={setValidFrom}
+        hint="Data, od której sprzedawca stosuje te stawki (np. 1 stycznia przy nowych cenach na rok)." />
       <Field label="Źródło stawek" value={source} onChangeText={setSource} placeholder="np. faktura FV/123/2026" hint="Każda stawka musi mieć udokumentowane źródło." />
       <Body muted>Stawki netto. Puste wiersze zostaną pominięte. VAT w procentach.</Body>
 

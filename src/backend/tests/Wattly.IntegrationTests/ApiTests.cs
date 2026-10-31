@@ -96,6 +96,45 @@ public class ApiTests(WattlyApiFactory factory)
     }
 
     [Fact]
+    public async Task Contracts_and_own_rate_plans_can_be_corrected_and_deleted()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var scenario = await Scenario.CreateAsync(client);
+        var contract = (await client.GetJsonAsync($"/api/v1/properties/{scenario.PropertyId}/energy-contracts")).AsArray().Single()!;
+        var plan = (await client.GetJsonAsync($"/api/v1/properties/{scenario.PropertyId}/rate-plans")).AsArray().Single()!;
+
+        // Wrong start date entered during setup is corrected in place.
+        var corrected = await client.PutJsonAsync($"/api/v1/energy-contracts/{contract["id"]}", new { tariffId = scenario.TariffId, validFrom = "2025-12-01", contractedPowerKw = 4 });
+        Assert.Equal("2025-12-01", corrected["validFrom"]!.GetValue<string>());
+
+        // Rates are replaced as a whole; the old components are removed from the database.
+        var updatedPlan = await client.PutJsonAsync($"/api/v1/rate-plans/{plan["id"]}", new
+        {
+            tariffId = scenario.TariffId,
+            name = "Stawki 2026",
+            validFrom = "2025-12-01",
+            sourceReference = "Faktura FV/2/2026",
+            components = new object[] { new { componentType = "Energy", name = "Energia", zoneCode = "DAY", unit = "Kwh", netRate = 0.579m, taxRate = 0.23m } },
+        });
+        Assert.Equal("Stawki 2026", updatedPlan["name"]!.GetValue<string>());
+        Assert.Single(updatedPlan["components"]!.AsArray());
+        await using (var connection = new NpgsqlConnection(factory.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var count = new NpgsqlCommand($"SELECT COUNT(*) FROM \"TariffRateComponents\" WHERE \"TariffRatePlanId\" = '{plan["id"]}'", connection);
+            Assert.Equal(1L, (long)(await count.ExecuteScalarAsync())!);
+        }
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/v1/rate-plans/{plan["id"]}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/v1/energy-contracts/{contract["id"]}")).StatusCode);
+        Assert.Empty((await client.GetJsonAsync($"/api/v1/properties/{scenario.PropertyId}/rate-plans")).AsArray());
+
+        // Another user cannot touch them.
+        var stranger = await factory.CreateUserClientAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.DeleteAsync($"/api/v1/energy-contracts/{Guid.NewGuid()}")).StatusCode);
+    }
+
+    [Fact]
     public async Task Health_endpoints_report_healthy()
     {
         var client = factory.CreateClient();

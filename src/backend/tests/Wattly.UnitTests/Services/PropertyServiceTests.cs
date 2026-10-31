@@ -8,8 +8,24 @@ namespace Wattly.UnitTests.Services;
 /// <summary>Tests of <see cref="PropertyService"/>.</summary>
 public class PropertyServiceTests
 {
-    private static PropertyRequest Request(string name = "Dom", int? months = 2, string? timeZone = null, decimal? budget = null) =>
-        new(name, null, null, null, null, timeZone, null, months, new DateOnly(2026, 1, 1), budget);
+    private static PropertyRequest Request(string name = "Dom", int? months = 2, string? timeZone = null, decimal? budget = null, string? ppe = null) =>
+        new(name, null, null, null, null, timeZone, null, months, new DateOnly(2026, 1, 1), budget, ppe);
+
+    [Fact]
+    public async Task Ppe_code_is_normalized_and_validated()
+    {
+        using var t = new TestContext();
+        var service = new PropertyService(t.Db, t.User, t.Storage, t.Clock);
+
+        var created = await service.CreateAsync(Request(ppe: "5903 2242 8100 789765"), CancellationToken.None);
+        Assert.Equal("590322428100789765", created.PpeCode);
+
+        var error = await Assert.ThrowsAsync<ValidationFailedException>(() => service.UpdateAsync(created.Id, Request(ppe: "590322428100789766"), CancellationToken.None));
+        Assert.Contains(nameof(PropertyRequest.PpeCode), error.Errors.Keys);
+
+        var cleared = await service.UpdateAsync(created.Id, Request(ppe: null), CancellationToken.None);
+        Assert.Null(cleared.PpeCode);
+    }
 
     [Fact]
     public async Task Create_adds_household_on_first_use_and_applies_defaults()

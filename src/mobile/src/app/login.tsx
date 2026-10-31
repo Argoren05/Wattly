@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 import { SocialSignIn } from '../components/SocialSignIn';
+import { currentPasswordAutofill, usernameAutofill } from '../auth/autofill';
 import { Body, Button, Card, Field, Notice, Screen, Title } from '../components/ui';
 import { spacing, useTheme } from '../theme/theme';
 
@@ -43,8 +44,8 @@ export default function Login() {
           <Title>Monitoruj zużycie. Kontroluj koszty. Przewiduj rachunki.</Title>
         </View>
         <Card>
-          <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email" keyboardType="email-address" textContentType="emailAddress" />
-          <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" onSubmitEditing={submit} />
+          <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" {...usernameAutofill} />
+          <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry {...currentPasswordAutofill} onSubmitEditing={submit} />
           {error ? <Notice tone="danger">{error}</Notice> : null}
           <Button title="Zaloguj się" onPress={submit} loading={busy} />
           <SocialSignIn />

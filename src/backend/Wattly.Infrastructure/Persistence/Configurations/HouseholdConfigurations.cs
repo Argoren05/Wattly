@@ -32,6 +32,7 @@ internal sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
         b.Property(x => x.CurrencyCode).HasMaxLength(3);
         b.Property(x => x.TimeZoneId).HasMaxLength(64);
         b.Property(x => x.MonthlyBudget).HasPrecision(18, 2);
+        b.Property(x => x.PpeCode).HasMaxLength(18);
         b.HasOne(x => x.Household).WithMany(h => h.Properties).HasForeignKey(x => x.HouseholdId).OnDelete(DeleteBehavior.Cascade);
         b.ToTable(t => t.HasCheckConstraint("CK_Properties_BillingPeriodMonths", "\"BillingPeriodMonths\" IN (1, 2, 3, 6, 12)"));
     }

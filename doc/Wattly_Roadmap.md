@@ -89,7 +89,9 @@
 - [ ] Rejestracja aplikacji u dostawców logowania i ustawienie identyfikatorów (EAS + API).
 - [x] Przygotowanie serwera do wdrożenia na Railway (DEC-026).
 - [x] Przygotowanie wdrożenia na Google Cloud Run + Neon (DEC-027).
-- [ ] Uruchomienie serwera na Cloud Run i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
+- [x] Uruchomienie serwera na Cloud Run i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
+- [x] Poprawki po pierwszych testach (DEC-028): kalendarz i format dat z telefonu, autouzupełnianie haseł, numer PPE ze skanerem, poprawianie i usuwanie umów oraz cenników, dodawanie i usuwanie nieruchomości.
+- [ ] Instalator 1.1.0 (nowe moduły natywne: kalendarz, aparat).
 - [ ] Publikacja w Google Play / App Store.
 
 ## Definicja ukończenia zadania
