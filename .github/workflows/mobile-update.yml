@@ -1,0 +1,52 @@
+# Publishes over-the-air updates (EAS Update) whenever the mobile app changes on main.
+# Installed apps download the update in the background and offer a restart ("Uruchom ponownie").
+#
+# runtimeVersion uses the "fingerprint" policy: if a change touches native code, the update is published
+# for a new runtime that no installed app uses – such changes require a new installer (mobile-build.yml),
+# and the API endpoint /app/release tells existing apps to download it.
+#
+# Required repository secrets: EXPO_TOKEN and EAS_PROJECT_ID.
+name: Mobile OTA update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/mobile/**'
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mobile
+    env:
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+      EXPO_PUBLIC_API_URL: ${{ vars.WATTLY_API_URL }}
+      # Passed through the environment (never interpolated into the script) to prevent shell injection.
+      UPDATE_MESSAGE: ${{ github.event.head_commit.message || 'Manual update' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/mobile/package-lock.json
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # Both the installable APK (preview) and store builds (production) receive the update.
+      - name: Publish to preview channel
+        run: eas update --channel preview --message "$UPDATE_MESSAGE" --non-interactive
+      - name: Publish to production channel
+        run: eas update --channel production --message "$UPDATE_MESSAGE" --non-interactive

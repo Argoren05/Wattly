@@ -1,0 +1,57 @@
+# Builds installable mobile apps with EAS Build.
+#
+# - "preview":    Android APK that can be installed directly on a phone (download link / QR code in the EAS dashboard).
+# - "production": Android App Bundle for Google Play and an iOS build for the App Store.
+#
+# Required repository secrets: EXPO_TOKEN (expo.dev access token) and EAS_PROJECT_ID (from `npx eas-cli init`).
+# Optional repository variable: WATTLY_API_URL (public API address baked into the build).
+name: Mobile build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Build profile
+        type: choice
+        options: [preview, production]
+        default: preview
+      platform:
+        description: Platform
+        type: choice
+        options: [android, ios, all]
+        default: android
+  push:
+    tags:
+      - 'mobile-v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mobile
+    env:
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+      EXPO_PUBLIC_API_URL: ${{ vars.WATTLY_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/mobile/package-lock.json
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      # Never ship a build that fails the quality gate.
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: EAS Build
+        run: >
+          eas build
+          --profile ${{ github.event.inputs.profile || 'preview' }}
+          --platform ${{ github.event.inputs.platform || 'android' }}
+          --non-interactive --no-wait

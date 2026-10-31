@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wattly.IntegrationTests/Wattly.IntegrationTests.csproj" />
+    <Project Path="tests/Wattly.UnitTests/Wattly.UnitTests.csproj" />
+  </Folder>
+  <Project Path="Wattly.Api/Wattly.Api.csproj" />
+  <Project Path="Wattly.Application/Wattly.Application.csproj" />
+  <Project Path="Wattly.Domain/Wattly.Domain.csproj" />
+  <Project Path="Wattly.Infrastructure/Wattly.Infrastructure.csproj" />
+</Solution>
