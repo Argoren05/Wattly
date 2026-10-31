@@ -13,7 +13,10 @@ import { confirmAsync } from './confirm';
 import { DateField } from './DateField';
 import { Button, Card, Chips, Field, KeyValue, Notice } from './ui';
 
-/** Shared form for new readings and corrections, with preview against the previous reading and anomaly confirmation. */
+/**
+ * Shared form for new readings and corrections. The preview compares the value with the readings right before and after
+ * the chosen moment (so back-dated readings are checked correctly) and unusual values need confirmation.
+ */
 export function ReadingForm({ registers, initialRegisterId, initial, submitLabel, save, onSaved }: {
   registers: RegisterOption[];
   initialRegisterId?: string;
@@ -30,14 +33,18 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
   const [busy, setBusy] = useState(false);
 
   const register = registers.find((r) => r.id === registerId);
-  const latest = useQuery({
-    queryKey: [...keys.readings(registerId), 'latest'],
-    queryFn: () => readingApi.list(registerId, 1),
-    enabled: !!registerId,
+  // Neighbours of the chosen moment: a back-dated reading is compared with the readings around it, not the newest one.
+  const readingAtIso = parseLocalDateTime(when);
+  const around = useQuery({
+    queryKey: [...keys.readings(registerId), 'neighbors', readingAtIso],
+    queryFn: () => readingApi.neighbors(registerId, readingAtIso!),
+    enabled: !!registerId && !!readingAtIso && !initial,
   });
-  const previous = latest.data?.items[0];
+  const previous = around.data?.previous ?? null;
+  const following = around.data?.next ?? null;
   const parsedValue = parseDecimal(value);
-  const diff = previous && parsedValue !== null && !initial ? parsedValue - previous.value : null;
+  const diff = previous && parsedValue !== null ? parsedValue - previous.value : null;
+  const diffToNext = following && parsedValue !== null ? following.value - parsedValue : null;
 
   /** Validates input, saves and handles anomaly confirmation and server errors. */
   async function submit() {
@@ -90,11 +97,22 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
       />
       <Field label="Notatka (opcjonalnie)" value={note} onChangeText={setNote} maxLength={500} />
 
-      {previous && !initial ? (
+      {(previous || following) && !initial ? (
         <Card>
-          <KeyValue label="Ostatni odczyt" value={`${formatKwh(previous.value)} · ${formatDateTime(previous.readingAt)}`} />
-          <KeyValue label="Zużycie od poprzedniego odczytu" value={diff === null ? '–' : formatKwh(diff)} />
-          {diff !== null && diff < 0 ? <Notice tone="warning">Wskazanie jest niższe niż ostatni odczyt.</Notice> : null}
+          {previous ? (
+            <>
+              <KeyValue label="Poprzedni odczyt" value={`${formatKwh(previous.value)} · ${formatDateTime(previous.readingAt)}`} />
+              <KeyValue label="Zużycie od poprzedniego odczytu" value={diff === null ? '–' : formatKwh(diff)} />
+            </>
+          ) : null}
+          {following ? (
+            <>
+              <KeyValue label="Następny odczyt" value={`${formatKwh(following.value)} · ${formatDateTime(following.readingAt)}`} />
+              <KeyValue label="Zużycie do następnego odczytu" value={diffToNext === null ? '–' : formatKwh(diffToNext)} />
+            </>
+          ) : null}
+          {diff !== null && diff < 0 ? <Notice tone="warning">Wskazanie jest niższe niż poprzedni odczyt.</Notice> : null}
+          {diffToNext !== null && diffToNext < 0 ? <Notice tone="warning">Wskazanie jest wyższe niż następny odczyt.</Notice> : null}
         </Card>
       ) : null}
 

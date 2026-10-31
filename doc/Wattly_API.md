@@ -99,7 +99,8 @@ Dozwolone jednostki: `Energy`/`VariableDistribution` → `Kwh`; `FixedDistributi
 
 ## 6. Odczyty
 
-- `GET /registers/{registerId}/readings?from=&to=&includeInactive=&page=&pageSize=` – każdy element zawiera `consumptionSincePrevious` i `daysSincePrevious`
+- `GET /registers/{registerId}/readings?from=&to=&includeInactive=&page=&pageSize=` – każdy element zawiera `consumptionSincePrevious` i `daysSincePrevious`; lista od najnowszego, `from`/`to` włącznie (daty z przesunięciem strefy kodowane w URL, np. `%2B01%3A00`)
+  - sąsiedzi chwili `t` (podgląd odczytu w aplikacji): poprzedni = `?to=t&pageSize=1`, następny = ostatnia strona `?from=t&pageSize=1&page={totalCount}`
 - `POST /registers/{registerId}/readings`
 - `GET /readings/{readingId}`
 - `PUT /readings/{readingId}` – korekta: tworzy nowy odczyt, poprzedni otrzymuje status `Superseded`

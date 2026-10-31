@@ -64,3 +64,30 @@ test('mutations with bodies pass them through', async () => {
     '/properties/p1/rate-plans', '/properties/p1/meters', '/registers/r1/readings', '/properties/p1/invoices', '/invoices/i1/attachments',
   ]);
 });
+
+describe('readingApi.neighbors', () => {
+  const page = (items: { id: string }[], totalCount: number) => ({ items, page: 1, pageSize: 1, totalCount });
+
+  test('takes the newest reading up to the moment and the oldest one after it', async () => {
+    jest.mocked(http.get)
+      .mockResolvedValueOnce(page([{ id: 'before' }], 5)) // ?to=at   – newest first, so items[0] is right before
+      .mockResolvedValueOnce(page([{ id: 'newest' }], 3)) // ?from=at – 3 later readings, newest first
+      .mockResolvedValueOnce(page([{ id: 'after' }], 3)); // last page = oldest later reading
+
+    const result = await readingApi.neighbors('r1', '2026-03-01T21:08:00+01:00');
+
+    expect(result).toEqual({ previous: { id: 'before' }, next: { id: 'after' } });
+    const urls = jest.mocked(http.get).mock.calls.map((c) => c[0]);
+    expect(urls[0]).toBe('/registers/r1/readings?pageSize=1&to=2026-03-01T21%3A08%3A00%2B01%3A00');
+    expect(urls[1]).toBe('/registers/r1/readings?pageSize=1&from=2026-03-01T21%3A08%3A00%2B01%3A00');
+    expect(urls[2]).toBe('/registers/r1/readings?pageSize=1&from=2026-03-01T21%3A08%3A00%2B01%3A00&page=3');
+  });
+
+  test('handles no readings around and a reading at the same moment', async () => {
+    jest.mocked(http.get).mockResolvedValueOnce(page([], 0)).mockResolvedValueOnce(page([], 0));
+    expect(await readingApi.neighbors('r1', 'x')).toEqual({ previous: null, next: null });
+
+    jest.mocked(http.get).mockResolvedValueOnce(page([{ id: 'same' }], 1)).mockResolvedValueOnce(page([{ id: 'same' }], 1));
+    expect(await readingApi.neighbors('r1', 'x')).toEqual({ previous: { id: 'same' }, next: null });
+  });
+});

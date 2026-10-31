@@ -48,7 +48,7 @@ Proponowane zakładki:
 - Wartość wskazania.
 - Zdjęcie (opcjonalnie).
 - Notatka (opcjonalnie).
-- Podgląd różnicy względem poprzedniego odczytu.
+- Podgląd różnicy względem odczytów sąsiadujących z wybraną datą: poprzedniego i następnego. Odczyt wpisany wstecz (np. ze starych notatek) porównywany jest z odczytami wokół swojej daty, nie z najnowszym; ostrzeżenie, gdy wartość jest niższa od poprzedniego lub wyższa od następnego.
 - Ostrzeżenie o anomalii.
 - Potwierdzenie zapisu.
 
