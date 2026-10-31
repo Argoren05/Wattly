@@ -7,7 +7,9 @@ COPY Wattly.Domain/Wattly.Domain.csproj Wattly.Domain/
 COPY Wattly.Application/Wattly.Application.csproj Wattly.Application/
 COPY Wattly.Infrastructure/Wattly.Infrastructure.csproj Wattly.Infrastructure/
 COPY Wattly.Api/Wattly.Api.csproj Wattly.Api/
-RUN dotnet restore Wattly.Api/Wattly.Api.csproj -r linux-x64
+# PublishReadyToRun must be set already at restore: it downloads the ReadyToRun compiler package, which
+# the --no-restore publish below cannot fetch on its own (error NETSDK1094).
+RUN dotnet restore Wattly.Api/Wattly.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
 COPY Wattly.Domain/ Wattly.Domain/
 COPY Wattly.Application/ Wattly.Application/
 COPY Wattly.Infrastructure/ Wattly.Infrastructure/
