@@ -1,0 +1,74 @@
+# Wattly API – build and deploy to Google Cloud Run (DEC-027).
+# Run by a Cloud Build trigger on every push to main that changes src/backend/** (see doc/Wattly_Deployment_CloudRun.md).
+# Paths are relative to the repository root, because the trigger checks out the whole repository.
+#
+# Settings chosen for the lowest cost with a few users:
+#   --min-instances 0   the service sleeps when nobody uses it (no charge while asleep)
+#   --max-instances 1   a hard cap on spending; one instance easily serves 3 people
+#   --cpu-boost         extra CPU only while starting, so waking up takes ~3 s instead of ~5 s
+#   CPU billed only during requests (default "request-based" billing) – fits the Cloud Run free tier.
+# Secrets (the database URL) come from Secret Manager and are never stored in this file.
+
+substitutions:
+  _REGION: europe-west4
+  _SERVICE: wattly-api
+  _REPOSITORY: wattly
+
+steps:
+  # 1. Docker image registry with a cleanup policy – only the 2 newest images are kept, so storage stays free.
+  - id: registry
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        gcloud artifacts repositories describe ${_REPOSITORY} --location=${_REGION} >/dev/null 2>&1 \
+          || gcloud artifacts repositories create ${_REPOSITORY} --location=${_REGION} --repository-format=docker \
+               --description="Wattly API images"
+        cat > /workspace/cleanup.json <<'POLICY'
+        [
+          {"name": "keep-newest", "action": {"type": "Keep"}, "mostRecentVersions": {"keepCount": 2}},
+          {"name": "delete-older", "action": {"type": "Delete"}, "condition": {"tagState": "any", "olderThan": "1d"}}
+        ]
+        POLICY
+        gcloud artifacts repositories set-cleanup-policies ${_REPOSITORY} --location=${_REGION} \
+          --policy=/workspace/cleanup.json
+
+  # 2. Build the image from src/backend/Dockerfile.
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/api:$BUILD_ID', 'src/backend']
+
+  # 3. Push it to Artifact Registry.
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/api:$BUILD_ID']
+
+  # 4. Deploy the new revision. Database migrations run when the new instance starts.
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/api:$BUILD_ID
+      - --region=${_REGION}
+      - --allow-unauthenticated
+      - --port=8080
+      - --cpu=1
+      - --memory=512Mi
+      - --cpu-boost
+      - --cpu-throttling
+      - --min-instances=0
+      - --max-instances=1
+      - --concurrency=80
+      - --timeout=60
+      - --update-secrets=DATABASE_URL=wattly-database-url:latest
+      - --update-env-vars=ASPNETCORE_ENVIRONMENT=Production,Database__MigrateOnStartup=true,Storage__Provider=Database,Http__TrustForwardedHeaders=true
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1200s

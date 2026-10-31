@@ -49,6 +49,37 @@ public class DatabaseConnectionTests
         Assert.Null(builder.Password);
     }
 
+    [Fact]
+    public void Neon_url_with_tls_and_channel_binding_is_supported()
+    {
+        var builder = DatabaseConnection.FromUrl(
+            "postgresql://neondb_owner:secret@ep-cool-name-a1b2c3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require");
+
+        Assert.Equal("ep-cool-name-a1b2c3.eu-central-1.aws.neon.tech", builder.Host);
+        Assert.Equal(5432, builder.Port);
+        Assert.Equal("neondb", builder.Database);
+        Assert.Equal("neondb_owner", builder.Username);
+        Assert.Equal(SslMode.Require, builder.SslMode);
+        Assert.Equal(ChannelBinding.Require, builder.ChannelBinding);
+    }
+
+    [Theory]
+    [InlineData("verify-full", SslMode.VerifyFull)]
+    [InlineData("disable", SslMode.Disable)]
+    public void Dashed_ssl_modes_are_mapped(string value, SslMode expected)
+    {
+        Assert.Equal(expected, DatabaseConnection.FromUrl($"postgres://u:p@h/db?sslmode={value}").SslMode);
+    }
+
+    [Fact]
+    public void Unknown_and_malformed_query_parameters_are_ignored()
+    {
+        var builder = DatabaseConnection.FromUrl("postgres://u:p@h/db?options=x&flag&sslmode=bogus");
+
+        Assert.Equal("db", builder.Database);
+        Assert.Equal(new NpgsqlConnectionStringBuilder().SslMode, builder.SslMode);
+    }
+
     [Theory]
     [InlineData("mysql://u:p@h/db")]
     [InlineData("not a url")]

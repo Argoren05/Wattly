@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Npgsql;
 
 namespace Wattly.IntegrationTests;
 
@@ -68,6 +69,30 @@ public class ApiTests(WattlyApiFactory factory)
         var takeover = await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "test", token = $"attacker|{email}|false" });
         Assert.Equal(HttpStatusCode.Conflict, takeover.StatusCode);
         Assert.Equal("external.email_in_use", (await takeover.ReadJsonAsync())["code"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Tokens_survive_a_server_restart_because_keys_are_stored_in_the_database()
+    {
+        var email = $"restart_{Guid.NewGuid():N}@wattly.test";
+        await factory.CreateUserClientAsync(email);
+        var tokens = await (await factory.CreateClient().PostAsJsonAsync("/api/v1/auth/login", new { email, password = "Password12345" })).ReadJsonAsync();
+
+        // The key ring is in the database, not in the container file system that a scale-to-zero restart wipes.
+        await using (var connection = new NpgsqlConnection(factory.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var count = new NpgsqlCommand("SELECT COUNT(*) FROM \"DataProtectionKeys\"", connection);
+            Assert.True((long)(await count.ExecuteScalarAsync())! > 0);
+        }
+
+        // A second, independent host (like a freshly started Cloud Run instance) accepts both tokens.
+        await using var restarted = factory.WithWebHostBuilder(_ => { });
+        var client = restarted.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens["accessToken"]!.GetValue<string>());
+        Assert.Equal(email, (await client.GetJsonAsync("/api/v1/users/me"))["email"]!.GetValue<string>());
+        var refreshed = await restarted.CreateClient().PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = tokens["refreshToken"]!.GetValue<string>() });
+        Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);
     }
 
     [Fact]
