@@ -75,7 +75,7 @@ Instalatory są budowane w chmurze Expo (EAS Build) – nie są potrzebne Androi
 
 ### Jednorazowa konfiguracja
 
-1. Załóż darmowe konto na https://expo.dev i utwórz projekt **Wattly**. Jego identyfikator jest zapisany w `src/mobile/app.json` (`extra.eas.projectId`) – nie jest tajny.
+1. Załóż darmowe konto na https://expo.dev i utwórz projekt **Wattly**. Konto (`owner`: `argoren`) i identyfikator projektu (`extra.eas.projectId`) są zapisane w `src/mobile/app.json` – nie są tajne.
 2. W ustawieniach projektu Expo, w sekcji **GitHub**, połącz repozytorium i ustaw **Base directory** na `src/mobile`.
 3. W ustawieniach konta Expo, w sekcji **Access tokens**, utwórz **robota** z rolą *Developer* i wygeneruj dla niego token. Lepiej nie używać tokenu osobistego, który daje pełny dostęp do konta.
 4. W GitHubie (**Settings → Secrets and variables → Actions**) dodaj sekret `EXPO_TOKEN` z tokenem robota oraz zmienną `WATTLY_API_URL` z publicznym adresem API.
