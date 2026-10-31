@@ -3,7 +3,8 @@
 # - "preview":    Android APK that can be installed directly on a phone (download link / QR code in the EAS dashboard).
 # - "production": Android App Bundle for Google Play and an iOS build for the App Store.
 #
-# Required repository secrets: EXPO_TOKEN (expo.dev access token) and EAS_PROJECT_ID (from `npx eas-cli init`).
+# Required repository secret: EXPO_TOKEN (token of an Expo robot user with the Developer role).
+# The EAS project id is stored in src/mobile/app.json; the optional EAS_PROJECT_ID secret overrides it.
 # Optional repository variable: WATTLY_API_URL (public API address baked into the build).
 name: Mobile build
 

@@ -1,22 +1,22 @@
 /**
  * Dynamic Expo configuration layered on top of app.json.
  *
- * Over-the-air updates are served by EAS Update and need the EAS project id, which is created once with
- * `npx eas-cli init` and passed as EAS_PROJECT_ID (locally in .env.local, in CI as a secret). Without it the app
- * still builds and runs – automatic updates are simply disabled (e.g. for local development).
+ * Over-the-air updates are served by EAS Update and need the EAS project id. It is stored in app.json
+ * (`extra.eas.projectId` – not a secret) and can be overridden with EAS_PROJECT_ID, e.g. for a fork.
  */
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const projectId = process.env.EAS_PROJECT_ID;
+  // `||` instead of `??`: CI passes unset secrets/variables as empty strings.
+  const projectId: string | undefined = process.env.EAS_PROJECT_ID || config.extra?.eas?.projectId;
 
   return {
     ...(config as ExpoConfig),
     extra: {
       ...config.extra,
       // Base URL of the Wattly API baked into the build (overridable at runtime with EXPO_PUBLIC_API_URL).
-      apiUrl: process.env.EXPO_PUBLIC_API_URL ?? config.extra?.apiUrl,
-      ...(projectId ? { eas: { projectId } } : {}),
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || config.extra?.apiUrl,
+      ...(projectId ? { eas: { ...config.extra?.eas, projectId } } : {}),
     },
     updates: projectId
       ? {

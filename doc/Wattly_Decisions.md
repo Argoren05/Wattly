@@ -101,7 +101,7 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Data: 2026-10-30
 - Status: Propozycja
 - Decyzja: instalatory budowane przez EAS Build. Profil `preview` tworzy APK do bezpośredniej instalacji, profil `production` tworzy AAB i build iOS do sklepów. Brak instalatorów desktopowych (.exe).
-- Konsekwencje: wymagane konto Expo (darmowy plan wystarcza na start) oraz sekrety `EXPO_TOKEN` i `EAS_PROJECT_ID` w CI. iOS wymaga konta Apple Developer.
+- Konsekwencje: wymagane konto Expo (darmowy plan wystarcza na start) oraz sekret `EXPO_TOKEN` (token robota z rolą Developer) w CI; identyfikator projektu EAS jest w `app.json`. iOS wymaga konta Apple Developer.
 
 ## DEC-022 – Automatyczne aktualizacje
 - Data: 2026-10-30

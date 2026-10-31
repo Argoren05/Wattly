@@ -83,7 +83,8 @@
 - [x] Konfiguracja instalatora (EAS Build: APK, AAB, iOS).
 - [x] Automatyczne aktualizacje OTA i wykrywanie nowych instalatorów.
 - [x] Wymuszona dokumentacja kodu i testy jednostkowe wszystkich warstw.
-- [ ] Założenie projektu EAS i sekretów CI (`EXPO_TOKEN`, `EAS_PROJECT_ID`).
+- [x] Założenie projektu EAS i połączenie z GitHubem.
+- [ ] Token robota Expo w sekrecie CI `EXPO_TOKEN`.
 - [ ] Publiczne środowisko API (adres w `WATTLY_API_URL`).
 - [ ] Publikacja w Google Play / App Store.
 

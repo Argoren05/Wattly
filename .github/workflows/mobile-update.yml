@@ -5,7 +5,7 @@
 # for a new runtime that no installed app uses – such changes require a new installer (mobile-build.yml),
 # and the API endpoint /app/release tells existing apps to download it.
 #
-# Required repository secrets: EXPO_TOKEN and EAS_PROJECT_ID.
+# Required repository secret: EXPO_TOKEN (Expo robot token). EAS_PROJECT_ID is optional (overrides app.json).
 name: Mobile OTA update
 
 on:
