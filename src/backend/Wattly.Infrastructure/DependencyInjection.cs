@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wattly.Application.Common;
 using Wattly.Infrastructure.Identity;
+using Wattly.Infrastructure.Identity.External;
 using Wattly.Infrastructure.Persistence;
 using Wattly.Infrastructure.Storage;
 
@@ -35,6 +36,8 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<WattlyDbContext>()
             .AddDefaultTokenProviders()
             .AddApiEndpoints();
+
+        services.AddExternalAuthentication(configuration);
 
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();

@@ -11,6 +11,8 @@ interface AuthState {
   isReady: boolean;
   isSignedIn: boolean;
   signIn(email: string, password: string): Promise<void>;
+  /** Signs in with a token obtained from an external provider. */
+  signInExternal(provider: string, token: string, nonce?: string): Promise<void>;
   signUp(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
 }
@@ -49,6 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await setTokens(await authApi.login(email.trim(), password));
   }, [setTokens]);
 
+  const signInExternal = useCallback(async (provider: string, token: string, nonce?: string) => {
+    await setTokens(await authApi.external(provider, token, nonce));
+  }, [setTokens]);
+
   const signUp = useCallback(async (email: string, password: string) => {
     await authApi.register(email.trim(), password);
     await signIn(email, password);
@@ -63,7 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await setTokens(null);
   }, [setTokens]);
 
-  const value = useMemo(() => ({ isReady, isSignedIn, signIn, signUp, signOut }), [isReady, isSignedIn, signIn, signUp, signOut]);
+  const value = useMemo(
+    () => ({ isReady, isSignedIn, signIn, signInExternal, signUp, signOut }),
+    [isReady, isSignedIn, signIn, signInExternal, signUp, signOut],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

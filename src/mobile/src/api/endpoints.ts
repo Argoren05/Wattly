@@ -9,6 +9,9 @@ import type {
 export const authApi = {
   register: (email: string, password: string) => http.post<void>('/auth/register', { email, password }),
   login: (email: string, password: string) => http.post<TokenResponse>('/auth/login', { email, password }),
+  /** Exchanges a Google/Microsoft/Apple/Facebook token for Wattly session tokens. */
+  external: (provider: string, token: string, nonce?: string) =>
+    http.post<TokenResponse>('/auth/external', { provider, token, nonce: nonce ?? null }),
   logout: () => http.post<void>('/auth/logout'),
   forgotPassword: (email: string) => http.post<void>('/auth/forgotPassword', { email }),
   me: () => http.get<User>('/users/me'),

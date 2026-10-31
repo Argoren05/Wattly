@@ -84,8 +84,10 @@
 - [x] Automatyczne aktualizacje OTA i wykrywanie nowych instalatorów.
 - [x] Wymuszona dokumentacja kodu i testy jednostkowe wszystkich warstw.
 - [x] Założenie projektu EAS i połączenie z GitHubem.
-- [ ] Token robota Expo w sekrecie CI `EXPO_TOKEN`.
-- [ ] Publiczne środowisko API (adres w `WATTLY_API_URL`).
+- [x] Token robota Expo w sekrecie CI `EXPO_TOKEN`.
+- [x] Logowanie kontami Google, Microsoft, Facebook i Apple (kod).
+- [ ] Rejestracja aplikacji u dostawców logowania i ustawienie identyfikatorów (EAS + API).
+- [ ] Publiczne środowisko API (adres w zmiennej EAS `EXPO_PUBLIC_API_URL`).
 - [ ] Publikacja w Google Play / App Store.
 
 ## Definicja ukończenia zadania

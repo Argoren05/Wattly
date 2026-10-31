@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 
 import { errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { SocialSignIn } from '../components/SocialSignIn';
 import { Body, Button, Card, Field, Notice, Screen, Title } from '../components/ui';
 import { spacing, useTheme } from '../theme/theme';
 
@@ -46,6 +47,7 @@ export default function Login() {
           <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" onSubmitEditing={submit} />
           {error ? <Notice tone="danger">{error}</Notice> : null}
           <Button title="Zaloguj się" onPress={submit} loading={busy} />
+          <SocialSignIn />
         </Card>
         <Body muted style={{ textAlign: 'center' }}>
           Nie masz konta? <Link href="/register" style={{ color: colors.primary, fontWeight: '700' }}>Załóż konto</Link>

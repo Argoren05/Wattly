@@ -7,7 +7,8 @@ Wattly to aplikacja mobilna (Android, iOS) do monitorowania zużycia energii ele
 - skonfigurować operatora dystrybucyjnego, sprzedawcę i taryfę (G11, G12, G12w, G13),
 - przeliczać koszty na podstawie stawek z faktury,
 - przeglądać wykresy, statystyki i prognozę rachunku,
-- porównywać prognozę z rzeczywistymi fakturami.
+- porównywać prognozę z rzeczywistymi fakturami,
+- logować się e-mailem i hasłem albo kontem Google, Microsoft, Facebook lub Apple.
 
 > Wattly jest narzędziem informacyjnym i szacunkowym – prognoza nie jest fakturą sprzedawcy.
 
@@ -27,7 +28,7 @@ Aplikacja **aktualizuje się automatycznie**: zmiany w kodzie trafiają do telef
 | Aplikacja mobilna | React Native, Expo SDK 58, TypeScript, Expo Router, TanStack Query |
 | Backend | ASP.NET Core Web API (.NET 10), modularny monolit |
 | Baza danych | PostgreSQL 16, Entity Framework Core |
-| Uwierzytelnianie | ASP.NET Core Identity (tokeny bearer) |
+| Uwierzytelnianie | ASP.NET Core Identity (tokeny bearer), logowanie Google / Microsoft / Facebook / Apple |
 | Budowanie i aktualizacje | EAS Build, EAS Update (expo-updates) |
 | Testy | xUnit (backend), Jest + Testing Library (mobile) |
 | CI | GitHub Actions |

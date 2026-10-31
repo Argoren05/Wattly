@@ -196,6 +196,7 @@ Model został zaimplementowany w EF Core z następującymi uzupełnieniami i ods
 - **NotificationPreference** – jeszcze niezaimplementowana.
 - Enumy zapisywane jako tekst; wszystkie znaczniki czasu jako `timestamptz` (UTC).
 - Usunięcie użytkownika kaskadowo usuwa gospodarstwa, nieruchomości i powiązane dane.
+- Logowania przez Google, Microsoft, Apple i Facebook są zapisywane w tabeli Identity `AspNetUserLogins` (dostawca + identyfikator użytkownika u dostawcy); konto może mieć wiele powiązanych logowań i nie musi mieć hasła.
 
 ## 3. Relacje w skrócie
 

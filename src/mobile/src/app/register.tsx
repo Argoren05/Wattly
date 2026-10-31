@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { ApiError, errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { SocialSignIn } from '../components/SocialSignIn';
 import { Body, Button, Card, Field, Notice, Screen } from '../components/ui';
 
 /** Registration screen. */
@@ -45,6 +46,7 @@ export default function Register() {
         <Field label="Powtórz hasło" value={confirm} onChangeText={setConfirm} secureTextEntry autoComplete="new-password" />
         {error ? <Notice tone="danger">{error}</Notice> : null}
         <Button title="Załóż konto" onPress={submit} loading={busy} />
+        <SocialSignIn />
       </Card>
       <Body muted>
         Wattly służy do szacowania kosztów energii. Wyniki nie zastępują faktury sprzedawcy.

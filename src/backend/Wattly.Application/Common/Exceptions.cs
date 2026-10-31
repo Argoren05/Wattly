@@ -29,3 +29,12 @@ public sealed class ConflictException(string code, string message) : Exception(m
 /// <summary>The user is authenticated but not allowed to perform the operation (HTTP 403).</summary>
 /// <param name="message">Message for the user.</param>
 public sealed class ForbiddenException(string message = "Brak uprawnień do wykonania operacji.") : Exception(message);
+
+/// <summary>Credentials or an external identity token were rejected (HTTP 401).</summary>
+/// <param name="code">Stable error code, e.g. <c>external.invalid_token</c>.</param>
+/// <param name="message">Message for the user.</param>
+public sealed class AuthenticationFailedException(string code, string message) : Exception(message)
+{
+    /// <summary>Stable error code.</summary>
+    public string Code { get; } = code;
+}
