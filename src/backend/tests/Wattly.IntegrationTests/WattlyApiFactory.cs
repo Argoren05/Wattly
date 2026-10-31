@@ -30,6 +30,8 @@ public sealed class WattlyApiFactory : WebApplicationFactory<Program>, IAsyncLif
         builder.UseSetting("RateLimiting:AuthPerMinute", "10000");
         builder.UseSetting("RateLimiting:GlobalPerMinute", "10000");
         builder.UseSetting("Storage:LocalPath", _storagePath);
+        // Same attachment storage as the Railway deployment (DEC-026).
+        builder.UseSetting("Storage:Provider", "Database");
         builder.UseSetting("Seed:AdminEmail", "admin@wattly.test");
         builder.UseSetting("Seed:AdminPassword", "AdminPassword123");
         builder.ConfigureTestServices(services => services.AddSingleton<IExternalTokenValidator, FakeExternalValidator>());

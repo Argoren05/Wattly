@@ -6,6 +6,7 @@ using Wattly.Domain.Households;
 using Wattly.Domain.Invoices;
 using Wattly.Domain.Tariffs;
 using Wattly.Infrastructure.Identity;
+using Wattly.Infrastructure.Storage;
 
 namespace Wattly.Infrastructure.Persistence.Configurations;
 
@@ -94,5 +95,16 @@ internal sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEv
         b.Property(x => x.ChangesJson).HasColumnType("jsonb");
         b.HasIndex(x => new { x.EntityType, x.EntityId });
         b.HasIndex(x => x.OccurredAt);
+    }
+}
+
+/// <summary>EF Core mapping of <c>StoredFile</c>: the key is the primary key, content is <c>bytea</c>.</summary>
+internal sealed class StoredFileConfiguration : IEntityTypeConfiguration<StoredFile>
+{
+    /// <inheritdoc />
+    public void Configure(EntityTypeBuilder<StoredFile> b)
+    {
+        b.HasKey(x => x.Key);
+        b.Property(x => x.Key).HasMaxLength(200);
     }
 }

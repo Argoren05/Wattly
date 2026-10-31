@@ -89,9 +89,12 @@ public sealed class TestContext : IDisposable
     /// <summary>Database context used by services under test.</summary>
     public WattlyDbContext Db { get; }
 
+    /// <summary>Options of the test database.</summary>
+    public DbContextOptions<WattlyDbContext> Options =>
+        new DbContextOptionsBuilder<WattlyDbContext>().UseInMemoryDatabase(_databaseName).Options;
+
     /// <summary>Opens another context on the same database (to verify what was persisted).</summary>
-    public WattlyDbContext NewDbContext() =>
-        new(new DbContextOptionsBuilder<WattlyDbContext>().UseInMemoryDatabase(_databaseName).Options, User, Clock);
+    public WattlyDbContext NewDbContext() => new(Options, User, Clock);
 
     /// <summary>Adds a G12-like tariff with DAY/NIGHT zones and returns it.</summary>
     /// <param name="code">Tariff code.</param>

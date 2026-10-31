@@ -23,6 +23,18 @@ interface TokenStore {
 }
 
 /** Token store registered by AuthProvider; null until the provider mounts. */
+/**
+ * Statuses returned by the hosting proxy while a sleeping server wakes up (Railway App Sleeping, DEC-026).
+ * The request did not reach the API, so repeating it once is safe.
+ */
+const WAKE_UP_STATUSES = new Set([502, 503]);
+
+/** Pause before repeating a request that hit a waking server (ms); exported for tests. */
+export const wakeUp = { delayMs: 2500 };
+
+/** Waits the given number of milliseconds. */
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 let tokenStore: TokenStore | null = null;
 /** Shared refresh promise, so parallel 401 responses trigger only one refresh. */
 let refreshInFlight: Promise<boolean> | null = null;
@@ -51,15 +63,24 @@ export async function request<T>(method: string, path: string, body?: Body, retr
   const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
 
-  let response: Response;
-  try {
-    response = await fetch(apiUrl(path), {
-      method,
-      headers,
-      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
-    });
-  } catch {
-    throw new NetworkError();
+  /** Sends the request once. */
+  const send = async (): Promise<Response> => {
+    try {
+      return await fetch(apiUrl(path), {
+        method,
+        headers,
+        body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+      });
+    } catch {
+      throw new NetworkError();
+    }
+  };
+
+  let response = await send();
+  if (WAKE_UP_STATUSES.has(response.status)) {
+    // The server was asleep – give it a moment to start and try once more.
+    await sleep(wakeUp.delayMs);
+    response = await send();
   }
 
   if (response.status === 401 && retry && token && (await refreshTokens())) {

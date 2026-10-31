@@ -129,6 +129,20 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Decyzja: adres API i identyfikatory klientów logowania są zmiennymi środowiskowymi EAS (expo.dev → projekt → Environment variables), wybieranymi przez pole `environment` profilu w `eas.json` (build) i `eas update --environment` (aktualizacje OTA).
 - Powód: zmienne z runnera GitHub nie docierają do buildu na serwerach Expo; wcześniejsza zmienna `WATTLY_API_URL` działałaby tylko w aktualizacjach OTA.
 
+## DEC-026 – Hosting na Railway o minimalnym zużyciu
+- Data: 2026-10-31
+- Status: Zatwierdzona
+- Kontekst: 3 użytkowników, opłaty naliczane za faktycznie zużytą pamięć i procesor.
+- Decyzja: Railway (plan Hobby). Serwer API w trybie *Serverless* (usypianie po bezczynności), baza PostgreSQL działa stale, załączniki faktur w bazie (`Storage:Provider=Database`) zamiast osobnego dysku.
+- Zmiany w kodzie, które to umożliwiają:
+  - obsługa `PORT` i `DATABASE_URL`;
+  - pula połączeń z krótkim czasem bezczynności (60 s) i maks. 10 połączeniami – otwarte połączenia blokowałyby uśpienie;
+  - zaufanie do nagłówków `X-Forwarded-*` od proxy Railway, żeby limit logowań liczył się per użytkownik, a nie dla całego proxy;
+  - oszczędne ustawienia środowiska .NET (Workstation GC, ConserveMemory, Invariant Globalization);
+  - jednokrotne ponowienie zapytania w aplikacji przy 502/503 (wybudzanie serwera).
+- Odrzucone: trwały dysk Railway na załączniki (montowany jako root – wymagałby uruchamiania kontenera z uprawnieniami roota); usypianie bazy (zgłaszane problemy z wybudzaniem); plan Free (1 USD zużycia nie wystarcza na stale działającą bazę).
+- Konsekwencje: pierwsze zapytanie po przerwie trwa kilka sekund dłużej; `railway.json` nie jest używany (Railway wycofuje *Config as Code* dla nowych usług), więc ustawienia usług są opisane w `Wattly_Deployment_Railway.md`.
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł
