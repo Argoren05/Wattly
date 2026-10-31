@@ -2,6 +2,7 @@
   "expo": {
     "name": "Wattly",
     "slug": "wattly",
+    "owner": "argoren",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,7 +33,10 @@
     ],
     "scheme": "wattly",
     "extra": {
-      "apiUrl": "http://localhost:5103"
+      "apiUrl": "http://localhost:5103",
+      "eas": {
+        "projectId": "0d60d8dc-6f78-4d20-b6b7-06fb922750b9"
+      }
     },
     "experiments": {
       "typedRoutes": false

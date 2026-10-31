@@ -75,15 +75,16 @@ Instalatory są budowane w chmurze Expo (EAS Build) – nie są potrzebne Androi
 
 ### Jednorazowa konfiguracja
 
-1. Załóż darmowe konto na https://expo.dev.
-2. W katalogu `src/mobile` uruchom `npx eas-cli login`, a potem `npx eas-cli init`. Polecenie wypisze **identyfikator projektu**.
-3. W repozytorium GitHub dodaj sekrety: `EXPO_TOKEN` (token z expo.dev → Access tokens) oraz `EAS_PROJECT_ID`, a także zmienną `WATTLY_API_URL` z publicznym adresem API.
-4. W `eas.json` ustaw `EXPO_PUBLIC_API_URL` profilu `base` na adres produkcyjnego API (albo polegaj na zmiennej `WATTLY_API_URL` z CI).
+1. Załóż darmowe konto na https://expo.dev i utwórz projekt **Wattly**. Konto (`owner`: `argoren`) i identyfikator projektu (`extra.eas.projectId`) są zapisane w `src/mobile/app.json` – nie są tajne.
+2. W ustawieniach projektu Expo, w sekcji **GitHub**, połącz repozytorium i ustaw **Base directory** na `src/mobile`.
+3. W ustawieniach konta Expo, w sekcji **Access tokens**, utwórz **robota** z rolą *Developer* i wygeneruj dla niego token. Lepiej nie używać tokenu osobistego, który daje pełny dostęp do konta.
+4. W GitHubie (**Settings → Secrets and variables → Actions**) dodaj sekret `EXPO_TOKEN` z tokenem robota oraz zmienną `WATTLY_API_URL` z publicznym adresem API.
+5. Opcjonalnie: sekret `EAS_PROJECT_ID` nadpisuje identyfikator z `app.json` (np. w forku).
 
 ### Budowanie
 
 - Z GitHub Actions: workflow **Mobile build** (ręcznie albo tagiem `mobile-v1.2.0`).
-- Lokalnie: `cd src/mobile && EAS_PROJECT_ID=<id> npx eas-cli build --profile preview --platform android`.
+- Lokalnie: `cd src/mobile && npx eas-cli build --profile preview --platform android`.
 
 Po zakończeniu buildu EAS udostępnia link i kod QR. Na telefonie należy otworzyć link, pobrać APK i zezwolić na instalację z tego źródła.
 
