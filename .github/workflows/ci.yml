@@ -37,6 +37,14 @@ jobs:
           dotnet tool restore
           dotnet ef migrations has-pending-model-changes -p Wattly.Infrastructure -s Wattly.Api
 
+  # Builds the same image Cloud Build deploys (src/backend/cloudbuild.yaml), so Dockerfile errors fail the PR
+  # instead of the production deployment.
+  backend-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t wattly-api:ci src/backend
+
   mobile:
     runs-on: ubuntu-latest
     defaults:
