@@ -3,9 +3,12 @@ import Constants from 'expo-constants';
 import { ApiError, NetworkError } from './errors';
 import type { TokenResponse } from './types';
 
-/** API base URL: EXPO_PUBLIC_API_URL (build-time env) wins over the value baked into app config. */
+/**
+ * API base URL: EXPO_PUBLIC_API_URL (build-time env) wins over the value baked into app config.
+ * `||` instead of `??`: CI passes an unset variable as an empty string, which must not become the base URL.
+ */
 const baseUrl: string =
-  process.env.EXPO_PUBLIC_API_URL ?? (Constants.expoConfig?.extra?.apiUrl as string | undefined) ?? 'http://localhost:5103';
+  process.env.EXPO_PUBLIC_API_URL || (Constants.expoConfig?.extra?.apiUrl as string | undefined) || 'http://localhost:5103';
 
 /**
  * Builds the absolute URL of a versioned API path.

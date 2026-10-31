@@ -60,6 +60,10 @@
       "!src/**/*.test.{ts,tsx}",
       "!src/test/**"
     ],
-    "clearMocks": true
+    "clearMocks": true,
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup-after-env.ts"
+    ],
+    "testTimeout": 20000
   }
 }
