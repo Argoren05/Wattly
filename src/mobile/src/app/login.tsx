@@ -6,7 +6,7 @@ import { errorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 import { SocialSignIn } from '../components/SocialSignIn';
 import { currentPasswordAutofill, usernameAutofill } from '../auth/autofill';
-import { Body, Button, Card, Field, Notice, Screen, Title } from '../components/ui';
+import { Body, Button, Card, Field, Notice, PasswordField, Screen, Title } from '../components/ui';
 import { spacing, useTheme } from '../theme/theme';
 
 /** Sign-in screen. */
@@ -45,7 +45,7 @@ export default function Login() {
         </View>
         <Card>
           <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" {...usernameAutofill} />
-          <Field label="Hasło" value={password} onChangeText={setPassword} secureTextEntry {...currentPasswordAutofill} onSubmitEditing={submit} />
+          <PasswordField label="Hasło" value={password} onChangeText={setPassword} {...currentPasswordAutofill} onSubmitEditing={submit} />
           {error ? <Notice tone="danger">{error}</Notice> : null}
           <Button title="Zaloguj się" onPress={submit} loading={busy} />
           <SocialSignIn />
