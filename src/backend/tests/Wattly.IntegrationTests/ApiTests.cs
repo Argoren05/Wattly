@@ -135,6 +135,31 @@ public class ApiTests(WattlyApiFactory factory)
     }
 
     [Fact]
+    public async Task Readings_around_a_moment_can_be_found_with_offset_dates()
+    {
+        // The app previews a back-dated reading by asking for the newest reading up to the moment (to=)
+        // and the oldest one after it (from=, last page). The offset "+01:00" must survive URL encoding.
+        var client = await factory.CreateUserClientAsync();
+        var scenario = await Scenario.CreateAsync(client);
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-02-06T20:00:00+01:00", 3279m);
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-02-20T20:00:00+01:00", 3412m);
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-03-02T20:00:00+01:00", 3508m);
+        var at = Uri.EscapeDataString("2026-02-10T20:00:00+01:00");
+        var url = $"/api/v1/registers/{scenario.DayRegisterId}/readings?pageSize=1";
+
+        var before = await client.GetJsonAsync($"{url}&to={at}");
+        var after = await client.GetJsonAsync($"{url}&from={at}");
+        var next = await client.GetJsonAsync($"{url}&from={at}&page={after["totalCount"]}");
+
+        Assert.Equal(3279m, before["items"]![0]!["value"]!.GetValue<decimal>());
+        Assert.Equal(2, after["totalCount"]!.GetValue<int>());
+        Assert.Equal(3412m, next["items"]![0]!["value"]!.GetValue<decimal>());
+
+        // Saving the back-dated reading between them is accepted.
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-02-10T20:00:00+01:00", 3330m);
+    }
+
+    [Fact]
     public async Task Health_endpoints_report_healthy()
     {
         var client = factory.CreateClient();

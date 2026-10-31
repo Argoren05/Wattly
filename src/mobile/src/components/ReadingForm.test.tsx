@@ -16,7 +16,7 @@ const registers = importRegisters([meter()]);
 const saved: ReadingSaved = { reading: reading(), warnings: [] };
 
 beforeEach(() => {
-  jest.mocked(readingApi.list).mockResolvedValue({ items: [reading({ value: 1200, readingAt: '2026-10-01T06:00:00Z' })], page: 1, pageSize: 50, totalCount: 1 });
+  jest.mocked(readingApi.neighbors).mockResolvedValue({ previous: reading({ value: 1200, readingAt: '2026-10-01T06:00:00Z' }), next: null });
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -37,11 +37,32 @@ test('previews consumption since the last reading and saves', async () => {
   expect(save).toHaveBeenCalledWith('rDay', expect.objectContaining({ value: 1250.5, source: 'Manual', note: null }));
 });
 
+test('a back-dated reading is compared with the readings around its date, not the newest one', async () => {
+  jest.mocked(readingApi.neighbors).mockResolvedValue({
+    previous: reading({ id: 'a', value: 3279, readingAt: '2026-02-06T19:00:00Z' }),
+    next: reading({ id: 'b', value: 3412, readingAt: '2026-02-20T19:00:00Z' }),
+  });
+  const { save } = await renderForm();
+
+  await fireEvent.changeText(screen.getByLabelText('Data i godzina'), '2026-02-10 20:00');
+  await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '3330');
+
+  expect(await screen.findByText('Następny odczyt')).toBeOnTheScreen();
+  expect(screen.getByText(/^51,0\s?kWh$/)).toBeOnTheScreen(); // since the previous reading
+  expect(screen.getByText(/^82,0\s?kWh$/)).toBeOnTheScreen(); // until the next reading
+  expect(screen.queryByText(/niższe|wyższe/)).toBeNull();
+  await waitFor(() => expect(readingApi.neighbors).toHaveBeenLastCalledWith('rDay', expect.stringMatching(/^2026-02-10T20:00:00[+-]\d\d:\d\d$/)));
+
+  await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '3500');
+  expect(await screen.findByText('Wskazanie jest wyższe niż następny odczyt.')).toBeOnTheScreen();
+  expect(save).not.toHaveBeenCalled();
+});
+
 test('warns about values lower than the last reading and validates input', async () => {
   const { save } = await renderForm();
 
   await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '100');
-  expect(await screen.findByText('Wskazanie jest niższe niż ostatni odczyt.')).toBeOnTheScreen();
+  expect(await screen.findByText('Wskazanie jest niższe niż poprzedni odczyt.')).toBeOnTheScreen();
 
   await fireEvent.changeText(screen.getByLabelText('Wskazanie (kWh)'), '');
   await fireEvent.press(screen.getByRole('button', { name: /Zapisz odczyt/ }));

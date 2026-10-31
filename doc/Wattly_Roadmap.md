@@ -94,6 +94,7 @@
 - [x] Wygląd: tryb jasny/ciemny/systemowy i kolor motywu (DEC-029).
 - [x] Instrukcja konfiguracji Neon + Google Cloud krok po kroku.
 - [x] Przycisk pokazywania hasła na ekranach logowania i rejestracji.
+- [x] Podgląd odczytu wpisanego wstecz: porównanie z odczytami przed i po jego dacie.
 - [ ] Instalator 1.1.0 (nowe moduły natywne: kalendarz, aparat).
 - [ ] Publikacja w Google Play / App Store.
 

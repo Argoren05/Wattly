@@ -56,6 +56,23 @@ export const readingApi = {
   list: (registerId: string, page = 1, includeInactive = false) =>
     http.get<PagedResult<Reading>>(`/registers/${registerId}/readings?page=${page}&pageSize=50&includeInactive=${includeInactive}`),
   get: (id: string) => http.get<Reading>(`/readings/${id}`),
+  /**
+   * Active readings right before and right after a moment – used to preview a new (possibly back-dated) reading.
+   * The API lists newest first, so the next reading is the last item of the readings from `at` onwards.
+   * @param registerId Register.
+   * @param at ISO instant of the new reading.
+   */
+  neighbors: async (registerId: string, at: string): Promise<{ previous: Reading | null; next: Reading | null }> => {
+    const base = `/registers/${registerId}/readings?pageSize=1`;
+    const before = await http.get<PagedResult<Reading>>(`${base}&to=${encodeURIComponent(at)}`);
+    const after = await http.get<PagedResult<Reading>>(`${base}&from=${encodeURIComponent(at)}`);
+    const previous = before.items[0] ?? null;
+    let next = after.totalCount > 0 ? (after.totalCount === 1 ? after.items[0] ?? null : null) : null;
+    if (after.totalCount > 1) next = (await http.get<PagedResult<Reading>>(`${base}&from=${encodeURIComponent(at)}&page=${after.totalCount}`)).items[0] ?? null;
+    // A reading at exactly the same moment is a duplicate (reported by the API on save), not a later reading.
+    if (next && previous && next.id === previous.id) next = null;
+    return { previous, next };
+  },
   create: (registerId: string, body: ReadingRequest) => http.post<ReadingSaved>(`/registers/${registerId}/readings`, body),
   correct: (id: string, body: ReadingRequest) => http.put<ReadingSaved>(`/readings/${id}`, body),
   void: (id: string, reason: string | null) => http.post<Reading>(`/readings/${id}/void`, { reason }),
