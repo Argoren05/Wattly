@@ -168,6 +168,13 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
   - pola logowania mają podpowiedzi autouzupełniania rozpoznawane przez Androida (`username`, `password`, `password-new`), dzięki czemu działają menedżery haseł (np. Bitwarden).
 - Konsekwencje: zapisane kalkulacje przechowują kopię stawek, więc poprawki zmieniają tylko prognozy i nowe kalkulacje. Aparat i kalendarz to moduły natywne, dlatego potrzebny był nowy instalator (wersja 1.1.0, `versionCode` 2) – kolejne zmiany znów przychodzą jako aktualizacje OTA.
 
+## DEC-029 – Wygląd: tryb i kolor motywu
+- Data: 2026-10-31
+- Status: Zatwierdzona
+- Kontekst: użytkownicy chcą sami wybrać tryb jasny/ciemny i kolorystykę zamiast zawsze podążać za ustawieniem telefonu.
+- Decyzja: Ustawienia → Wygląd: tryb „Jak w telefonie” / „Jasny” / „Ciemny” i kolor motywu (zielony – domyślny, niebieski, fioletowy, pomarańczowy). Wybór zapisywany lokalnie (`expo-secure-store`, klucz `wattly.appearance`), nie na serwerze – to preferencja urządzenia. Tryb jest przekazywany do elementów natywnych (`Appearance.setColorScheme`), więc kalendarz i okna dialogowe mają ten sam motyw. Kolor zmienia tylko tokeny akcentu (`primary`, `primaryText`, kolory wykresu); kolory ostrzeżeń, błędów i estymacji zostają stałe, żeby zachowały znaczenie.
+- Konsekwencje: zmiana działa natychmiast, bez restartu. Każda paleta ma test kontrastu WCAG AA; nowy kolor można dodać tylko z kompletem wartości dla trybu jasnego i ciemnego.
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

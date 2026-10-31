@@ -91,6 +91,8 @@
 - [x] Przygotowanie wdrożenia na Google Cloud Run + Neon (DEC-027).
 - [x] Uruchomienie serwera na Cloud Run i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
 - [x] Poprawki po pierwszych testach (DEC-028): kalendarz i format dat z telefonu, autouzupełnianie haseł, numer PPE ze skanerem, poprawianie i usuwanie umów oraz cenników, dodawanie i usuwanie nieruchomości.
+- [x] Wygląd: tryb jasny/ciemny/systemowy i kolor motywu (DEC-029).
+- [x] Instrukcja konfiguracji Neon + Google Cloud krok po kroku.
 - [ ] Instalator 1.1.0 (nowe moduły natywne: kalendarz, aparat).
 - [ ] Publikacja w Google Play / App Store.
 

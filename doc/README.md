@@ -45,6 +45,7 @@ Wersje bibliotek i pakietów należy ustalać podczas tworzenia repozytorium i z
 - [Instrukcje dla asystenta AI](AI_WORKING_GUIDELINES.md)
 - [Uruchomienie i development](Wattly_Development.md)
 - [Wdrożenie serwera na Google Cloud Run + Neon](Wattly_Deployment_CloudRun.md)
+- [Konfiguracja Neon + Google Cloud krok po kroku](Wattly_Konfiguracja_Neon_GoogleCloud.md)
 - [Wdrożenie na Railway (alternatywa, nieaktualne)](Wattly_Deployment_Railway.md)
 
 ## Najważniejsze zasady produktu

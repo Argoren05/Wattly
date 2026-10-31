@@ -151,7 +151,7 @@ Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środow
 
 ## Wdrożenie produkcyjne
 
-Serwer na Google Cloud Run + baza Neon: [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md). Konfiguracja budowania i wdrożenia: `src/backend/cloudbuild.yaml`.
+Serwer na Google Cloud Run + baza Neon: [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md), konfiguracja krok po kroku: [Wattly_Konfiguracja_Neon_GoogleCloud.md](Wattly_Konfiguracja_Neon_GoogleCloud.md). Konfiguracja budowania i wdrożenia: `src/backend/cloudbuild.yaml`.
 
 Klucze szyfrujące tokeny logowania (ASP.NET Data Protection) są w tabeli `DataProtectionKeys`, więc restart lub uśpienie serwera nie wylogowuje użytkowników.
 

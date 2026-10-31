@@ -10,7 +10,7 @@ import { useAppUpdates } from '../../../updates/UpdateContext';
 import * as Application from 'expo-application';
 import { Body, Button, Card, Chips, Screen, SectionTitle } from '../../../components/ui';
 import { useProperty } from '../../../state/PropertyContext';
-import { spacing, useTheme } from '../../../theme/theme';
+import { accents, modeLabels, spacing, useAppearance, useTheme, type AccentName, type ThemeMode } from '../../../theme/theme';
 
 /** Navigation row of the settings list. */
 function Item({ icon, title, subtitle, href }: { icon: ComponentProps<typeof Ionicons>['name']; title: string; subtitle: string; href: Href }) {
@@ -30,6 +30,7 @@ function Item({ icon, title, subtitle, href }: { icon: ComponentProps<typeof Ion
 /** Settings tab: property selection, configuration screens, app version, updates and sign-out. */
 export default function Settings() {
   const { signOut } = useAuth();
+  const appearance = useAppearance();
   const { properties, property, select } = useProperty();
   const me = useQuery({ queryKey: ['me'], queryFn: authApi.me });
   const { ota, checkNow, restart } = useAppUpdates();
@@ -58,6 +59,14 @@ export default function Settings() {
         <Item icon="flash-outline" title="Umowa i taryfa" subtitle="Operator, sprzedawca, grupa taryfowa" href="/settings/contract" />
         <Item icon="pricetags-outline" title="Stawki" subtitle="Cenniki i ich okresy obowiązywania" href="/settings/rates" />
         <Item icon="speedometer-outline" title="Liczniki i rejestry" subtitle="Konfiguracja liczników" href="/settings/meters" />
+      </Card>
+      <Card>
+        <SectionTitle>Wygląd</SectionTitle>
+        <Chips<ThemeMode> label="Tryb" value={appearance.mode} onChange={appearance.setMode}
+          options={(Object.keys(modeLabels) as ThemeMode[]).map((m) => ({ value: m, label: modeLabels[m] }))} />
+        <Chips<AccentName> label="Kolor motywu" value={appearance.accent} onChange={appearance.setAccent}
+          options={(Object.keys(accents) as AccentName[]).map((a) => ({ value: a, label: accents[a].label }))} />
+        <Body muted>Ustawienia wyglądu są zapisywane na tym telefonie.</Body>
       </Card>
       <Card>
         <SectionTitle>Konto</SectionTitle>

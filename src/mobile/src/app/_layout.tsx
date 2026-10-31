@@ -9,9 +9,9 @@ import { AuthProvider } from '../auth/AuthContext';
 import { PropertyProvider } from '../state/PropertyContext';
 import { UpdateGate } from '../components/UpdateBanner';
 import { UpdateProvider } from '../updates/UpdateContext';
-import { useTheme } from '../theme/theme';
+import { AppearanceProvider, useTheme } from '../theme/theme';
 
-/** Root of the app: query cache, session, selected property, automatic updates and navigation. */
+/** Root of the app: appearance (theme), query cache, session, selected property, automatic updates and navigation. */
 export default function RootLayout() {
   const [queryClient] = useState(
     () =>
@@ -27,17 +27,19 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PropertyProvider>
-            <UpdateProvider>
-              <UpdateGate>
-                <Navigator />
-              </UpdateGate>
-            </UpdateProvider>
-          </PropertyProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <AppearanceProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PropertyProvider>
+              <UpdateProvider>
+                <UpdateGate>
+                  <Navigator />
+                </UpdateGate>
+              </UpdateProvider>
+            </PropertyProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </AppearanceProvider>
     </SafeAreaProvider>
   );
 }
