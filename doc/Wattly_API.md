@@ -26,6 +26,9 @@
 | `rate_plan.overlap` | Cennik w tym samym zakresie nakłada się okresem obowiązywania |
 | `contract.overlap` | Umowa nakłada się na późniejszą umowę |
 | `catalog.duplicate_code` | Kod operatora/sprzedawcy/taryfy już istnieje |
+| `external.invalid_token` | Token dostawcy logowania nieprawidłowy, wygasły lub wydany dla innej aplikacji |
+| `external.email_missing` | Dostawca nie udostępnił adresu e-mail |
+| `external.email_in_use` | Istnieje konto z tym adresem, a dostawca nie potwierdził adresu – zaloguj się hasłem |
 
 ## 2. Konto (`/auth`, limit 10 żądań/min/IP)
 
@@ -34,6 +37,9 @@ Endpointy ASP.NET Core Identity (`MapIdentityApi`):
 - `POST /auth/login` `{ email, password }` → `{ tokenType, accessToken, expiresIn, refreshToken }`
 - `POST /auth/refresh` `{ refreshToken }`
 - `POST /auth/forgotPassword`, `POST /auth/resetPassword`, `POST /auth/manage/info` i pozostałe endpointy Identity
+- `POST /auth/external` `{ provider: "google" | "microsoft" | "apple" | "facebook", token, nonce? }` → te same tokeny co `/auth/login` (DEC-024)
+  - `token` – ID token (Google, Microsoft, Apple) albo access token użytkownika (Facebook)
+  - błędy: `401 external.invalid_token`, `401 external.email_missing`, `409 external.email_in_use` (konto z tym adresem już istnieje, a dostawca nie potwierdził adresu), `400` – nieznany lub nieskonfigurowany dostawca, `403` – konto zablokowane
 - `POST /auth/logout` – unieważnia tokeny odświeżania użytkownika
 - `GET /users/me` → `{ id, email, roles }`
 

@@ -5,19 +5,14 @@
   },
   "build": {
     "base": {
-      "node": "22.22.0",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.wattly.example"
-      }
+      "node": "22.22.0"
     },
     "development": {
       "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.10:5103"
-      }
+      "environment": "development"
     },
     "preview": {
       "extends": "base",
@@ -25,7 +20,8 @@
       "channel": "preview",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "environment": "preview"
     },
     "production": {
       "extends": "base",
@@ -33,7 +29,8 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "environment": "production"
     }
   },
   "submit": {

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Wattly.Infrastructure.Identity;
+using Wattly.Infrastructure.Identity.External;
 
 namespace Wattly.Api.Endpoints;
 
@@ -19,6 +20,16 @@ public static class AuthEndpoints
     {
         var auth = api.MapGroup("/auth").WithTags("Auth").RequireRateLimiting(RateLimitPolicies.Auth);
         auth.MapIdentityApi<AppUser>();
+
+        // Sign-in with Google, Microsoft, Apple or Facebook: the app sends the provider's token and receives
+        // the same Wattly bearer/refresh tokens as after password sign-in.
+        auth.MapPost("/external", async (ExternalLoginRequest request, ExternalLoginService service, SignInManager<AppUser> signIn, CancellationToken ct) =>
+        {
+            var user = await service.SignInAsync(request, ct);
+            signIn.AuthenticationScheme = IdentityConstants.BearerScheme;
+            await signIn.SignInAsync(user, isPersistent: false);
+            return Results.Empty;
+        });
 
         // Bearer access tokens are stateless; changing the security stamp invalidates all refresh tokens of the user.
         auth.MapPost("/logout", async (ClaimsPrincipal principal, UserManager<AppUser> users) =>

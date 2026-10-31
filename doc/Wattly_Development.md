@@ -77,9 +77,32 @@ Instalatory są budowane w chmurze Expo (EAS Build) – nie są potrzebne Androi
 
 1. Załóż darmowe konto na https://expo.dev i utwórz projekt **Wattly**. Konto (`owner`: `argoren`) i identyfikator projektu (`extra.eas.projectId`) są zapisane w `src/mobile/app.json` – nie są tajne.
 2. W ustawieniach projektu Expo, w sekcji **GitHub**, połącz repozytorium i ustaw **Base directory** na `src/mobile`.
-3. W ustawieniach konta Expo, w sekcji **Access tokens**, utwórz **robota** z rolą *Developer* i wygeneruj dla niego token. Lepiej nie używać tokenu osobistego, który daje pełny dostęp do konta.
-4. W GitHubie (**Settings → Secrets and variables → Actions**) dodaj sekret `EXPO_TOKEN` z tokenem robota oraz zmienną `WATTLY_API_URL` z publicznym adresem API.
-5. Opcjonalnie: sekret `EAS_PROJECT_ID` nadpisuje identyfikator z `app.json` (np. w forku).
+3. W ustawieniach konta Expo, w sekcji **Access tokens**, utwórz **robota** z rolą *Developer* i wygeneruj dla niego token. Lepiej nie używać tokenu osobistego, który daje pełny dostęp do konta. Token zapisz w GitHubie (**Settings → Secrets and variables → Actions**) jako sekret `EXPO_TOKEN`.
+4. Na expo.dev, w projekcie Wattly, otwórz **Environment variables** i dodaj zmienne dla środowisk *preview* i *production* (widoczność *Plain text*; to publiczne identyfikatory, nie sekrety):
+
+   | Zmienna | Wartość |
+   |---|---|
+   | `EXPO_PUBLIC_API_URL` | publiczny adres API, np. `https://api.twojadomena.pl` |
+   | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google – identyfikator klienta typu *Web application* |
+   | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google – identyfikator klienta *iOS* (tylko dla iOS) |
+   | `EXPO_PUBLIC_MICROSOFT_CLIENT_ID` | Microsoft Entra – *Application (client) ID* |
+   | `EXPO_PUBLIC_FACEBOOK_APP_ID` | Meta – *App ID* |
+   | `EXPO_PUBLIC_APPLE_SIGN_IN` | `true`, aby włączyć „Zaloguj przez Apple” (iOS) |
+
+   Builder EAS i `eas update` pobierają te zmienne zgodnie z polem `environment` w `eas.json`. Zmienne z GitHuba **nie** docierają do buildu na serwerach Expo (DEC-025). Opcjonalnie sekret `EAS_PROJECT_ID` nadpisuje identyfikator z `app.json` (np. w forku).
+
+### Logowanie kontami zewnętrznymi (DEC-024)
+
+Przycisk dostawcy pojawia się w aplikacji dopiero po ustawieniu jego identyfikatora (pkt 4). API musi znać te same identyfikatory – ustaw je w konfiguracji API (zmienne środowiskowe serwera):
+
+| Dostawca | Gdzie utworzyć | Konfiguracja API |
+|---|---|---|
+| Google | Google Cloud Console → *APIs & Services → Credentials*: klient **Web application**, klient **Android** (pakiet `app.wattly.mobile` + odcisk SHA-1 klucza podpisu z expo.dev → *Credentials*) i opcjonalnie **iOS** (bundle `app.wattly.mobile`) | `Auth__External__Google__ClientIds__0` = identyfikator klienta *Web* |
+| Microsoft | Microsoft Entra → *App registrations*: konta „dowolny katalog + osobiste konta Microsoft”, platforma *Mobile and desktop*, adres przekierowania `wattly://auth` | `Auth__External__Microsoft__ClientIds__0` = *Application (client) ID* |
+| Facebook | Meta for Developers → aplikacja z produktem *Facebook Login*, prawidłowy adres przekierowania OAuth `fb<APP_ID>://authorize`, uprawnienia `public_profile` i `email` | `Auth__External__Facebook__AppId`, `Auth__External__Facebook__AppSecret` (sekret – tylko na serwerze) |
+| Apple | Apple Developer → identyfikator `app.wattly.mobile` z funkcją *Sign in with Apple* (EAS Build może to ustawić automatycznie) | `Auth__External__Apple__ClientIds__0` = `app.wattly.mobile` |
+
+Po zmianie identyfikatorów Google, Facebooka lub Apple potrzebny jest **nowy instalator** (zmieniają się ustawienia natywne). Pozostałe zmiany trafiają do telefonów jako aktualizacja OTA.
 
 ### Budowanie
 
@@ -117,6 +140,7 @@ W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawien
 | `Cors:AllowedOrigins` | Dozwolone originy (tylko dla wersji web) |
 | `Http:RedirectToHttps` | Przekierowanie na HTTPS (gdy TLS nie kończy się na proxy) |
 | `MobileApp:Android:*`, `MobileApp:Ios:*` | Najnowsza i minimalna wersja instalatora, link do pobrania, opis zmian |
+| `Auth:External:*` | Logowanie Google, Microsoft, Apple, Facebook (identyfikatory klientów; sekret Facebooka) |
 
 Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środowiskowe lub menedżer sekretów – nigdy przez repozytorium.
 

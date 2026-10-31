@@ -24,6 +24,7 @@ public sealed class ProblemExceptionHandler(IProblemDetailsService problemDetail
             ConflictException e => WithCode(new ProblemDetails { Status = StatusCodes.Status409Conflict, Title = e.Message }, e.Code),
             DomainException e => WithCode(new ProblemDetails { Status = StatusCodes.Status422UnprocessableEntity, Title = e.Message }, e.Code),
             ForbiddenException e => new ProblemDetails { Status = StatusCodes.Status403Forbidden, Title = e.Message },
+            AuthenticationFailedException e => WithCode(new ProblemDetails { Status = StatusCodes.Status401Unauthorized, Title = e.Message }, e.Code),
             UnauthorizedAccessException => new ProblemDetails { Status = StatusCodes.Status401Unauthorized, Title = "Wymagane jest zalogowanie." },
             BadHttpRequestException e => new ProblemDetails { Status = e.StatusCode, Title = "Nieprawidłowe żądanie." },
             _ => new ProblemDetails { Status = StatusCodes.Status500InternalServerError, Title = "Wystąpił nieoczekiwany błąd." },

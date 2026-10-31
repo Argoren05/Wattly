@@ -42,6 +42,18 @@ test('sign in stores tokens, sign out clears them even when the server fails', a
   expect(store.has('wattly.tokens')).toBe(false);
 });
 
+test('external sign-in stores the Wattly tokens returned for the provider token', async () => {
+  jest.mocked(authApi.external).mockResolvedValue(tokens);
+  const { result } = await renderHook(() => useAuth(), { wrapper });
+  await waitFor(() => expect(result.current.isReady).toBe(true));
+
+  await act(() => result.current.signInExternal('google', 'id-token', 'nonce'));
+
+  expect(authApi.external).toHaveBeenCalledWith('google', 'id-token', 'nonce');
+  expect(result.current.isSignedIn).toBe(true);
+  expect(store.get('wattly.tokens')).toBe(JSON.stringify(tokens));
+});
+
 test('sign up registers and signs in', async () => {
   jest.mocked(authApi.register).mockResolvedValue(undefined);
   jest.mocked(authApi.login).mockResolvedValue(tokens);

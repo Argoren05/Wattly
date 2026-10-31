@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Wattly.Infrastructure.Identity.External;
 using Npgsql;
 
 namespace Wattly.IntegrationTests;
@@ -29,6 +32,7 @@ public sealed class WattlyApiFactory : WebApplicationFactory<Program>, IAsyncLif
         builder.UseSetting("Storage:LocalPath", _storagePath);
         builder.UseSetting("Seed:AdminEmail", "admin@wattly.test");
         builder.UseSetting("Seed:AdminPassword", "AdminPassword123");
+        builder.ConfigureTestServices(services => services.AddSingleton<IExternalTokenValidator, FakeExternalValidator>());
     }
 
     /// <summary>Nothing to prepare – the API migrates the database on start.</summary>

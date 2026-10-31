@@ -114,6 +114,21 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Status: Zatwierdzona
 - Decyzja: dokumentacja kodu wymuszana narzędziowo (XML docs w .NET, ESLint JSDoc w aplikacji mobilnej). Testy jednostkowe obejmują wszystkie warstwy, a CI blokuje build i publikację aktualizacji przy błędach.
 
+## DEC-024 – Logowanie kontami Google, Microsoft, Facebook i Apple
+- Data: 2026-10-31
+- Status: Propozycja
+- Decyzja: aplikacja pobiera token dostawcy na urządzeniu. Google przez natywne SDK (`@react-native-google-signin/google-signin`), Microsoft przez OpenID Connect z PKCE, Facebook przez okno logowania w przeglądarce systemowej, Apple przez `expo-apple-authentication` na iOS. Token trafia do `POST /api/v1/auth/external`. Backend weryfikuje podpis, wystawcę, odbiorcę, ważność i nonce (Google, Microsoft, Apple) lub sprawdza token przez Graph API `debug_token` (Facebook), a następnie wydaje własne tokeny Wattly – takie same jak przy logowaniu hasłem.
+- Wiązanie kont: konto z tym samym adresem e-mail jest łączone tylko wtedy, gdy dostawca potwierdza, że adres jest zweryfikowany (Google, Apple, Facebook). Microsoft nie gwarantuje weryfikacji, więc przy istniejącym koncie zwracany jest błąd `external.email_in_use`, a nie przejęcie konta. Konto bez adresu e-mail jest odrzucane (`external.email_missing`).
+- Konfiguracja: identyfikatory klientów są publiczne i ustawiane jako zmienne środowiskowe EAS (`EXPO_PUBLIC_*`); sekret Facebooka tylko po stronie API. Dostawca bez konfiguracji nie jest pokazywany.
+- Odrzucone: przestarzałe moduły `expo-auth-session/providers/google` i `facebook`; `react-native-fbsdk-next` (brak aktualizacji od 8 miesięcy, niepewna zgodność z React Native 0.88).
+- Konsekwencje: na iOS z logowaniem Google lub Facebook App Store wymaga też „Zaloguj przez Apple” (`EXPO_PUBLIC_APPLE_SIGN_IN=true`).
+
+## DEC-025 – Zmienne środowiskowe EAS jako jedyne źródło konfiguracji aplikacji
+- Data: 2026-10-31
+- Status: Propozycja
+- Decyzja: adres API i identyfikatory klientów logowania są zmiennymi środowiskowymi EAS (expo.dev → projekt → Environment variables), wybieranymi przez pole `environment` profilu w `eas.json` (build) i `eas update --environment` (aktualizacje OTA).
+- Powód: zmienne z runnera GitHub nie docierają do buildu na serwerach Expo; wcześniejsza zmienna `WATTLY_API_URL` działałaby tylko w aktualizacjach OTA.
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

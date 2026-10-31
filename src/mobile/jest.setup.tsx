@@ -55,3 +55,41 @@ jest.mock('expo-router', () => {
     Tabs,
   };
 });
+
+// Sign-in with external providers: native SDKs replaced by test doubles (tests override return values).
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  GoogleSignin: { configure: jest.fn(), hasPlayServices: jest.fn(async () => true), signIn: jest.fn() },
+  isSuccessResponse: (response: { type: string }) => response.type === 'success',
+  isErrorWithCode: (error: unknown) => typeof error === 'object' && error !== null && 'code' in error,
+  statusCodes: { SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED', IN_PROGRESS: 'IN_PROGRESS', PLAY_SERVICES_NOT_AVAILABLE: 'PLAY_SERVICES_NOT_AVAILABLE' },
+}));
+
+jest.mock('expo-apple-authentication', () => ({
+  signInAsync: jest.fn(),
+  AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 },
+}));
+
+jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'test-nonce') }));
+
+jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
+
+jest.mock('expo-auth-session', () => {
+  const promptAsync = jest.fn();
+  class AuthRequest {
+    codeVerifier = 'test-verifier';
+    config: Record<string, unknown>;
+    constructor(config: Record<string, unknown>) {
+      this.config = config;
+      AuthRequest.instances.push(this);
+    }
+    static instances: AuthRequest[] = [];
+    promptAsync = promptAsync;
+  }
+  return {
+    AuthRequest,
+    ResponseType: { Code: 'code', Token: 'token' },
+    makeRedirectUri: jest.fn(() => 'wattly://auth'),
+    exchangeCodeAsync: jest.fn(),
+    __promptAsync: promptAsync,
+  };
+});

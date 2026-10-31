@@ -24,6 +24,53 @@ public class ApiTests(WattlyApiFactory factory)
     }
 
     [Fact]
+    public async Task External_login_issues_wattly_tokens_and_reuses_the_account()
+    {
+        var client = factory.CreateClient();
+        var subject = Guid.NewGuid().ToString("N");
+        var email = $"{subject}@social.test";
+
+        var first = await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "test", token = $"{subject}|{email}|true" });
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var tokens = await first.ReadJsonAsync();
+        Assert.Equal("Bearer", tokens["tokenType"]!.GetValue<string>());
+
+        var authed = factory.CreateClient();
+        authed.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens["accessToken"]!.GetValue<string>());
+        var me = await authed.GetJsonAsync("/api/v1/users/me");
+        Assert.Equal(email, me["email"]!.GetValue<string>());
+
+        // Signing in again with the same provider account returns the same Wattly user.
+        var again = await (await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "TEST", token = $"{subject}|{email}|true" })).ReadJsonAsync();
+        authed.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", again["accessToken"]!.GetValue<string>());
+        Assert.Equal(me["id"]!.GetValue<string>(), (await authed.GetJsonAsync("/api/v1/users/me"))["id"]!.GetValue<string>());
+
+        // The refresh token works exactly as after password sign-in.
+        var refreshed = await client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = tokens["refreshToken"]!.GetValue<string>() });
+        Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);
+    }
+
+    [Fact]
+    public async Task External_login_rejects_bad_tokens_unknown_providers_and_account_takeover()
+    {
+        var client = factory.CreateClient();
+
+        var invalid = await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "test", token = "garbage" });
+        Assert.Equal(HttpStatusCode.Unauthorized, invalid.StatusCode);
+        Assert.Equal("external.invalid_token", (await invalid.ReadJsonAsync())["code"]!.GetValue<string>());
+
+        var unknown = await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "myspace", token = "a|b@c.d|true" });
+        Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
+
+        // An unverified address must not be linked to an existing password account.
+        var email = $"owner_{Guid.NewGuid():N}@wattly.test";
+        await factory.CreateUserClientAsync(email);
+        var takeover = await client.PostAsJsonAsync("/api/v1/auth/external", new { provider = "test", token = $"attacker|{email}|false" });
+        Assert.Equal(HttpStatusCode.Conflict, takeover.StatusCode);
+        Assert.Equal("external.email_in_use", (await takeover.ReadJsonAsync())["code"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task Health_endpoints_report_healthy()
     {
         var client = factory.CreateClient();
