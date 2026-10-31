@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ namespace Wattly.Infrastructure.Persistence;
 /// <param name="currentUser">Current user (null at design time) – recorded as the actor of audit events.</param>
 /// <param name="clock">Time source (defaults to the system clock).</param>
 public class WattlyDbContext(DbContextOptions<WattlyDbContext> options, ICurrentUser? currentUser = null, TimeProvider? clock = null)
-    : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options), IWattlyDbContext
+    : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options), IWattlyDbContext, IDataProtectionKeyContext
 {
     /// <inheritdoc />
     public DbSet<Household> Households => Set<Household>();
@@ -56,6 +57,12 @@ public class WattlyDbContext(DbContextOptions<WattlyDbContext> options, ICurrent
 
     /// <summary>Attachment contents when <c>Storage:Provider</c> is <c>Database</c>.</summary>
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+
+    /// <summary>
+    /// ASP.NET Data Protection keys. Access and refresh tokens are encrypted with them, so they must survive a
+    /// container restart – otherwise every scale-to-zero restart on Cloud Run would sign all users out (DEC-027).
+    /// </summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     /// <summary>Default precision for decimals (money and readings must never be floating point).</summary>
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

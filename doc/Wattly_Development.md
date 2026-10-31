@@ -139,10 +139,10 @@ W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawien
 | `Storage:LocalPath` | Katalog załączników (poza web root) |
 | `Cors:AllowedOrigins` | Dozwolone originy (tylko dla wersji web) |
 | `Http:RedirectToHttps` | Przekierowanie na HTTPS (gdy TLS nie kończy się na proxy) |
-| `DATABASE_URL` | Alternatywa dla `ConnectionStrings:Wattly` w formacie `postgresql://…` (Railway) |
+| `DATABASE_URL` | Alternatywa dla `ConnectionStrings:Wattly` w formacie `postgresql://…?sslmode=require` (Neon; na Cloud Run z Secret Manager) |
 | `PORT` | Port nasłuchu ustawiany przez platformę hostingową |
 | `Storage:Provider` | `Local` (katalog, domyślnie) lub `Database` (załączniki w PostgreSQL) |
-| `Http:TrustForwardedHeaders` | `true` za zaufanym proxy (Railway) – prawdziwy adres IP klienta dla limitów logowań |
+| `Http:TrustForwardedHeaders` | `true` za zaufanym proxy (Cloud Run) – prawdziwy adres IP klienta dla limitów logowań |
 | `MobileApp:Android:*`, `MobileApp:Ios:*` | Najnowsza i minimalna wersja instalatora, link do pobrania, opis zmian |
 | `Auth:External:*` | Logowanie Google, Microsoft, Apple, Facebook (identyfikatory klientów; sekret Facebooka) |
 
@@ -150,7 +150,9 @@ Sekrety (hasła, connection stringi produkcyjne) przekazuj przez zmienne środow
 
 ## Wdrożenie produkcyjne
 
-Serwer na Railway: [Wattly_Deployment_Railway.md](Wattly_Deployment_Railway.md).
+Serwer na Google Cloud Run + baza Neon: [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md). Konfiguracja budowania i wdrożenia: `src/backend/cloudbuild.yaml`.
+
+Klucze szyfrujące tokeny logowania (ASP.NET Data Protection) są w tabeli `DataProtectionKeys`, więc restart lub uśpienie serwera nie wylogowuje użytkowników.
 
 ## Znane ograniczenia MVP
 

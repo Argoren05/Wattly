@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +15,7 @@ namespace Wattly.Infrastructure;
 /// <summary>Registration of the infrastructure layer.</summary>
 public static class DependencyInjection
 {
-    /// <summary>Registers EF Core (PostgreSQL), Identity, file storage, clock and health checks.</summary>
+    /// <summary>Registers EF Core (PostgreSQL), Identity, Data Protection key storage, file storage, clock and health checks.</summary>
     /// <param name="services">Service collection.</param>
     /// <param name="configuration">Application configuration.</param>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -37,6 +38,12 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<WattlyDbContext>()
             .AddDefaultTokenProviders()
             .AddApiEndpoints();
+
+        // Token encryption keys live in the database: containers are stateless and restart often (scale to zero),
+        // and a fresh key ring would invalidate every issued access and refresh token (DEC-027).
+        services.AddDataProtection()
+            .SetApplicationName("Wattly")
+            .PersistKeysToDbContext<WattlyDbContext>();
 
         services.AddExternalAuthentication(configuration);
 

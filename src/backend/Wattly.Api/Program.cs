@@ -15,7 +15,7 @@ using Wattly.Infrastructure.Persistence;
 // Composition root of the Wattly API: services, security, middleware pipeline and endpoints.
 var builder = WebApplication.CreateBuilder(args);
 
-// Hosting platforms such as Railway tell the app which port to listen on.
+// Hosting platforms such as Cloud Run tell the app which port to listen on.
 if (int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var port))
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 

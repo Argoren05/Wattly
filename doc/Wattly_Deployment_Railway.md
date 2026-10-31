@@ -1,5 +1,7 @@
 # Wattly – wdrożenie serwera na Railway
 
+> **Nieaktualne.** Railway wstrzymał rejestrację nowych kont, dlatego serwer działa na Google Cloud Run + Neon – zob. [Wattly_Deployment_CloudRun.md](Wattly_Deployment_CloudRun.md) i DEC-027. Ta instrukcja zostaje na wypadek przeniesienia serwera na Railway w przyszłości.
+
 Instrukcja uruchomienia API i bazy danych na [Railway](https://railway.com) w konfiguracji o **najmniejszym zużyciu** dla kilku użytkowników (DEC-026). Wszystko da się wyklikać w przeglądarce, także na telefonie.
 
 ## Jak to działa i ile kosztuje

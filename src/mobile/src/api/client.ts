@@ -24,7 +24,7 @@ interface TokenStore {
 
 /** Token store registered by AuthProvider; null until the provider mounts. */
 /**
- * Statuses returned by the hosting proxy while a sleeping server wakes up (Railway App Sleeping, DEC-026).
+ * Statuses returned by the hosting proxy while a sleeping server wakes up (Cloud Run scaling from zero, DEC-027).
  * The request did not reach the API, so repeating it once is safe.
  */
 const WAKE_UP_STATUSES = new Set([502, 503]);

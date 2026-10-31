@@ -88,7 +88,8 @@
 - [x] Logowanie kontami Google, Microsoft, Facebook i Apple (kod).
 - [ ] Rejestracja aplikacji u dostawców logowania i ustawienie identyfikatorów (EAS + API).
 - [x] Przygotowanie serwera do wdrożenia na Railway (DEC-026).
-- [ ] Uruchomienie serwera na Railway i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
+- [x] Przygotowanie wdrożenia na Google Cloud Run + Neon (DEC-027).
+- [ ] Uruchomienie serwera na Cloud Run i ustawienie `EXPO_PUBLIC_API_URL` na expo.dev.
 - [ ] Publikacja w Google Play / App Store.
 
 ## Definicja ukończenia zadania

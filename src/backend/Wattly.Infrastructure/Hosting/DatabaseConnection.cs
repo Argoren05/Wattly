@@ -5,13 +5,15 @@ namespace Wattly.Infrastructure.Hosting;
 
 /// <summary>
 /// Builds the PostgreSQL connection string. Supports the explicit <c>ConnectionStrings:Wattly</c> setting and the
-/// <c>DATABASE_URL</c> variable provided by hosting platforms such as Railway (<c>postgresql://user:pass@host:port/db</c>).
+/// <c>DATABASE_URL</c> variable in URL form (<c>postgresql://user:pass@host:port/db?sslmode=require</c>) as given by
+/// Neon and similar services. On Cloud Run the URL comes from Secret Manager (DEC-027).
 /// </summary>
 public static class DatabaseConnection
 {
     /// <summary>
     /// Seconds after which an idle pooled connection is closed. Short on purpose: an open connection is network
-    /// traffic that keeps a "serverless" host (Railway App Sleeping) awake and billed (DEC-026).
+    /// traffic that keeps a scale-to-zero host (Cloud Run) and a scale-to-zero database (Neon) awake and billed
+    /// (DEC-026, DEC-027).
     /// </summary>
     public const int DefaultIdleLifetimeSeconds = 60;
 
@@ -57,13 +59,20 @@ public static class DatabaseConnection
             Password = credentials.Length > 1 ? Uri.UnescapeDataString(credentials[1]) : null,
         };
 
-        // Optional query parameters, e.g. ?sslmode=require.
+        // Optional query parameters, e.g. Neon's ?sslmode=require&channel_binding=require. Unknown ones are ignored.
         foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = pair.Split('=', 2);
-            if (parts.Length == 2 && parts[0].Equals("sslmode", StringComparison.OrdinalIgnoreCase)
-                && Enum.TryParse<SslMode>(Uri.UnescapeDataString(parts[1]).Replace("-", string.Empty), ignoreCase: true, out var mode))
+            if (parts.Length != 2)
+                continue;
+            // "verify-full" -> "VerifyFull", "require" -> "Require" (enum names without the dash).
+            var value = Uri.UnescapeDataString(parts[1]).Replace("-", string.Empty);
+            if (parts[0].Equals("sslmode", StringComparison.OrdinalIgnoreCase)
+                && Enum.TryParse<SslMode>(value, ignoreCase: true, out var mode))
                 builder.SslMode = mode;
+            else if (parts[0].Equals("channel_binding", StringComparison.OrdinalIgnoreCase)
+                && Enum.TryParse<ChannelBinding>(value, ignoreCase: true, out var binding))
+                builder.ChannelBinding = binding;
         }
 
         return builder;
