@@ -85,7 +85,7 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 ## DEC-018 – Układ repozytorium
 - Data: 2026-10-30
 - Status: Zatwierdzona
-- Decyzja: cały kod i konfiguracja projektu w `src/` (w tym testy i docker-compose), dokumentacja w `doc/`. Wyjątek: `.github/workflows` w katalogu głównym (wymóg GitHub).
+- Decyzja: cały kod i konfiguracja projektu w `src/` (w tym testy i docker-compose), dokumentacja w `doc/`. Wyjątki w katalogu głównym: `.github/workflows` (wymóg GitHub) oraz krótki `README.md` jako strona startowa repozytorium z odnośnikami do `doc/`.
 
 ## DEC-019 – Estymacja zużycia
 - Data: 2026-10-30
