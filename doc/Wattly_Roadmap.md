@@ -97,6 +97,7 @@
 - [x] Podgląd odczytu wpisanego wstecz: porównanie z odczytami przed i po jego dacie.
 - [x] Dni między codziennymi odczytami oznaczane jako „na podstawie odczytów” (DEC-030).
 - [x] Jeden główny README (opis, zasady, stan projektu) i spis dokumentacji w `doc/README.md`.
+- [x] Ustawienia pokazują wersję instalatora (z kompilacją) i wgraną aktualizację OTA.
 - [ ] Konto administratora i ekran zarządzania katalogiem (na razie niepotrzebne – własne stawki).
 - [ ] Instalator 1.1.0 (nowe moduły natywne: kalendarz, aparat).
 - [ ] Publikacja w Google Play / App Store.

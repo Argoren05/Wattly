@@ -158,8 +158,10 @@ describe('settings', () => {
     await renderWithProviders(<Settings />, { properties: [property(), property({ id: 'p2', name: 'Dom' })] });
 
     expect(await screen.findByText('jan@example.com')).toBeOnTheScreen();
-    expect(screen.getByText('Wersja 1.0.0')).toBeOnTheScreen();
-    expect(screen.getByText(/wyłączone w tej wersji/)).toBeOnTheScreen();
+    expect(screen.getByText('Instalator')).toBeOnTheScreen();
+    expect(screen.getByText('1.0.0 (kompilacja 1)')).toBeOnTheScreen();
+    expect(screen.getByText('wyłączone w tej wersji')).toBeOnTheScreen();
+    expect(screen.getByText(/Automatyczne aktualizacje są wyłączone/)).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: /Sprawdź aktualizacje/ })).toBeDisabled();
 
     await fireEvent.press(screen.getByRole('button', { name: /Stawki/ }));

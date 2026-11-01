@@ -8,7 +8,9 @@ import { authApi } from '../../../api/endpoints';
 import { useAuth } from '../../../auth/AuthContext';
 import { useAppUpdates } from '../../../updates/UpdateContext';
 import * as Application from 'expo-application';
-import { Body, Button, Card, Chips, Screen, SectionTitle } from '../../../components/ui';
+import * as Updates from 'expo-updates';
+import { describeVersion } from '../../../updates/versionInfo';
+import { Body, Button, Card, Chips, KeyValue, Screen, SectionTitle } from '../../../components/ui';
 import { useProperty } from '../../../state/PropertyContext';
 import { accents, modeLabels, spacing, useAppearance, useTheme, type AccentName, type ThemeMode } from '../../../theme/theme';
 
@@ -34,6 +36,15 @@ export default function Settings() {
   const { properties, property, select } = useProperty();
   const me = useQuery({ queryKey: ['me'], queryFn: authApi.me });
   const { ota, checkNow, restart } = useAppUpdates();
+  // Installer version changes only with a new APK; the update line changes with every automatic (OTA) update.
+  const version = describeVersion({
+    nativeVersion: Application.nativeApplicationVersion,
+    nativeBuild: Application.nativeBuildVersion,
+    updatesEnabled: Updates.isEnabled,
+    isEmbeddedLaunch: Updates.isEmbeddedLaunch,
+    updateId: Updates.updateId,
+    createdAt: Updates.createdAt,
+  });
   const otaLabel: Record<typeof ota, string> = {
     disabled: 'Automatyczne aktualizacje są wyłączone w tej wersji (tryb deweloperski).',
     idle: 'Aktualizacje są sprawdzane automatycznie.',
@@ -75,7 +86,8 @@ export default function Settings() {
       </Card>
       <Card>
         <SectionTitle>Aplikacja</SectionTitle>
-        <Body muted>Wersja {Application.nativeApplicationVersion ?? 'deweloperska'}</Body>
+        <KeyValue label="Instalator" value={version.installer} />
+        <KeyValue label="Aktualizacja" value={version.update} />
         <Body>{otaLabel[ota]}</Body>
         {ota === 'ready'
           ? <Button title="Uruchom ponownie" icon="refresh" onPress={() => void restart()} />

@@ -20,6 +20,9 @@ jest.mock('expo-secure-store', () => {
 // OTA updates are disabled unless a test provides its own UpdatesModule double.
 jest.mock('expo-updates', () => ({
   isEnabled: false,
+  isEmbeddedLaunch: true,
+  updateId: null,
+  createdAt: null,
   checkForUpdateAsync: jest.fn(),
   fetchUpdateAsync: jest.fn(),
   reloadAsync: jest.fn(),
