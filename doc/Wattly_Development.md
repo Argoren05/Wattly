@@ -119,7 +119,25 @@ Workflow **Mobile build** czeka, aż Expo skończy budowanie (zwykle 10–20 min
 2. Sekcja **System → Actions**: zaznacz powiadomienia **Email** i odznacz **„Only notify for failed workflows”**.
 3. Od teraz po każdym uruchomieniu *Mobile build* przyjdzie mail z wynikiem. Link w mailu prowadzi do uruchomienia, a tam w *Summary* jest link do pliku APK. Wystarczy otworzyć go na telefonie.
 
-GitHub wysyła takie maile tylko osobie, która uruchomiła workflow. Czekanie na build zużywa minuty GitHub Actions (w darmowym planie 2000 minut miesięcznie dla repozytoriów prywatnych); jeden build to ok. 15–25 minut. Pełna treść maila z linkiem do APK wymagałaby wysyłki przez własny serwer SMTP albo webhook EAS i nie jest skonfigurowana.
+GitHub wysyła takie maile tylko osobie, która uruchomiła workflow. Czekanie na build zużywa minuty GitHub Actions (w darmowym planie 2000 minut miesięcznie dla repozytoriów prywatnych); jeden build to ok. 15–25 minut.
+
+#### Mail z linkiem do APK do kilku osób
+
+Po udanym buildzie workflow może wysłać maila z linkiem do pliku i stroną buildu (kod QR) na dowolną liczbę adresów. Wysyłka idzie przez konto Gmail (akcja `dawidd6/action-send-mail`). Adresy i hasło są przechowywane wyłącznie w sekretach GitHuba – nie trafiają do repozytorium ani do logów.
+
+1. Konto Gmail, z którego będą wysyłane maile (może to być osobne konto, np. dla Wattly), musi mieć włączoną **weryfikację dwuetapową**.
+2. https://myaccount.google.com/apppasswords → utwórz **hasło aplikacji** o nazwie np. „Wattly GitHub” (16 znaków). Zwykłe hasło do Gmaila nie zadziała.
+3. GitHub → repozytorium → **Settings → Secrets and variables → Actions → New repository secret**:
+
+   | Sekret | Wartość |
+   |---|---|
+   | `MAIL_USERNAME` | adres Gmail nadawcy, np. `wattly.powiadomienia@gmail.com` |
+   | `MAIL_PASSWORD` | hasło aplikacji z kroku 2 (bez spacji) |
+   | `INSTALLER_EMAILS` | adresy odbiorców oddzielone przecinkami, np. `ja@example.com,ona@example.com,on@example.com` |
+
+4. Przy następnym uruchomieniu *Mobile build* każdy odbiorca dostanie maila „Wattly 1.2.0 (kompilacja 3) – nowy instalator gotowy”. Gdy sekretów nie ma, krok wysyłki jest pomijany.
+
+Zmiana listy odbiorców = edycja sekretu `INSTALLER_EMAILS` (bez zmian w kodzie). Unieważnienie dostępu = usunięcie hasła aplikacji w koncie Google.
 
 ## Automatyczne aktualizacje
 
