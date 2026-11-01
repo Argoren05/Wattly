@@ -95,6 +95,9 @@
 - [x] Instrukcja konfiguracji Neon + Google Cloud krok po kroku.
 - [x] Przycisk pokazywania hasła na ekranach logowania i rejestracji.
 - [x] Podgląd odczytu wpisanego wstecz: porównanie z odczytami przed i po jego dacie.
+- [x] Dni między codziennymi odczytami oznaczane jako „na podstawie odczytów” (DEC-030).
+- [x] Jeden główny README (opis, zasady, stan projektu) i spis dokumentacji w `doc/README.md`.
+- [ ] Konto administratora i ekran zarządzania katalogiem (na razie niepotrzebne – własne stawki).
 - [ ] Instalator 1.1.0 (nowe moduły natywne: kalendarz, aparat).
 - [ ] Publikacja w Google Play / App Store.
 

@@ -90,7 +90,7 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 ## DEC-019 – Estymacja zużycia
 - Data: 2026-10-30
 - Status: Propozycja
-- Decyzja: odczyty są źródłem prawdy; między odczytami – interpolacja liniowa, po ostatnim odczycie – ekstrapolacja średnią dzienną z ostatnich 90 dni. Przed pierwszym odczytem zużycie jest nieznane (okres przycinany). Każdy taki wynik jest oznaczony jako szacunkowy i opisany w założeniach.
+- Decyzja: odczyty są źródłem prawdy; między odczytami – interpolacja liniowa, po ostatnim odczycie – ekstrapolacja średnią dzienną z ostatnich 90 dni. Przed pierwszym odczytem zużycie jest nieznane (okres przycinany). Każdy taki wynik jest oznaczony jako szacunkowy i opisany w założeniach. *(Interpolacja między odczytami odległymi o ≤ 36 h nie jest oznaczana jako estymacja – DEC-030.)*
 
 ## DEC-020 – Walidacja odczytów
 - Data: 2026-10-30
@@ -174,6 +174,13 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Kontekst: użytkownicy chcą sami wybrać tryb jasny/ciemny i kolorystykę zamiast zawsze podążać za ustawieniem telefonu.
 - Decyzja: Ustawienia → Wygląd: tryb „Jak w telefonie” / „Jasny” / „Ciemny” i kolor motywu (zielony – domyślny, niebieski, fioletowy, pomarańczowy). Wybór zapisywany lokalnie (`expo-secure-store`, klucz `wattly.appearance`), nie na serwerze – to preferencja urządzenia. Tryb jest przekazywany do elementów natywnych (`Appearance.setColorScheme`), więc kalendarz i okna dialogowe mają ten sam motyw. Kolor zmienia tylko tokeny akcentu (`primary`, `primaryText`, kolory wykresu); kolory ostrzeżeń, błędów i estymacji zostają stałe, żeby zachowały znaczenie.
 - Konsekwencje: zmiana działa natychmiast, bez restartu. Każda paleta ma test kontrastu WCAG AA; nowy kolor można dodać tylko z kompletem wartości dla trybu jasnego i ciemnego.
+
+## DEC-030 – Dzień „na podstawie odczytów” przy codziennych odczytach
+- Data: 2026-11-01
+- Status: Zatwierdzona
+- Kontekst: dzień liczony jest od 00:00 do 24:00, a odczyty wpisuje się o dowolnej porze (np. codziennie o 22:10). Granice dnia zawsze wypadały między odczytami, więc wykres oznaczał każdy dzień jako estymację mimo codziennych odczytów.
+- Decyzja: wartość między dwoma odczytami odległymi o najwyżej **36 godzin** (`RegisterSeries.MaxMeasuredGap`) ma rodzaj `ShortInterpolation` i liczy się jako „na podstawie odczytów”. Przy dłuższych przerwach (np. odczyty co 3 dni) dni pozostają estymacją. Wartości (kWh, zł) się nie zmieniają – zmienia się tylko oznaczenie.
+- Konsekwencje: dotyczy wykresów, statystyk, prognozy i kalkulacji (flaga `isEstimate`). Dzień po ostatnim odczycie nadal jest prognozą. Założenia kalkulacji nie wspominają o interpolacji krótszej niż 36 h, bo jej wpływ jest pomijalny przy rozkładzie godzinowym zużycia w obrębie doby.
 
 ## Szablon nowej decyzji
 

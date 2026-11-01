@@ -27,6 +27,36 @@ public class RegisterSeriesTests
     }
 
     [Fact]
+    public void Daily_readings_at_any_hour_make_calendar_days_based_on_readings()
+    {
+        // Readings every evening at 22:10 (as entered by users): the midnight boundaries are interpolated,
+        // but only within a one-day gap, so the day counts as based on readings (DEC-030).
+        var at = (int day) => new DateTimeOffset(2026, 10, day, 22, 10, 0, TimeSpan.FromHours(1));
+        var series = new RegisterSeries([
+            new ReadingPoint(at(26), 5271), new ReadingPoint(at(27), 5279), new ReadingPoint(at(28), 5286), new ReadingPoint(at(29), 5293)]);
+        var midnight = (int day) => new DateTimeOffset(2026, 10, day, 0, 0, 0, TimeSpan.FromHours(1));
+
+        Assert.Equal(ValueKind.ShortInterpolation, series.ValueAt(midnight(28))!.Value.Kind);
+        var day = series.Consumption(midnight(28), midnight(29))!;
+        Assert.False(day.IsEstimate);
+        Assert.Equal(7m, Math.Round(day.Kwh, 1)); // 7 kWh/day in both surrounding intervals
+
+        // After the last reading the value is a forecast, so the current day stays an estimate.
+        Assert.True(series.Consumption(midnight(29), midnight(30))!.IsEstimate);
+    }
+
+    [Fact]
+    public void Gaps_longer_than_36_hours_remain_estimates()
+    {
+        var series = new RegisterSeries([
+            new ReadingPoint(T0, 100), new ReadingPoint(T0.AddHours(36), 136), new ReadingPoint(T0.AddHours(36 + 37), 173)]);
+
+        Assert.Equal(ValueKind.ShortInterpolation, series.ValueAt(T0.AddHours(12))!.Value.Kind); // gap exactly 36 h
+        Assert.Equal(ValueKind.Interpolated, series.ValueAt(T0.AddHours(50))!.Value.Kind);       // gap 37 h
+        Assert.True(series.Consumption(T0.AddHours(12), T0.AddHours(50))!.IsEstimate);
+    }
+
+    [Fact]
     public void ValueAt_after_last_reading_extrapolates_with_average_rate()
     {
         var value = Series((0, 100), (10, 200)).ValueAt(T0.AddDays(15));

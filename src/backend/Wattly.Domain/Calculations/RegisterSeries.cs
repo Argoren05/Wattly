@@ -14,6 +14,12 @@ public enum ValueKind
     /// <summary>Linear interpolation between two readings.</summary>
     Interpolated,
 
+    /// <summary>
+    /// Linear interpolation between readings at most <see cref="RegisterSeries.MaxMeasuredGap"/> apart (e.g. daily readings
+    /// taken at 22:10). Only the split within that short gap is estimated, so the result counts as based on readings (DEC-030).
+    /// </summary>
+    ShortInterpolation,
+
     /// <summary>Extrapolation beyond the last reading using recent average consumption.</summary>
     Extrapolated,
 }
@@ -38,8 +44,14 @@ public sealed record ConsumptionEstimate(
     ValueKind EndKind,
     bool StartClamped)
 {
-    /// <summary>True when any part of the result is not taken directly from readings.</summary>
-    public bool IsEstimate => StartKind != ValueKind.Actual || EndKind != ValueKind.Actual || StartClamped;
+    /// <summary>
+    /// True when any part of the result is not based on readings. Short interpolations between dense readings
+    /// count as based on readings (DEC-030).
+    /// </summary>
+    public bool IsEstimate => !IsMeasured(StartKind) || !IsMeasured(EndKind) || StartClamped;
+
+    /// <summary>Whether a value comes from readings or from a short interpolation between them.</summary>
+    private static bool IsMeasured(ValueKind kind) => kind is ValueKind.Actual or ValueKind.ShortInterpolation;
 }
 
 /// <summary>
@@ -50,6 +62,12 @@ public sealed class RegisterSeries
 {
     /// <summary>History window used to compute the average consumption for extrapolation.</summary>
     public static readonly TimeSpan DefaultExtrapolationWindow = TimeSpan.FromDays(90);
+
+    /// <summary>
+    /// Largest gap between two readings for which a value between them still counts as based on readings (DEC-030):
+    /// daily readings at any hour qualify, readings every few days do not.
+    /// </summary>
+    public static readonly TimeSpan MaxMeasuredGap = TimeSpan.FromHours(36);
 
     private readonly ReadingPoint[] _points;
     private readonly TimeSpan _extrapolationWindow;
@@ -91,7 +109,8 @@ public sealed class RegisterSeries
         if (index < _points.Length - 1)
         {
             var after = _points[index + 1];
-            return new EstimatedValue(Interpolate(before, after, at), ValueKind.Interpolated);
+            var kind = after.At - before.At <= MaxMeasuredGap ? ValueKind.ShortInterpolation : ValueKind.Interpolated;
+            return new EstimatedValue(Interpolate(before, after, at), kind);
         }
 
         var dailyRate = AverageDailyRate();
