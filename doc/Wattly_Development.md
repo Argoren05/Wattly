@@ -131,6 +131,8 @@ Ustawienia → Aplikacja pokazują dwie wersje:
 - **Instalator** – `version` i numer kompilacji (`android.versionCode` / `ios.buildNumber`) z `app.json`, np. `1.1.0 (kompilacja 2)`; zmienia się tylko z nowym instalatorem;
 - **Aktualizacja** – data publikacji i pierwsze 8 znaków identyfikatora wgranej aktualizacji OTA (`Updates.createdAt`, `Updates.updateId`), np. `01.11.2026, 09:20 · 3f9a1c2b`, albo „wbudowana w instalator” przed pierwszą aktualizacją. Identyfikator jest widoczny na expo.dev → *Updates*.
 
+Przypomnienia o odczycie (DEC-031) to powiadomienia lokalne `expo-notifications` – nie wymagają serwera ani tokenów push. Logika planowania: `src/mobile/src/reminders/schedule.ts` (czyste funkcje), obsługa systemu: `reminders.ts`, otwieranie ekranu po dotknięciu: `useReminderLinks.ts`.
+
 W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawienia → Aplikacja pokazuje wtedy odpowiedni komunikat.
 
 ## Konfiguracja (najważniejsze klucze API)

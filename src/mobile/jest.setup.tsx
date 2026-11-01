@@ -41,12 +41,26 @@ jest.mock('@react-native-community/datetimepicker', () => {
   const { parseFieldDate } = jest.requireActual('./src/utils/format');
   const Picker = ({ accessibilityLabel, onValueChange }: { accessibilityLabel?: string; onValueChange?: (event: unknown, date: Date) => void }) => (
     <TextInput accessibilityLabel={accessibilityLabel} onChangeText={(text: string) => {
-      const date = parseFieldDate(text);
+      const time = /^(\d{1,2}):(\d{2})$/.exec(text);
+      const date = time ? new Date(2026, 0, 1, Number(time[1]), Number(time[2])) : parseFieldDate(text);
       if (date) onValueChange?.({ nativeEvent: { timestamp: date.getTime(), utcOffset: 0 } }, date);
     }} />
   );
   return { __esModule: true, default: Picker, DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() } };
 });
+
+// Local notifications (reading reminders): permission granted, scheduling recorded.
+jest.mock('expo-notifications', () => ({
+  getPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
+  requestPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
+  cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),
+  scheduleNotificationAsync: jest.fn(async () => 'id'),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  setNotificationHandler: jest.fn(),
+  useLastNotificationResponse: jest.fn(() => undefined),
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+  AndroidImportance: { DEFAULT: 3 },
+}));
 
 // Barcode scanner camera: permission granted, no camera view in Node.
 jest.mock('expo-camera', () => ({

@@ -182,6 +182,14 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Decyzja: wartość między dwoma odczytami odległymi o najwyżej **36 godzin** (`RegisterSeries.MaxMeasuredGap`) ma rodzaj `ShortInterpolation` i liczy się jako „na podstawie odczytów”. Przy dłuższych przerwach (np. odczyty co 3 dni) dni pozostają estymacją. Wartości (kWh, zł) się nie zmieniają – zmienia się tylko oznaczenie.
 - Konsekwencje: dotyczy wykresów, statystyk, prognozy i kalkulacji (flaga `isEstimate`). Dzień po ostatnim odczycie nadal jest prognozą. Założenia kalkulacji nie wspominają o interpolacji krótszej niż 36 h, bo jej wpływ jest pomijalny przy rozkładzie godzinowym zużycia w obrębie doby.
 
+## DEC-031 – Przypomnienia o odczycie (powiadomienia lokalne)
+- Data: 2026-11-01
+- Status: Zatwierdzona
+- Kontekst: użytkownik chce dostawać przypomnienie o spisaniu licznika: codziennie, raz w tygodniu albo raz w miesiącu, o wybranej godzinie, bez przypominania w dni, w które odczyt już dodał.
+- Rozważane opcje: powiadomienia push z serwera (tokeny urządzeń, harmonogram na serwerze, koszt i przetwarzanie danych) albo powiadomienia lokalne planowane przez telefon.
+- Decyzja: powiadomienia **lokalne** (`expo-notifications`) bez udziału serwera. Ustawienia są zapisywane na telefonie (`wattly.reminders`). Aplikacja planuje pojedyncze powiadomienia na 35 dni naprzód i planuje je od nowa przy każdym starcie, po zapisaniu odczytu i po zmianie ustawień. Dzięki temu opcja „pomiń, jeśli dodano odczyt” działa bez internetu. Dotknięcie powiadomienia otwiera „Dodaj odczyt”. Na Androidzie powiadomienia mają osobny kanał „Przypomnienia o odczycie”.
+- Konsekwencje: działa także offline i bez kosztów serwera. Odczyt dodany na innym telefonie nie wyłącza przypomnienia na tym. Android może opóźnić powiadomienie o kilka minut (oszczędzanie baterii; bez uprawnienia do dokładnych alarmów). Moduł jest natywny, więc potrzebny jest instalator 1.2.0 (`versionCode` 3).
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł
