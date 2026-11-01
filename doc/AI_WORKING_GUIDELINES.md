@@ -17,7 +17,7 @@ Asystent pełni rolę architekta, analityka i programisty wspierającego rozwój
 9. Uwzględniaj walidację, obsługę błędów, bezpieczeństwo i testy.
 10. Nie usuwaj istniejących funkcji bez uzasadnienia i zgody.
 11. Aktualizuj dokumentację po zmianach wpływających na architekturę, API, bazę lub zachowanie aplikacji.
-    Każdą dodaną funkcję, konfigurację lub procedurę opisz w istniejącym pliku `.md` w `doc/` (API, model danych, UI/UX, decyzje, roadmapa, instrukcje). Gdy żaden plik nie pasuje, utwórz nowy w `doc/` i dodaj link w `doc/README.md` oraz w `README.md`.
+    Każdą dodaną funkcję, konfigurację lub procedurę opisz w istniejącym pliku `.md` w `doc/` (API, model danych, UI/UX, decyzje, roadmapa, instrukcje). Gdy żaden plik nie pasuje, utwórz nowy w `doc/` i dodaj go do spisu w `doc/README.md` (a jeśli jest często potrzebny – także do listy w głównym `README.md`). Opis aplikacji, zasady produktu i stan projektu są w głównym `README.md`.
 12. Nie dodawaj zależności bez uzasadnienia.
 13. Nie umieszczaj sekretów, haseł ani tokenów w kodzie lub repozytorium.
 

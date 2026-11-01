@@ -63,7 +63,7 @@ Proponowane zakładki:
 - Dziennie, tygodniowo, miesięcznie, rocznie.
 - Zużycie i koszt jako oddzielne serie.
 - Porównanie okresów.
-- Oznaczenie estymacji przy rzadkich odczytach.
+- Oznaczenie estymacji przy rzadkich odczytach – dni między odczytami odległymi o więcej niż 36 h (DEC-030); przy codziennych odczytach dzień jest „na podstawie odczytów”.
 
 ### Faktury
 - Lista faktur.

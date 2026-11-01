@@ -12,6 +12,22 @@ Wattly to aplikacja mobilna (Android, iOS) do monitorowania zużycia energii ele
 
 > Wattly jest narzędziem informacyjnym i szacunkowym – prognoza nie jest fakturą sprzedawcy.
 
+## Zasady produktu
+
+1. Prognoza nie może być przedstawiana jako oficjalna faktura.
+2. Dane rzeczywiste, szacunkowe i zaimportowane są wyraźnie rozróżnione.
+3. Każdy cennik ma datę obowiązywania i udokumentowane źródło.
+4. Zmiana cennika nie zmienia zapisanych rozliczeń (kalkulacje przechowują kopię stawek).
+5. Przy rzadkich odczytach aplikacja nie udaje, że zna zużycie każdego dnia – oznacza estymację.
+6. Kwoty liczone są z jawnych składników rachunku, a nie z jednej ceny za kWh.
+7. Dane użytkowników i załączniki są odseparowane i chronione.
+
+## Stan projektu
+
+Działa: konto (e-mail i hasło, opcjonalnie Google / Microsoft / Facebook / Apple), wiele nieruchomości z numerem PPE, umowy (operator, sprzedawca, taryfa) z historią, własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, prognoza, statystyki, faktury z porównaniem i załącznikami, motyw jasny/ciemny z kolorami.
+
+Kolejne etapy: powiadomienia, odczyt ze zdjęcia (OCR), eksport, import odczytów, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline – szczegóły w [roadmapie](doc/Wattly_Roadmap.md).
+
 ## Instalacja na telefonie
 
 Instalator dla Androida (plik APK) budowany jest w chmurze Expo:
@@ -39,8 +55,14 @@ Aplikacja **aktualizuje się automatycznie**: zmiany w kodzie trafiają do telef
 Wattly/
 ├── doc/                      # dokumentacja projektu
 ├── src/
-│   ├── backend/              # API (.NET 10) + testy
-│   ├── mobile/               # aplikacja mobilna (Expo)
+│   ├── backend/              # ASP.NET Core (.NET 10) – modularny monolit
+│   │   ├── Wattly.Domain/          # encje, reguły domenowe, silnik kalkulacji
+│   │   ├── Wattly.Application/     # przypadki użycia, DTO, walidacja
+│   │   ├── Wattly.Infrastructure/  # EF Core + PostgreSQL, Identity, storage
+│   │   ├── Wattly.Api/             # Minimal API, uwierzytelnianie, ProblemDetails
+│   │   ├── tests/                  # testy jednostkowe i integracyjne
+│   │   ├── Dockerfile, cloudbuild.yaml  # obraz i wdrożenie na Cloud Run
+│   ├── mobile/               # React Native + Expo + TypeScript (Expo Router)
 │   ├── docker-compose.yml    # PostgreSQL + API lokalnie
 │   └── .env.example
 └── .github/workflows/        # CI, build instalatora, aktualizacje OTA
@@ -70,15 +92,12 @@ Szczegóły – konfiguracja, migracje, sekrety CI, wydawanie wersji – są w [
 
 ## Dokumentacja
 
-- [Opis projektu i zasady produktu](doc/README.md)
-- [Wymagania](doc/Wattly_Requirements.md)
-- [Architektura](doc/Wattly_Architecture.md)
-- [Model danych](doc/Wattly_Database.md)
-- [Kontrakt API](doc/Wattly_API.md)
-- [UI/UX](doc/Wattly_UI_UX.md)
-- [Roadmapa](doc/Wattly_Roadmap.md)
-- [Rejestr decyzji](doc/Wattly_Decisions.md)
+Pełny spis z opisem każdego dokumentu: **[doc/README.md](doc/README.md)**. Najczęściej potrzebne:
+
 - [Uruchomienie i development](doc/Wattly_Development.md)
-- [Wdrożenie serwera na Google Cloud Run + Neon](doc/Wattly_Deployment_CloudRun.md)
-- [Konfiguracja Neon + Google Cloud krok po kroku](doc/Wattly_Konfiguracja_Neon_GoogleCloud.md)
-- [Wdrożenie na Railway (alternatywa, nieaktualne)](doc/Wattly_Deployment_Railway.md)
+- [Konfiguracja serwera: Neon + Google Cloud krok po kroku](doc/Wattly_Konfiguracja_Neon_GoogleCloud.md)
+- [Kontrakt API](doc/Wattly_API.md)
+- [Rejestr decyzji](doc/Wattly_Decisions.md)
+- [Roadmapa](doc/Wattly_Roadmap.md)
+
+Dokumenty wymagań, architektury i UI/UX opisują zamierzone zachowanie produktu; co jest już zrobione, pokazuje roadmapa. Każda zmiana w kodzie jest opisywana w odpowiednim pliku w `doc/` ([zasady pracy](doc/AI_WORKING_GUIDELINES.md)).
