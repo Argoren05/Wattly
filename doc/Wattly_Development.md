@@ -111,6 +111,16 @@ Po zmianie identyfikatorów Google, Facebooka lub Apple potrzebny jest **nowy in
 
 Po zakończeniu buildu EAS udostępnia link i kod QR. Na telefonie należy otworzyć link, pobrać APK i zezwolić na instalację z tego źródła.
 
+### Powiadomienie e-mailem o gotowym instalatorze
+
+Workflow **Mobile build** czeka, aż Expo skończy budowanie (zwykle 10–20 minut), i umieszcza w podsumowaniu uruchomienia (*Summary*) tabelę z linkiem do pobrania pliku i stroną buildu na expo.dev. Expo nie ma wbudowanego powiadomienia e-mailem, dlatego mail wysyła GitHub po zakończeniu workflow. Jednorazowo trzeba to włączyć:
+
+1. GitHub → zdjęcie profilu → **Settings → Notifications**.
+2. Sekcja **System → Actions**: zaznacz powiadomienia **Email** i odznacz **„Only notify for failed workflows”**.
+3. Od teraz po każdym uruchomieniu *Mobile build* przyjdzie mail z wynikiem. Link w mailu prowadzi do uruchomienia, a tam w *Summary* jest link do pliku APK. Wystarczy otworzyć go na telefonie.
+
+GitHub wysyła takie maile tylko osobie, która uruchomiła workflow. Czekanie na build zużywa minuty GitHub Actions (w darmowym planie 2000 minut miesięcznie dla repozytoriów prywatnych); jeden build to ok. 15–25 minut. Pełna treść maila z linkiem do APK wymagałaby wysyłki przez własny serwer SMTP albo webhook EAS i nie jest skonfigurowana.
+
 ## Automatyczne aktualizacje
 
 Aplikacja aktualizuje się na dwóch poziomach (DEC-022):

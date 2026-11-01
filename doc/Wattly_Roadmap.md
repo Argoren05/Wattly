@@ -99,6 +99,7 @@
 - [x] Jeden główny README (opis, zasady, stan projektu) i spis dokumentacji w `doc/README.md`.
 - [x] Ustawienia pokazują wersję instalatora (z kompilacją) i wgraną aktualizację OTA.
 - [x] Przypomnienia o odczycie – powiadomienia lokalne (DEC-031); wymaga instalatora 1.2.0.
+- [x] Mail o gotowym instalatorze (powiadomienie GitHub Actions + link do APK w podsumowaniu workflow).
 - [ ] Import odczytów: wklejona lista z notatek i plik CSV (także dane godzinowe/dobowe z eLicznika i MojeIRE).
 - [ ] Pomiar z własnego urządzenia przy zwykłym liczniku (czujnik optyczny na diodzie licznika lub Shelly EM): odbiór pomiarów na serwerze z kluczem urządzenia.
 - [ ] Automatyczne pobieranie z licznika zdalnego odczytu: MojeIRE (CSIRE, po publikacji API przez PSE) lub eLicznik TAURON – po wymianie licznika na zdalny.
