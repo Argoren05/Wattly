@@ -10,12 +10,12 @@ import { Field } from './ui';
 export interface DateFieldProps {
   /** Visible label, also announced by screen readers. */
   label: string;
-  /** Current value: "YYYY-MM-DD" (mode date) or "YYYY-MM-DD HH:mm" (mode datetime), local time. */
+  /** Current value: "YYYY-MM-DD" (date), "YYYY-MM-DD HH:mm" (datetime) or "HH:mm" (time), local time. */
   value: string;
   /** Receives the new value in the same text format. */
   onChange: (value: string) => void;
-  /** Date only (default) or date and time. */
-  mode?: 'date' | 'datetime';
+  /** Date only (default), date and time, or time of day only. */
+  mode?: 'date' | 'datetime' | 'time';
   /** Help text under the field. */
   hint?: string;
   /** Validation message (replaces the hint). */
@@ -27,7 +27,17 @@ export interface DateFieldProps {
 }
 
 /** Converts a picked Date back to the text format of the field. */
-const toText = (date: Date, mode: 'date' | 'datetime') => (mode === 'date' ? toIsoDate(date) : toLocalDateTimeText(date));
+const toText = (date: Date, mode: 'date' | 'datetime' | 'time') =>
+  mode === 'date' ? toIsoDate(date) : mode === 'time' ? toLocalDateTimeText(date).slice(11) : toLocalDateTimeText(date);
+
+/** Parses the field value; a time-only value becomes today at that time. */
+function parseValue(value: string, mode: 'date' | 'datetime' | 'time'): Date | null {
+  if (mode !== 'time') return parseFieldDate(value);
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match || Number(match[1]) > 23 || Number(match[2]) > 59) return null;
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(match[1]), Number(match[2]));
+}
 
 /**
  * Date (and time) field with the platform's native picker:
@@ -38,11 +48,11 @@ const toText = (date: Date, mode: 'date' | 'datetime') => (mode === 'date' ? toI
  */
 export function DateField({ label, value, onChange, mode = 'date', hint, error, minimumDate, maximumDate }: DateFieldProps) {
   const { colors, dark } = useTheme();
-  const current = parseFieldDate(value) ?? new Date();
+  const current = parseValue(value, mode) ?? new Date();
 
   if (Platform.OS === 'web') {
     return <Field label={label} value={value} onChangeText={onChange} hint={hint} error={error}
-      placeholder={mode === 'date' ? 'RRRR-MM-DD' : 'RRRR-MM-DD GG:MM'} />;
+      placeholder={mode === 'date' ? 'RRRR-MM-DD' : mode === 'time' ? 'GG:MM' : 'RRRR-MM-DD GG:MM'} />;
   }
 
   const help = error ? <Text style={[styles.help, { color: colors.danger }]}>{error}</Text>
@@ -60,8 +70,12 @@ export function DateField({ label, value, onChange, mode = 'date', hint, error, 
     );
   }
 
-  /** Opens the Android dialogs: date first, then (for date-time) the clock with the picked day. */
+  /** Opens the Android dialogs: the clock for time fields; otherwise the date, then (for date-time) the clock. */
   const open = () => {
+    if (mode === 'time') {
+      DateTimePickerAndroid.open({ value: current, mode: 'time', onValueChange: (_, time) => onChange(toText(time, 'time')) });
+      return;
+    }
     DateTimePickerAndroid.open({
       value: current, mode: 'date', minimumDate, maximumDate,
       onValueChange: (_, date) => {
@@ -72,13 +86,14 @@ export function DateField({ label, value, onChange, mode = 'date', hint, error, 
     });
   };
 
-  const parsed = parseFieldDate(value);
-  const shown = !parsed ? 'Wybierz datę' : mode === 'date' ? formatDate(value) : formatDateTime(toOffsetIso(parsed));
+  const parsed = parseValue(value, mode);
+  const shown = !parsed ? (mode === 'time' ? 'Wybierz godzinę' : 'Wybierz datę')
+    : mode === 'date' ? formatDate(value) : mode === 'time' ? value.trim() : formatDateTime(toOffsetIso(parsed));
   return (
     <View style={styles.field}>
       <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityValue={{ text: shown }}
-        accessibilityHint="Otwiera kalendarz" onPress={open}
+        accessibilityHint={mode === 'time' ? 'Otwiera zegar' : 'Otwiera kalendarz'} onPress={open}
         style={[styles.input, { backgroundColor: colors.surface, borderColor: error ? colors.danger : colors.border }]}>
         <Text style={{ color: parsed ? colors.text : colors.textMuted, fontSize: 16 }}>{shown}</Text>
         <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={20} color={colors.textMuted} />

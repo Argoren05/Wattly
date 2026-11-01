@@ -9,6 +9,7 @@ import { AuthProvider } from '../auth/AuthContext';
 import { PropertyProvider } from '../state/PropertyContext';
 import { UpdateGate } from '../components/UpdateBanner';
 import { UpdateProvider } from '../updates/UpdateContext';
+import { useReminderLinks } from '../reminders/useReminderLinks';
 import { AppearanceProvider, useTheme } from '../theme/theme';
 
 /** Root of the app: appearance (theme), query cache, session, selected property, automatic updates and navigation. */
@@ -47,6 +48,7 @@ export default function RootLayout() {
 /** Top-level stack navigator with theme-aware headers. */
 function Navigator() {
   const { colors, dark } = useTheme();
+  useReminderLinks();
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
