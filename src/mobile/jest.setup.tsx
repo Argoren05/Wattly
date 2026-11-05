@@ -110,7 +110,10 @@ jest.mock('expo-apple-authentication', () => ({
   AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 },
 }));
 
-jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'test-nonce') }));
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'test-nonce'),
+  getRandomBytes: jest.fn((n: number) => new Uint8Array(n)),
+}));
 
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
 

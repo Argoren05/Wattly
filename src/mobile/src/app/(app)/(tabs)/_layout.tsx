@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { NotificationBell } from '../../../components/NotificationBell';
 import { useRequiredProperty } from '../../../state/PropertyContext';
+import { useTapoAutoSync } from '../../../tapo/useTapoAutoSync';
 import { useTheme } from '../../../theme/theme';
 
 /** Name of an Ionicons glyph. */
@@ -23,6 +24,7 @@ const icon = (name: IconName) => function TabBarIcon({ color, size }: { color: u
 export default function TabsLayout() {
   const { colors } = useTheme();
   const property = useRequiredProperty();
+  useTapoAutoSync();
 
   return (
     <Tabs

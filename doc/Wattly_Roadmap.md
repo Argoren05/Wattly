@@ -102,6 +102,8 @@
 - [x] Centrum powiadomień (DEC-033): wiele przypomnień, historia z licznikiem nieprzeczytanych, terminy płatności faktur, alerty o budżecie i zużyciu.
 - [x] Latarka przy dodawaniu odczytu i w skanerze PPE; od 1.3.0 bez uprawnienia aparatu – własny moduł natywny `wattly-torch` (DEC-032).
 - [x] Mail o gotowym instalatorze: powiadomienie GitHub Actions + link do APK w podsumowaniu workflow; opcjonalnie mail z linkiem do kilku osób (Gmail, sekrety `MAIL_USERNAME`, `MAIL_PASSWORD`, `INSTALLER_EMAILS`).
+- [x] Zużycie urządzeń i ekran „Na co schodzi prąd” (DEC-034): gniazdka Tapo P110/P115 czytane przez telefon w domowym Wi-Fi (bez Home Assistanta), urządzenia z wpisami ręcznymi (np. lodówka z SmartThings), koszt i udział na tle licznika.
+- [ ] Lodówka Samsung automatycznie przez SmartThings API (wymaga rejestracji aplikacji OAuth w Samsungu – tokeny osobiste wygasają po 24 h).
 - [ ] Import odczytów: wklejona lista z notatek i plik CSV (także dane godzinowe/dobowe z eLicznika i MojeIRE).
 - [ ] Pomiar z własnego urządzenia przy zwykłym liczniku (czujnik optyczny na diodzie licznika lub Shelly EM): odbiór pomiarów na serwerze z kluczem urządzenia.
 - [ ] Automatyczne pobieranie z licznika zdalnego odczytu: MojeIRE (CSIRE, po publikacji API przez PSE) lub eLicznik TAURON – po wymianie licznika na zdalny.

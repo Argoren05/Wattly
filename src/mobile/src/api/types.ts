@@ -426,3 +426,65 @@ export interface MobileRelease {
   updateAvailable: boolean;
   updateRequired: boolean;
 }
+
+/** Source of appliance consumption data. */
+export type ApplianceSource = 'Manual' | 'Tapo';
+
+/** Appliance with separately measured consumption (DEC-034). */
+export interface Appliance {
+  id: string;
+  propertyId: string;
+  name: string;
+  source: ApplianceSource;
+  /** Tapo device id. */
+  externalId: string | null;
+  model: string | null;
+  isHidden: boolean;
+  /** Last day with data (YYYY-MM-DD). */
+  lastUsageDate: string | null;
+  createdAt: string;
+}
+
+/** Create/update request of an appliance. */
+export interface ApplianceRequest {
+  name: string;
+  source?: ApplianceSource;
+  externalId?: string | null;
+  model?: string | null;
+  isHidden?: boolean;
+}
+
+/** Consumption entry of an appliance (days inclusive). */
+export interface ApplianceUsage {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  energyKwh: number;
+}
+
+/** Consumption entry to save. */
+export type ApplianceUsageEntry = Omit<ApplianceUsage, 'id'>;
+
+/** One line of the breakdown. */
+export interface BreakdownItem {
+  applianceId: string | null;
+  name: string;
+  energyKwh: number;
+  costGross: number | null;
+  sharePercent: number | null;
+  coveredDays: number;
+}
+
+/** "What uses the electricity" for a date range. */
+export interface ApplianceBreakdown {
+  from: string;
+  to: string;
+  days: number;
+  meterKwh: number | null;
+  meterIsEstimate: boolean;
+  pricePerKwhGross: number | null;
+  currencyCode: string;
+  items: BreakdownItem[];
+  other: BreakdownItem | null;
+  appliancesExceedMeter: boolean;
+}

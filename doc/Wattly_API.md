@@ -25,6 +25,8 @@
 | `reading.not_active` | Korekta/anulowanie odczytu, który nie jest aktywny |
 | `rate_plan.overlap` | Cennik w tym samym zakresie nakłada się okresem obowiązywania |
 | `contract.overlap` | Umowa nakłada się na późniejszą umowę |
+| `appliance.duplicate` | Gniazdko o tym identyfikatorze (`externalId`) jest już dodane do nieruchomości |
+| `appliance_usage.overlap` | Wpis zużycia nakłada się na inny okres tego urządzenia (ten sam okres jest nadpisywany) |
 | `catalog.duplicate_code` | Kod operatora/sprzedawcy/taryfy już istnieje |
 | `external.invalid_token` | Token dostawcy logowania nieprawidłowy, wygasły lub wydany dla innej aplikacji |
 | `external.email_missing` | Dostawca nie udostępnił adresu e-mail |
@@ -139,6 +141,24 @@ Wynik kalkulacji zawiera: okres, zużycie (łącznie i per strefa), wartości ź
 - `GET /attachments/{attachmentId}` – pobranie (tylko właściciel)
 
 Faktura zawiera `comparison` – szacunek Wattly dla okresu faktury i różnicę względem kwoty faktury.
+
+## 8a. Urządzenia i „Na co schodzi prąd” (DEC-034)
+
+- `GET /properties/{propertyId}/appliances`, `POST /properties/{propertyId}/appliances`
+  - `{ name, source: "Manual" | "Tapo", externalId?, model?, isHidden? }`; dla `Tapo` wymagany `externalId` (identyfikator gniazdka), unikalny w nieruchomości
+  - odpowiedź zawiera `lastUsageDate` – ostatni dzień z danymi
+- `PUT /appliances/{applianceId}`, `DELETE /appliances/{applianceId}` (usuwa też historię zużycia)
+- `GET /appliances/{applianceId}/usage` – wpisy od najnowszego (maks. 400)
+- `PUT /appliances/{applianceId}/usage` – `{ entries: [{ periodStart, periodEnd, energyKwh }] }`, 1–400 wpisów
+  - daty włącznie, w strefie czasowej nieruchomości; okres do 366 dni, nie w przyszłości
+  - `energyKwh` ≥ 0, maks. 3 miejsca po przecinku, maks. 100 kWh na dzień
+  - ten sam okres jest aktualizowany, inny nachodzący okres → 409 `appliance_usage.overlap`
+  - odpowiedź `{ created, updated }`
+- `DELETE /appliances/{applianceId}/usage/{usageId}`
+- `GET /properties/{propertyId}/appliances/breakdown?from=YYYY-MM-DD&to=YYYY-MM-DD` → `{ from, to, days, meterKwh, meterIsEstimate, pricePerKwhGross, currencyCode, items[], other, appliancesExceedMeter }`
+  - pozycja: `{ applianceId, name, energyKwh, costGross, sharePercent, coveredDays }`
+  - wpisy częściowo w zakresie liczone proporcjonalnie do dni; urządzenia ukryte pominięte
+  - bez odczytów licznika: `meterKwh`, `other`, koszty i udziały = `null`
 
 ## 9. Aplikacja mobilna (bez logowania)
 

@@ -42,6 +42,9 @@ export default function AppLayout() {
       <Stack.Screen name="settings/meters" options={{ title: 'Liczniki' }} />
       <Stack.Screen name="settings/reminders" options={{ title: 'Powiadomienia' }} />
       <Stack.Screen name="settings/reminder" options={{ title: 'Przypomnienie o odczycie' }} />
+      <Stack.Screen name="settings/appliances" options={{ title: 'Urządzenia' }} />
+      <Stack.Screen name="settings/appliance" options={{ title: 'Urządzenie' }} />
+      <Stack.Screen name="appliances" options={{ title: 'Na co schodzi prąd' }} />
       <Stack.Screen name="notifications" options={{ title: 'Historia powiadomień' }} />
     </Stack>
   );

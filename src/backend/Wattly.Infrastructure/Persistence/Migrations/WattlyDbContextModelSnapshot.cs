@@ -172,6 +172,83 @@ namespace Wattly.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Wattly.Domain.Appliances.Appliance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId", "ExternalId")
+                        .IsUnique()
+                        .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                    b.ToTable("Appliances");
+                });
+
+            modelBuilder.Entity("Wattly.Domain.Appliances.ApplianceUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApplianceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("EnergyKwh")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplianceId", "PeriodStart", "PeriodEnd")
+                        .IsUnique();
+
+                    b.ToTable("ApplianceUsage", t =>
+                        {
+                            t.HasCheckConstraint("CK_ApplianceUsage_Energy", "\"EnergyKwh\" >= 0");
+
+                            t.HasCheckConstraint("CK_ApplianceUsage_Period", "\"PeriodEnd\" >= \"PeriodStart\"");
+                        });
+                });
+
             modelBuilder.Entity("Wattly.Domain.Audit.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1113,6 +1190,26 @@ namespace Wattly.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Wattly.Domain.Appliances.Appliance", b =>
+                {
+                    b.HasOne("Wattly.Domain.Households.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
+            modelBuilder.Entity("Wattly.Domain.Appliances.ApplianceUsage", b =>
+                {
+                    b.HasOne("Wattly.Domain.Appliances.Appliance", null)
+                        .WithMany("Usage")
+                        .HasForeignKey("ApplianceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Wattly.Domain.Billing.CostCalculation", b =>
                 {
                     b.HasOne("Wattly.Domain.Households.Property", null)
@@ -1315,6 +1412,11 @@ namespace Wattly.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tariff");
+                });
+
+            modelBuilder.Entity("Wattly.Domain.Appliances.Appliance", b =>
+                {
+                    b.Navigation("Usage");
                 });
 
             modelBuilder.Entity("Wattly.Domain.Billing.CostCalculation", b =>

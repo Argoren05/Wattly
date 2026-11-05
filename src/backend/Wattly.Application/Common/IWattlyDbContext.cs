@@ -29,6 +29,12 @@ public interface IWattlyDbContext
     DbSet<TariffRateComponent> TariffRateComponents { get; }
     /// <summary>Meters.</summary>
     DbSet<Meter> Meters { get; }
+
+    /// <summary>Appliances with separately measured consumption.</summary>
+    DbSet<Wattly.Domain.Appliances.Appliance> Appliances { get; }
+
+    /// <summary>Consumption entries of appliances.</summary>
+    DbSet<Wattly.Domain.Appliances.ApplianceUsage> ApplianceUsage { get; }
     /// <summary>Meter registers.</summary>
     DbSet<MeterRegister> MeterRegisters { get; }
     /// <summary>Meter readings.</summary>

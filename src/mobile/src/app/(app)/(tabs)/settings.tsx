@@ -70,6 +70,7 @@ export default function Settings() {
         <Item icon="flash-outline" title="Umowa i taryfa" subtitle="Operator, sprzedawca, grupa taryfowa" href="/settings/contract" />
         <Item icon="pricetags-outline" title="Stawki" subtitle="Cenniki i ich okresy obowiązywania" href="/settings/rates" />
         <Item icon="speedometer-outline" title="Liczniki i rejestry" subtitle="Konfiguracja liczników" href="/settings/meters" />
+        <Item icon="hardware-chip-outline" title="Urządzenia" subtitle="Gniazdka Tapo i zużycie sprzętów" href="/settings/appliances" />
         <Item icon="notifications-outline" title="Powiadomienia" subtitle="Przypomnienia o odczycie, płatności, budżet, zużycie" href="/settings/reminders" />
       </Card>
       <Card>

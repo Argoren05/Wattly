@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { analyticsApi } from '../../../api/endpoints';
 import type { Granularity, Series } from '../../../api/types';
 import { BarChart } from '../../../components/BarChart';
-import { Body, Card, Chips, ErrorState, KeyValue, Loading, Screen, SectionTitle } from '../../../components/ui';
+import { Body, Button, Card, Chips, ErrorState, KeyValue, Loading, Screen, SectionTitle } from '../../../components/ui';
 import { keys } from '../../../hooks/queries';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { addDays, addMonths, formatDate, formatKwh, formatMoney, formatPercent, toIsoDate } from '../../../utils/format';
@@ -66,6 +67,12 @@ export default function Stats() {
             })}
           />
         ) : null}
+      </Card>
+
+      <Card>
+        <SectionTitle>Na co schodzi prąd</SectionTitle>
+        <Body muted>Zużycie i koszt poszczególnych urządzeń (gniazdka Tapo, wpisy ręczne) na tle licznika.</Body>
+        <Button title="Pokaż urządzenia" variant="secondary" icon="pie-chart-outline" onPress={() => router.push('/appliances')} />
       </Card>
 
       <Card>

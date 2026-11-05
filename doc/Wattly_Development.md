@@ -164,6 +164,19 @@ Powiadomienia (DEC-031, DEC-033) są lokalne (`expo-notifications`) – nie wyma
 
 W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawienia → Aplikacja pokazuje wtedy odpowiedni komunikat.
 
+Gniazdka Tapo (DEC-034, [instrukcja dla użytkownika](Wattly_Tapo.md)) są obsługiwane w `src/mobile/src/tapo/`:
+- `bytes.ts` – UTF-8 i Base64 bez API przeglądarki;
+- `klap.ts` – protokół KLAP v2 (skróty, klucze sesji, szyfrowanie z numerem sekwencji); testy zawierają wektory zgodności z python-kasa;
+- `client.ts` – `TapoClient` (uzgadnianie, `get_device_info`, `get_energy_data`) z wymiennym transportem, błędy z polskimi komunikatami; testy używają symulatora gniazdka;
+- `sync.ts` – konto (SecureStore), adresy gniazdek (AsyncStorage), `linkPlug`, `syncAll`, `autoSync` (co 6 h);
+- `useTapoAutoSync.ts` – synchronizacja przy starcie i powrocie do aplikacji (w układzie zakładek).
+
+Łączność z gniazdkiem wymaga lokalnego HTTP. W `app.json` są ustawione:
+- plugin `expo-build-properties` z `android.usesCleartextTraffic`;
+- na iOS `NSAppTransportSecurity.NSAllowsLocalNetworking` i `NSLocalNetworkUsageDescription`.
+
+Zmiana tych ustawień wymaga nowego instalatora.
+
 ## Konfiguracja (najważniejsze klucze API)
 
 | Klucz | Opis |

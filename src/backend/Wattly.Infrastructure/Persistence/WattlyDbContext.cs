@@ -55,6 +55,11 @@ public class WattlyDbContext(DbContextOptions<WattlyDbContext> options, ICurrent
     /// <inheritdoc />
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
+    /// <inheritdoc />
+    public DbSet<Wattly.Domain.Appliances.Appliance> Appliances => Set<Wattly.Domain.Appliances.Appliance>();
+    /// <inheritdoc />
+    public DbSet<Wattly.Domain.Appliances.ApplianceUsage> ApplianceUsage => Set<Wattly.Domain.Appliances.ApplianceUsage>();
+
     /// <summary>Attachment contents when <c>Storage:Provider</c> is <c>Database</c>.</summary>
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
 

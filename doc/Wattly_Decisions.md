@@ -209,6 +209,29 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
   - do faktur dodano `DueDate` i `AmountDue` (serwer, migracja `InvoiceDueDate`).
 - Konsekwencje: bez kosztów i konfiguracji Firebase, działa offline. Alert o budżecie pojawi się dopiero po otwarciu aplikacji (przy regularnych odczytach to wystarcza). Ustawienia i historia są per telefon. Nowy moduł natywny AsyncStorage wchodzi do instalatora 1.3.0.
 
+## DEC-034 – Zużycie urządzeń: gniazdka Tapo czytane przez telefon, wpisy ręczne
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: użytkownik ma gniazdka Tapo P110/P115 mierzące zużycie i lodówkę Samsung raportującą zużycie w SmartThings. Chce widzieć, na co w mieszkaniu schodzi prąd.
+- Rozważane opcje:
+  - Home Assistant (HA Green) jako lokalna bramka – odrzucone przez użytkownika (dodatkowe urządzenie);
+  - chmura TP-Link – brak oficjalnego API;
+  - SmartThings API – osobiste tokeny wygasają po 24 h, pełna integracja wymaga rejestracji aplikacji OAuth;
+  - serwer łączący się z gniazdkami – serwer działa w Cloud Run i nie widzi sieci domowej.
+- Decyzja:
+  - **telefon jest pośrednikiem**: w domowym Wi-Fi łączy się z gniazdkiem lokalnym protokołem KLAP v2 (`src/mobile/src/tapo/`, AES-128-CBC z `@noble/ciphers`, SHA z `@noble/hashes`; zgodność z python-kasa sprawdzona wektorami testowymi);
+  - z gniazdka pobierana jest dzienna historia bieżącego i poprzedniego kwartału (`get_energy_data`, interwał 1440) i wysyłana jako dzienne wpisy (`PUT /appliances/{id}/usage` – ten sam okres jest nadpisywany);
+  - synchronizacja automatyczna przy otwarciu aplikacji, najwyżej co 6 h, oraz ręczna;
+  - dane konta Tapo i adresy IP zostają tylko na telefonie (SecureStore / AsyncStorage);
+  - urządzenia bez integracji (lodówka) mają wpisy ręczne za dowolny okres;
+  - serwer: encje `Appliance` i `ApplianceUsage` (migracja `Appliances`), zestawienie `GET /properties/{id}/appliances/breakdown`. Okresy są dzielone proporcjonalnie do dni; koszt to kWh × średnia cena brutto 1 kWh ze składników liczonych od kWh w tej samej kalkulacji co rozbicie kosztów; „Pozostałe” = licznik − suma urządzeń.
+- Konsekwencje:
+  - bez dodatkowego sprzętu i kosztów;
+  - dane spływają tylko, gdy telefon bywa w domowej sieci (historia z gniazdka pokrywa przerwy do ok. 3 miesięcy);
+  - nowsze oprogramowanie gniazdek z protokołem TPAP nie jest obsługiwane – aplikacja pokazuje czytelny komunikat;
+  - wymaga instalatora 1.3.0 (lokalne HTTP: `usesCleartextTraffic` na Androidzie przez `expo-build-properties`, `NSAllowsLocalNetworking` i `NSLocalNetworkUsageDescription` na iOS);
+  - instrukcja dla użytkownika: [Wattly_Tapo.md](Wattly_Tapo.md).
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

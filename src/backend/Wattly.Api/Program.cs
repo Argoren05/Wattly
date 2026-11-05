@@ -118,6 +118,7 @@ secured.MapPropertyEndpoints();
 secured.MapCatalogEndpoints();
 secured.MapMeteringEndpoints();
 secured.MapBillingEndpoints();
+secured.MapApplianceEndpoints();
 
 // Migrations (if enabled), catalog seed, roles and the optional first administrator.
 await DatabaseInitializer.InitializeAsync(app.Services);
