@@ -11,6 +11,7 @@ import { formatDateTime, formatKwh, parseDecimal, parseLocalDateTime, toLocalDat
 import { spacing } from '../theme/theme';
 import { confirmAsync } from './confirm';
 import { DateField } from './DateField';
+import { FlashlightButton } from './Flashlight';
 import { Button, Card, Chips, Field, KeyValue, Notice } from './ui';
 
 /**
@@ -81,6 +82,7 @@ export function ReadingForm({ registers, initialRegisterId, initial, submitLabel
 
   return (
     <View style={{ gap: spacing.md }}>
+      <FlashlightButton />
       {registers.length > 1 && !initial ? (
         <Chips label="Licznik i rejestr" value={registerId} onChange={setRegisterId}
           options={registers.map((r) => ({ value: r.id, label: `${r.meterName}: ${r.name}` }))} />

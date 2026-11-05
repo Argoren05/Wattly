@@ -47,6 +47,7 @@ function PpeScanner({ onScanned, onClose }: { onScanned: (code: string) => void;
   const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [message, setMessage] = useState<string | null>(null);
+  const [torch, setTorch] = useState(false);
   // The camera reports the same code many times per second – accept only the first valid one.
   const done = useRef(false);
 
@@ -63,7 +64,7 @@ function PpeScanner({ onScanned, onClose }: { onScanned: (code: string) => void;
     <Modal animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
         {permission?.granted ? (
-          <CameraView style={styles.camera} facing="back"
+          <CameraView style={styles.camera} facing="back" enableTorch={torch}
             barcodeScannerSettings={{ barcodeTypes: ['code128', 'datamatrix', 'qr', 'ean13', 'itf14'] }}
             onBarcodeScanned={(result) => handle(result.data)} />
         ) : (
@@ -78,6 +79,10 @@ function PpeScanner({ onScanned, onClose }: { onScanned: (code: string) => void;
           <Text style={{ color: message ? colors.danger : colors.text }} accessibilityLiveRegion="polite">
             {message ?? 'Skieruj aparat na kod kreskowy przy numerze PPE.'}
           </Text>
+          {permission?.granted ? (
+            <Button title={torch ? 'Wyłącz latarkę' : 'Latarka'} variant="secondary" icon={torch ? 'flashlight' : 'flashlight-outline'}
+              onPress={() => setTorch((t) => !t)} />
+          ) : null}
           <Button title="Anuluj" variant="ghost" onPress={onClose} />
         </View>
       </SafeAreaView>
