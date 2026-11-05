@@ -2,14 +2,52 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Platform } from 'react-native';
 
+import { WattlyTorch } from '../../modules/wattly-torch';
 import { FlashlightButton } from './Flashlight';
+
+// Native module double; `available` switches between the native path and the camera fallback.
+const mockTorch: { available: boolean; isAvailable: jest.Mock<boolean, []>; setEnabled: jest.Mock<Promise<boolean>, [boolean]> } = {
+  available: false,
+  isAvailable: jest.fn((): boolean => mockTorch.available),
+  setEnabled: jest.fn(async (on: boolean) => on),
+};
+jest.mock('../../modules/wattly-torch', () => ({ get WattlyTorch() { return mockTorch; } }));
 
 /** Props of the last rendered (hidden) camera view. */
 const lastCamera = () => jest.mocked(CameraView).mock.calls.at(-1)?.[0] as { enableTorch?: boolean } | undefined;
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => {
+  jest.restoreAllMocks();
+  mockTorch.available = false;
+});
 
-test('turns the torch on and off with a hidden camera view', async () => {
+describe('native flashlight (no camera permission)', () => {
+  beforeEach(() => { mockTorch.available = true; });
+
+  test('switches the LED without asking for camera access and turns it off when leaving the screen', async () => {
+    const { unmount } = await render(<FlashlightButton />);
+
+    await fireEvent.press(screen.getByRole('button', { name: /Latarka/ }));
+    expect(WattlyTorch!.setEnabled).toHaveBeenLastCalledWith(true);
+    expect(await screen.findByRole('button', { name: /Wyłącz latarkę/ })).toBeOnTheScreen();
+    expect(useCameraPermissions().at(1)).not.toHaveBeenCalled();
+    expect(CameraView).not.toHaveBeenCalled();
+
+    await unmount();
+    expect(WattlyTorch!.setEnabled).toHaveBeenLastCalledWith(false);
+  });
+
+  test('explains when the flashlight is busy', async () => {
+    mockTorch.setEnabled.mockRejectedValueOnce(new Error('in use'));
+    await render(<FlashlightButton />);
+    await fireEvent.press(screen.getByRole('button', { name: /Latarka/ }));
+    expect(await screen.findByText(/może jej teraz używać inna aplikacja/)).toBeOnTheScreen();
+  });
+});
+
+describe('camera fallback (installers without the native module)', () => {
+
+test('turns the mockTorch on and off with a hidden camera view', async () => {
   await render(<FlashlightButton />);
   expect(CameraView).not.toHaveBeenCalled();
 
@@ -31,6 +69,8 @@ test('asks for camera access and explains a permanent refusal', async () => {
   expect(request).toHaveBeenCalled();
   expect(await screen.findByText(/włącz go w ustawieniach telefonu/)).toBeOnTheScreen();
   expect(screen.getByRole('button', { name: /Otwórz ustawienia telefonu/ })).toBeOnTheScreen();
+});
+
 });
 
 test('is hidden on the web', async () => {

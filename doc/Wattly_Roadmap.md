@@ -99,7 +99,7 @@
 - [x] Jeden główny README (opis, zasady, stan projektu) i spis dokumentacji w `doc/README.md`.
 - [x] Ustawienia pokazują wersję instalatora (z kompilacją) i wgraną aktualizację OTA.
 - [x] Przypomnienia o odczycie – powiadomienia lokalne (DEC-031); wymaga instalatora 1.2.0.
-- [x] Latarka przy dodawaniu odczytu i w skanerze PPE (dioda aparatu przez `expo-camera`).
+- [x] Latarka przy dodawaniu odczytu i w skanerze PPE; od 1.3.0 bez uprawnienia aparatu – własny moduł natywny `wattly-torch` (DEC-032).
 - [x] Mail o gotowym instalatorze: powiadomienie GitHub Actions + link do APK w podsumowaniu workflow; opcjonalnie mail z linkiem do kilku osób (Gmail, sekrety `MAIL_USERNAME`, `MAIL_PASSWORD`, `INSTALLER_EMAILS`).
 - [ ] Import odczytów: wklejona lista z notatek i plik CSV (także dane godzinowe/dobowe z eLicznika i MojeIRE).
 - [ ] Pomiar z własnego urządzenia przy zwykłym liczniku (czujnik optyczny na diodzie licznika lub Shelly EM): odbiór pomiarów na serwerze z kluczem urządzenia.

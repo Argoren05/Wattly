@@ -190,6 +190,13 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Decyzja: powiadomienia **lokalne** (`expo-notifications`) bez udziału serwera. Ustawienia są zapisywane na telefonie (`wattly.reminders`). Aplikacja planuje pojedyncze powiadomienia na 35 dni naprzód i planuje je od nowa przy każdym starcie, po zapisaniu odczytu i po zmianie ustawień. Dzięki temu opcja „pomiń, jeśli dodano odczyt” działa bez internetu. Dotknięcie powiadomienia otwiera „Dodaj odczyt”. Na Androidzie powiadomienia mają osobny kanał „Przypomnienia o odczycie”.
 - Konsekwencje: działa także offline i bez kosztów serwera. Odczyt dodany na innym telefonie nie wyłącza przypomnienia na tym. Android może opóźnić powiadomienie o kilka minut (oszczędzanie baterii; bez uprawnienia do dokładnych alarmów). Moduł jest natywny, więc potrzebny jest instalator 1.2.0 (`versionCode` 3).
 
+## DEC-032 – Latarka bez uprawnienia aparatu (własny moduł natywny)
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: pierwsza wersja latarki (1.2.0) włączała diodę przez niewidoczny podgląd `expo-camera`, co wymagało zgody na aparat i zapalało światło z opóźnieniem.
+- Decyzja: lokalny moduł Expo `src/mobile/modules/wattly-torch` (autolinkowany z katalogu `modules/`). Android: `CameraManager.setTorchMode` (Android 6+, bez uprawnienia `CAMERA`). iOS: `AVCaptureDevice.torchMode` (bez sesji przechwytywania). Moduł gasi latarkę, gdy aplikacja przechodzi w tło lub jest zamykana; aplikacja gasi ją po wyjściu z ekranu. Gdy modułu nie ma (instalator bez niego, Expo Go), aplikacja wraca do sposobu przez `expo-camera`.
+- Konsekwencje: brak prośby o aparat przy latarce, natychmiastowe zapalanie, mniejsze zużycie baterii. Kod natywny jest kompilowany dopiero w EAS Build – w CI sprawdzane są tylko autolinkowanie i warstwa JS. Wymaga instalatora 1.3.0 (`versionCode` 4).
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

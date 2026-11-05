@@ -43,7 +43,7 @@ Proponowane zakładki:
 - Przycisk „Dodaj odczyt”.
 
 ### Dodawanie odczytu
-- Przycisk „Latarka” – dioda aparatu oświetla licznik w ciemnym miejscu (także w skanerze numeru PPE). Gaśnie po ponownym naciśnięciu lub wyjściu z ekranu.
+- Przycisk „Latarka” – dioda telefonu oświetla licznik w ciemnym miejscu (także w skanerze numeru PPE), bez prośby o dostęp do aparatu (DEC-032). Gaśnie po ponownym naciśnięciu, wyjściu z ekranu lub z aplikacji.
 - Wybór licznika i rejestru.
 - Data i godzina.
 - Wartość wskazania.

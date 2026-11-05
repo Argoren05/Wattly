@@ -62,6 +62,7 @@ npx expo start
 - Na fizycznym telefonie ustaw `EXPO_PUBLIC_API_URL` na adres IP komputera w sieci LAN (np. `http://192.168.1.10:5103`), a nie `localhost`.
 - Kontrole jakości: `npm run typecheck`, `npm run lint` (wymusza JSDoc), `npm test` (Jest), `npm run test:coverage`.
 - Nowe moduły natywne instaluj przez `npx expo install <pakiet>`, aby wersje były zgodne z SDK.
+- Własne moduły natywne leżą w `src/mobile/modules/<nazwa>` (struktura modułu Expo: `expo-module.config.json`, `android/`, `ios/`, `index.ts`) i są autolinkowane bez instalacji. Obecnie: `wattly-torch` – latarka bez uprawnienia aparatu (DEC-032). Kod Kotlin/Swift kompiluje się dopiero w EAS Build; sprawdzenie autolinkowania lokalnie: `npx expo-modules-autolinking resolve --platform android`.
 
 ## Instalator na telefon (EAS Build)
 
