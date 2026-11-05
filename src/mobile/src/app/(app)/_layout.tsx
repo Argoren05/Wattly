@@ -40,6 +40,7 @@ export default function AppLayout() {
       <Stack.Screen name="settings/contract" options={{ title: 'Umowa i taryfa' }} />
       <Stack.Screen name="settings/rates" options={{ title: 'Stawki' }} />
       <Stack.Screen name="settings/meters" options={{ title: 'Liczniki' }} />
+      <Stack.Screen name="settings/reminders" options={{ title: 'Przypomnienia' }} />
     </Stack>
   );
 }

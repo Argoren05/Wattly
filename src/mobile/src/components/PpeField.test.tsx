@@ -26,6 +26,9 @@ test('shows the check-digit error while typing and opens the scanner', async () 
 
   await fireEvent.press(screen.getByRole('button', { name: /Skanuj kod PPE/ }));
   expect(await screen.findByText(/Skieruj aparat na kod kreskowy/)).toBeOnTheScreen();
+  await fireEvent.press(screen.getByRole('button', { name: /Latarka/ }));
+  expect((jest.mocked(CameraView).mock.calls.at(-1)![0] as { enableTorch?: boolean }).enableTorch).toBe(true);
+
   await fireEvent.press(screen.getByRole('button', { name: /Anuluj/ }));
   expect(screen.queryByText(/Skieruj aparat/)).toBeNull();
 });

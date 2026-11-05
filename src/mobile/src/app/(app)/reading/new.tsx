@@ -4,6 +4,7 @@ import { readingApi } from '../../../api/endpoints';
 import { ReadingForm } from '../../../components/ReadingForm';
 import { EmptyState, ErrorState, Loading, Screen } from '../../../components/ui';
 import { importRegisters, useInvalidateEnergyData, useMeters } from '../../../hooks/queries';
+import { recordReadingForReminders } from '../../../reminders/reminders';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 
 /** Modal adding a reading; an optional `registerId` route param preselects the register. */
@@ -25,7 +26,9 @@ export default function NewReading() {
         initialRegisterId={registerId}
         submitLabel="Zapisz odczyt"
         save={(id, request) => readingApi.create(id, request)}
-        onSaved={async () => {
+        onSaved={async (saved) => {
+          // Today's reminder is no longer needed once a reading for today is saved.
+          void recordReadingForReminders(new Date(saved.reading.readingAt));
           await invalidate(property.id);
           router.back();
         }}

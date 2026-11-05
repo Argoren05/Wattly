@@ -43,6 +43,7 @@ Proponowane zakładki:
 - Przycisk „Dodaj odczyt”.
 
 ### Dodawanie odczytu
+- Przycisk „Latarka” – dioda aparatu oświetla licznik w ciemnym miejscu (także w skanerze numeru PPE). Gaśnie po ponownym naciśnięciu lub wyjściu z ekranu.
 - Wybór licznika i rejestru.
 - Data i godzina.
 - Wartość wskazania.
@@ -74,6 +75,7 @@ Proponowane zakładki:
 ### Ustawienia
 - Nieruchomości: wybór, dodawanie (kreator konfiguracji), edycja z numerem PPE (wpisywanym lub skanowanym), usuwanie z potwierdzeniem.
 - Wygląd: tryb jasny/ciemny/systemowy i kolor motywu – zapisywane na telefonie.
+- Przypomnienia o odczycie: codziennie (wybrane dni), co tydzień lub co miesiąc o wybranej godzinie; opcja pominięcia dnia z dodanym odczytem; dotknięcie powiadomienia otwiera „Dodaj odczyt” (DEC-031).
 - Aplikacja: wersja instalatora z numerem kompilacji i wgrana aktualizacja (data, identyfikator), sprawdzanie aktualizacji.
 - Liczniki i rejestry.
 - Operator i sprzedawca.

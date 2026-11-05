@@ -111,6 +111,34 @@ Po zmianie identyfikatorów Google, Facebooka lub Apple potrzebny jest **nowy in
 
 Po zakończeniu buildu EAS udostępnia link i kod QR. Na telefonie należy otworzyć link, pobrać APK i zezwolić na instalację z tego źródła.
 
+### Powiadomienie e-mailem o gotowym instalatorze
+
+Workflow **Mobile build** czeka, aż Expo skończy budowanie (zwykle 10–20 minut), i umieszcza w podsumowaniu uruchomienia (*Summary*) tabelę z linkiem do pobrania pliku i stroną buildu na expo.dev. Expo nie ma wbudowanego powiadomienia e-mailem, dlatego mail wysyła GitHub po zakończeniu workflow. Jednorazowo trzeba to włączyć:
+
+1. GitHub → zdjęcie profilu → **Settings → Notifications**.
+2. Sekcja **System → Actions**: zaznacz powiadomienia **Email** i odznacz **„Only notify for failed workflows”**.
+3. Od teraz po każdym uruchomieniu *Mobile build* przyjdzie mail z wynikiem. Link w mailu prowadzi do uruchomienia, a tam w *Summary* jest link do pliku APK. Wystarczy otworzyć go na telefonie.
+
+GitHub wysyła takie maile tylko osobie, która uruchomiła workflow. Czekanie na build zużywa minuty GitHub Actions (w darmowym planie 2000 minut miesięcznie dla repozytoriów prywatnych); jeden build to ok. 15–25 minut.
+
+#### Mail z linkiem do APK do kilku osób
+
+Po udanym buildzie workflow może wysłać maila z linkiem do pliku i stroną buildu (kod QR) na dowolną liczbę adresów. Wysyłka idzie przez konto Gmail (akcja `dawidd6/action-send-mail`). Adresy i hasło są przechowywane wyłącznie w sekretach GitHuba – nie trafiają do repozytorium ani do logów.
+
+1. Konto Gmail, z którego będą wysyłane maile (może to być osobne konto, np. dla Wattly), musi mieć włączoną **weryfikację dwuetapową**.
+2. https://myaccount.google.com/apppasswords → utwórz **hasło aplikacji** o nazwie np. „Wattly GitHub” (16 znaków). Zwykłe hasło do Gmaila nie zadziała.
+3. GitHub → repozytorium → **Settings → Secrets and variables → Actions → New repository secret**:
+
+   | Sekret | Wartość |
+   |---|---|
+   | `MAIL_USERNAME` | adres Gmail nadawcy, np. `wattly.powiadomienia@gmail.com` |
+   | `MAIL_PASSWORD` | hasło aplikacji z kroku 2 (bez spacji) |
+   | `INSTALLER_EMAILS` | adresy odbiorców oddzielone przecinkami, np. `ja@example.com,ona@example.com,on@example.com` |
+
+4. Przy następnym uruchomieniu *Mobile build* każdy odbiorca dostanie maila „Wattly 1.2.0 (kompilacja 3) – nowy instalator gotowy”. Gdy sekretów nie ma, krok wysyłki jest pomijany.
+
+Zmiana listy odbiorców = edycja sekretu `INSTALLER_EMAILS` (bez zmian w kodzie). Unieważnienie dostępu = usunięcie hasła aplikacji w koncie Google.
+
 ## Automatyczne aktualizacje
 
 Aplikacja aktualizuje się na dwóch poziomach (DEC-022):
@@ -130,6 +158,8 @@ Procedura wydania wersji natywnej: podnieś `version` w `src/mobile/app.json`, z
 Ustawienia → Aplikacja pokazują dwie wersje:
 - **Instalator** – `version` i numer kompilacji (`android.versionCode` / `ios.buildNumber`) z `app.json`, np. `1.1.0 (kompilacja 2)`; zmienia się tylko z nowym instalatorem;
 - **Aktualizacja** – data publikacji i pierwsze 8 znaków identyfikatora wgranej aktualizacji OTA (`Updates.createdAt`, `Updates.updateId`), np. `01.11.2026, 09:20 · 3f9a1c2b`, albo „wbudowana w instalator” przed pierwszą aktualizacją. Identyfikator jest widoczny na expo.dev → *Updates*.
+
+Przypomnienia o odczycie (DEC-031) to powiadomienia lokalne `expo-notifications` – nie wymagają serwera ani tokenów push. Logika planowania: `src/mobile/src/reminders/schedule.ts` (czyste funkcje), obsługa systemu: `reminders.ts`, otwieranie ekranu po dotknięciu: `useReminderLinks.ts`.
 
 W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawienia → Aplikacja pokazuje wtedy odpowiedni komunikat.
 

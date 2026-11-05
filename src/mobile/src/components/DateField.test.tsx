@@ -38,6 +38,17 @@ describe('DateField on Android', () => {
     expect(onChange).toHaveBeenCalledWith('2026-02-06 07:45');
   });
 
+  test('time fields open the clock and return HH:mm', async () => {
+    const onChange = jest.fn();
+    await render(<DateField label="Godzina" mode="time" value="22:00" onChange={onChange} />);
+
+    expect(screen.getByText('22:00')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Godzina' }));
+    expect(lastOpen()).toMatchObject({ mode: 'time' });
+    pick(new Date(2026, 0, 1, 7, 5));
+    expect(onChange).toHaveBeenCalledWith('07:05');
+  });
+
   test('empty value invites to pick a date and errors replace the hint', async () => {
     await render(<DateField label="Okres od" value="" onChange={jest.fn()} hint="Podpowiedź" error="Wybierz datę." />);
     expect(screen.getByText('Wybierz datę')).toBeOnTheScreen();

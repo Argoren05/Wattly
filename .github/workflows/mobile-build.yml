@@ -34,6 +34,8 @@ jobs:
         working-directory: src/mobile
     env:
       EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+      # E-mail about a new installer is sent only when the mail secrets are set (doc/Wattly_Development.md).
+      MAIL_CONFIGURED: ${{ secrets.MAIL_USERNAME != '' && secrets.MAIL_PASSWORD != '' && secrets.INSTALLER_EMAILS != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,9 +52,56 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
+      # Waits for the cloud build (usually 10–20 min) so the run ends when the installer is ready: the download
+      # link lands in the run summary and GitHub's "workflow run" e-mail tells you it is done (see
+      # doc/Wattly_Development.md – notifications). The build itself runs on Expo's servers.
       - name: EAS Build
+        id: build
         run: >
           eas build
           --profile ${{ github.event.inputs.profile || 'preview' }}
           --platform ${{ github.event.inputs.platform || 'android' }}
-          --non-interactive --no-wait
+          --non-interactive --wait --json > "$RUNNER_TEMP/builds.json"
+      - name: Download links in the run summary
+        if: always() && steps.build.outcome != 'skipped'
+        run: |
+          {
+            echo "## Instalator Wattly"
+            echo
+            if [ -s "$RUNNER_TEMP/builds.json" ] && jq -e 'type == "array"' "$RUNNER_TEMP/builds.json" > /dev/null; then
+              echo "| Platforma | Wersja | Status | Pobierz | Strona buildu |"
+              echo "|---|---|---|---|---|"
+              jq -r '.[] | "| \(.platform) | \(.appVersion // "-") (\(.appBuildVersion // "-")) | \(.status) | \(if .artifacts.buildUrl then "[plik](" + .artifacts.buildUrl + ")" else "-" end) | [expo.dev](https://expo.dev/accounts/\(.project.ownerAccount.name // "argoren")/projects/\(.project.slug // "wattly")/builds/\(.id)) |"' "$RUNNER_TEMP/builds.json"
+              echo
+              echo "Otwórz link **na telefonie**, pobierz plik APK i zainstaluj go na obecną aplikację – dane zostaną (są na serwerze)."
+            else
+              echo "Nie udało się odczytać wyniku buildu – sprawdź log kroku *EAS Build* i listę buildów na expo.dev."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Mail with the download link to the people listed in the INSTALLER_EMAILS secret (comma-separated).
+      # Sent from a Gmail account with an app password; addresses and password never appear in the repository.
+      - name: Prepare e-mail
+        id: mail
+        if: steps.build.outcome == 'success' && env.MAIL_CONFIGURED == 'true'
+        run: |
+          version=$(jq -r '[.[] | "\(.appVersion // "?") (kompilacja \(.appBuildVersion // "?"))"] | first' "$RUNNER_TEMP/builds.json")
+          echo "subject=Wattly ${version} – nowy instalator gotowy" >> "$GITHUB_OUTPUT"
+          {
+            echo "<p>Nowa wersja aplikacji <b>Wattly ${version}</b> jest gotowa do instalacji.</p><ul>"
+            jq -r '.[] | "<li>\(.platform): " + (if .artifacts.buildUrl then "<a href=\"" + .artifacts.buildUrl + "\">pobierz plik</a>" else "brak pliku" end) + " · <a href=\"https://expo.dev/accounts/\(.project.ownerAccount.name // "argoren")/projects/\(.project.slug // "wattly")/builds/\(.id)\">strona buildu (kod QR)</a></li>"' "$RUNNER_TEMP/builds.json"
+            echo "</ul><p>Otwórz link <b>na telefonie</b>, pobierz plik i zainstaluj go na obecną aplikację – dane zostaną, bo są na serwerze. Przy pierwszej instalacji z przeglądarki Android poprosi o zgodę na instalowanie aplikacji z tego źródła.</p>"
+            echo "<p style=\"color:#666\">Wiadomość wysłana automatycznie przez workflow Mobile build (${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).</p>"
+          } > "$RUNNER_TEMP/mail.html"
+      - name: Send e-mail
+        if: steps.mail.outcome == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Wattly <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.INSTALLER_EMAILS }}
+          subject: ${{ steps.mail.outputs.subject }}
+          html_body: file://${{ runner.temp }}/mail.html
