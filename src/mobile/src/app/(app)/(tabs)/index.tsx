@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { analyticsApi } from '../../../api/endpoints';
+import { checkBudget } from '../../../reminders/center';
 import { BarChart } from '../../../components/BarChart';
 import { Body, Button, Card, EmptyState, ErrorState, Loading, Notice, Row, Screen, SectionTitle, Stat } from '../../../components/ui';
 import { keys } from '../../../hooks/queries';
@@ -18,6 +19,10 @@ export default function Dashboard() {
   const [showAssumptions, setShowAssumptions] = useState(false);
 
   const forecast = useQuery({ queryKey: keys.forecast(property.id), queryFn: () => analyticsApi.forecast(property.id) });
+  // Budget alert (at most once per billing period) – checked whenever a fresh forecast arrives.
+  useEffect(() => {
+    if (forecast.data) void checkBudget(property.name, forecast.data);
+  }, [forecast.data, property.name]);
   const today = new Date();
   const from = toIsoDate(addDays(today, -29));
   const to = toIsoDate(today);

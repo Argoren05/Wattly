@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 
+import { NotificationBell } from '../../../components/NotificationBell';
 import { useRequiredProperty } from '../../../state/PropertyContext';
 import { useTheme } from '../../../theme/theme';
 
@@ -32,6 +33,7 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700' },
+        headerRight: () => <NotificationBell />,
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Start', headerTitle: property.name, tabBarIcon: icon('home-outline') }} />

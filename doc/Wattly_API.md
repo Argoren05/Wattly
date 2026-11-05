@@ -133,6 +133,7 @@ Wynik kalkulacji zawiera: okres, zużycie (łącznie i per strefa), wartości ź
 ## 8. Faktury
 
 - `GET /properties/{propertyId}/invoices`, `POST /properties/{propertyId}/invoices`
+  - opcjonalnie `dueDate` (termin płatności, nie wcześniej niż `issueDate`, najwyżej rok później) i `amountDue` (kwota do zapłaty, gdy inna niż `totalGross` – np. po odliczeniu wpłaconych prognoz; może być ujemna przy nadpłacie)
 - `GET /invoices/{invoiceId}`, `PUT /invoices/{invoiceId}`, `DELETE /invoices/{invoiceId}`
 - `POST /invoices/{invoiceId}/attachments` – `multipart/form-data`, pole `file`; PDF/JPEG/PNG do 10 MB, typ weryfikowany sygnaturą pliku
 - `GET /attachments/{attachmentId}` – pobranie (tylko właściciel)

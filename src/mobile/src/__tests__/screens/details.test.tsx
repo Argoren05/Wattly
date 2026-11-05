@@ -127,6 +127,22 @@ describe('new invoice', () => {
     expect(invoiceApi.create).not.toHaveBeenCalled();
   });
 
+  test('saves the payment deadline and the amount to pay', async () => {
+    jest.mocked(invoiceApi.create).mockResolvedValue(invoice({ id: 'i9' }));
+    await renderWithProviders(<NewInvoice />);
+    await fill();
+    await fireEvent.changeText(screen.getByLabelText('Data wystawienia'), '2026-10-05');
+
+    await fireEvent.changeText(screen.getByLabelText('Termin płatności (opcjonalnie)'), '2026-10-01');
+    await fireEvent.press(screen.getByRole('button', { name: /Zapisz fakturę/ }));
+    expect(screen.getByText('Termin płatności nie może być przed datą wystawienia.')).toBeOnTheScreen();
+
+    await fireEvent.changeText(screen.getByLabelText('Termin płatności (opcjonalnie)'), '2026-10-20');
+    await fireEvent.changeText(screen.getByLabelText('Kwota do zapłaty (PLN, opcjonalnie)'), '393,27');
+    await fireEvent.press(screen.getByRole('button', { name: /Zapisz fakturę/ }));
+    await waitFor(() => expect(invoiceApi.create).toHaveBeenCalledWith('p1', expect.objectContaining({ dueDate: '2026-10-20', amountDue: 393.27 })));
+  });
+
   test('server errors are shown', async () => {
     jest.mocked(invoiceApi.create).mockRejectedValue(new ApiError(400, 'x', undefined, { TotalGross: ['Nieprawidłowa kwota brutto.'] }));
     await renderWithProviders(<NewInvoice />);
@@ -142,12 +158,16 @@ describe('invoice details', () => {
 
   test('shows comparison and deletes after confirmation', async () => {
     jest.spyOn(Alert, 'alert').mockImplementation((_t, _m, buttons) => buttons?.[1]?.onPress?.());
-    jest.mocked(invoiceApi.get).mockResolvedValue(invoice({ attachment: { id: 'a', fileName: 'f.pdf', contentType: 'application/pdf', sizeBytes: 1, createdAt: '' } }));
+    jest.mocked(invoiceApi.get).mockResolvedValue(invoice({
+      attachment: { id: 'a', fileName: 'f.pdf', contentType: 'application/pdf', sizeBytes: 1, createdAt: '' }, dueDate: '2026-10-20', amountDue: 393.27,
+    }));
     jest.mocked(invoiceApi.remove).mockResolvedValue(undefined);
     await renderWithProviders(<InvoiceDetails />);
 
     expect(await screen.findByText('Porównanie z szacunkiem')).toBeOnTheScreen();
     expect(screen.getByText('f.pdf')).toBeOnTheScreen();
+    expect(screen.getByText('Termin płatności')).toBeOnTheScreen();
+    expect(screen.getByText(/393,27/)).toBeOnTheScreen();
     expect(screen.getByText(/8,55/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: /Usuń fakturę/ }));

@@ -191,7 +191,7 @@ Model został zaimplementowany w EF Core z następującymi uzupełnieniami i ods
 - **TariffRateComponent** – `Name`, `ComponentType` (Energy, VariableDistribution, FixedDistribution, Subscription, Capacity, Other), `Unit` (Kwh, Month, Day, Kw), `NetRate numeric(18,6)`, `TaxRate numeric(5,4)` jako ułamek.
 - **MeterReading** – `Status` (Active, Superseded, Voided), `SupersedesReadingId`, `VoidReason`, `StatusChangedAt`. Częściowy unikalny indeks: jeden aktywny odczyt na rejestr i chwilę.
 - **CostCalculation** – powiązana z `PropertyId` i okresem (`PeriodStart`, `PeriodEnd`), `TotalNet`, `IsComplete`, `Assumptions text[]`; **CostCalculationLine** przechowuje migawkę użytych stawek.
-- **Invoice** – dodatkowo `TotalNet`, `CreatedAt`, `UpdatedAt`.
+- **Invoice** – dodatkowo `TotalNet`, `CreatedAt`, `UpdatedAt`; `DueDate date` i `AmountDue numeric(18,2)` (migracja `InvoiceDueDate`, DEC-033).
 - **AuditEvent** – zapisywany automatycznie dla umów, cenników, odczytów i faktur (`ChangesJson jsonb`).
 - **NotificationPreference** – jeszcze niezaimplementowana.
 - Enumy zapisywane jako tekst; wszystkie znaczniki czasu jako `timestamptz` (UTC).

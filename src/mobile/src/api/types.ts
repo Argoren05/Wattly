@@ -383,6 +383,10 @@ export interface Invoice {
   totalGross: number;
   currencyCode: string;
   notes: string | null;
+  /** Payment deadline (YYYY-MM-DD). */
+  dueDate: string | null;
+  /** Amount actually to pay when it differs from the gross total (e.g. after forecast payments). */
+  amountDue: number | null;
   attachment: Attachment | null;
   comparison: {
     estimatedGross: number;
@@ -407,6 +411,8 @@ export interface InvoiceRequest {
   totalNet?: number | null;
   totalGross: number;
   notes?: string | null;
+  dueDate?: string | null;
+  amountDue?: number | null;
 }
 
 /** Native installer status returned by GET /app/release. */

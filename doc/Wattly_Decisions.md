@@ -197,6 +197,18 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Decyzja: lokalny moduł Expo `src/mobile/modules/wattly-torch` (autolinkowany z katalogu `modules/`). Android: `CameraManager.setTorchMode` (Android 6+, bez uprawnienia `CAMERA`). iOS: `AVCaptureDevice.torchMode` (bez sesji przechwytywania). Moduł gasi latarkę, gdy aplikacja przechodzi w tło lub jest zamykana; aplikacja gasi ją po wyjściu z ekranu. Gdy modułu nie ma (instalator bez niego, Expo Go), aplikacja wraca do sposobu przez `expo-camera`.
 - Konsekwencje: brak prośby o aparat przy latarce, natychmiastowe zapalanie, mniejsze zużycie baterii. Kod natywny jest kompilowany dopiero w EAS Build – w CI sprawdzane są tylko autolinkowanie i warstwa JS. Wymaga instalatora 1.3.0 (`versionCode` 4).
 
+## DEC-033 – Centrum powiadomień: wiele przypomnień, historia, alerty
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: użytkownik chce mieć wiele przypomnień, historię powiadomień oraz nowe rodzaje: termin płatności faktury, przekroczenie budżetu, nietypowe zużycie.
+- Rozważane opcje: powiadomienia push z serwera (Firebase/FCM, tokeny urządzeń, zadanie cykliczne na serwerze) albo, jak w DEC-031, powiadomienia lokalne.
+- Decyzja: wszystko **lokalnie na telefonie** (`src/mobile/src/reminders/center.ts`):
+  - przypomnienia o odczycie (lista do 10) i terminy płatności są planowane z wyprzedzeniem (do 60 powiadomień; terminy z faktur z `dueDate`, kwota `amountDue` lub brutto); plan jest odświeżany przy starcie, po odczycie, po zmianie faktur i ustawień;
+  - alerty „prognoza przekracza budżet” (raz na okres rozliczeniowy) i „nietypowo duże zużycie” (gdy serwer zgłosi `reading.unusual_jump`) są wyświetlane od razu, gdy aplikacja je wykryje;
+  - historia (ostatnie 100 wpisów, przeczytane/nieprzeczytane) w AsyncStorage – zaplanowane powiadomienia trafiają do niej po swojej godzinie; licznik nieprzeczytanych na dzwonku i na ikonie aplikacji (gdzie launcher to obsługuje);
+  - do faktur dodano `DueDate` i `AmountDue` (serwer, migracja `InvoiceDueDate`).
+- Konsekwencje: bez kosztów i konfiguracji Firebase, działa offline. Alert o budżecie pojawi się dopiero po otwarciu aplikacji (przy regularnych odczytach to wystarcza). Ustawienia i historia są per telefon. Nowy moduł natywny AsyncStorage wchodzi do instalatora 1.3.0.
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł

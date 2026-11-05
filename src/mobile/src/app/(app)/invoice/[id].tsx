@@ -45,6 +45,8 @@ export default function InvoiceDetails() {
         <KeyValue label="Data wystawienia" value={formatDate(i.issueDate)} />
         <KeyValue label="Rzeczywista kwota faktury" value={formatMoney(i.totalGross, i.currencyCode)} />
         {i.consumptionKwh !== null ? <KeyValue label="Zużycie z faktury" value={formatKwh(i.consumptionKwh)} /> : null}
+        {i.amountDue !== null ? <KeyValue label="Do zapłaty" value={formatMoney(i.amountDue, i.currencyCode)} /> : null}
+        {i.dueDate ? <KeyValue label="Termin płatności" value={formatDate(i.dueDate)} /> : null}
         {i.attachment ? <KeyValue label="Załącznik" value={i.attachment.fileName} /> : null}
         {i.notes ? <Body muted>{i.notes}</Body> : null}
       </Card>

@@ -49,8 +49,12 @@ jest.mock('@react-native-community/datetimepicker', () => {
   return { __esModule: true, default: Picker, DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() } };
 });
 
+// Device storage (notification history): the library's own in-memory mock.
+jest.mock('@react-native-async-storage/async-storage', () => jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'));
+
 // Local notifications (reading reminders): permission granted, scheduling recorded.
 jest.mock('expo-notifications', () => ({
+  setBadgeCountAsync: jest.fn(async () => true),
   getPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
   requestPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
   cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),

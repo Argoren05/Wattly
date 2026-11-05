@@ -1,30 +1,40 @@
+import { useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { router, type Href } from 'expo-router';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 
-import { loadReminderSettings, rescheduleReminders } from './reminders';
+import { deliverDue, markRead, rescheduleAll } from './center';
+import { NOTIFICATIONS_QUERY } from './useNotificationLog';
 
-// Reminders arriving while the app is open are shown as a normal banner.
+// Notifications arriving while the app is open are shown as a normal banner.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
+  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: true }),
 });
 
 /**
- * Root-level effects of reading reminders:
- * - tapping a reminder opens the screen stored in its `url` (adding a reading);
- * - on start the reminders are re-planned (keeps the next weeks covered without opening Settings).
+ * Root-level effects of the notification centre:
+ * - tapping a notification marks it read in the history and opens its screen;
+ * - on start notifications are re-planned (keeps the next weeks covered);
+ * - when the app returns to the foreground, notifications shown meanwhile move to the history.
  */
 export function useReminderLinks() {
   const response = Notifications.useLastNotificationResponse();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    const url = response?.notification.request.content.data?.url;
+    const request = response?.notification.request;
+    if (!request) return;
+    const url = request.content.data?.url;
+    void markRead(request.identifier).then(() => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY })).catch(() => undefined);
     if (typeof url === 'string') router.push(url as Href);
-  }, [response]);
+  }, [response, queryClient]);
 
   useEffect(() => {
-    void loadReminderSettings()
-      .then((s) => (s.frequency === 'off' ? 0 : rescheduleReminders()))
-      .catch(() => undefined);
-  }, []);
+    void rescheduleAll().then(() => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY })).catch(() => undefined);
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void deliverDue().then(() => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY })).catch(() => undefined);
+    });
+    return () => subscription.remove();
+  }, [queryClient]);
 }

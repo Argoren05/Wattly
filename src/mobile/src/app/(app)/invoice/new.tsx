@@ -37,6 +37,8 @@ export default function NewInvoice() {
   const [gross, setGross] = useState('');
   const [consumption, setConsumption] = useState('');
   const [notes, setNotes] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [amountDue, setAmountDue] = useState('');
   const [file, setFile] = useState<PickedFile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -59,6 +61,10 @@ export default function NewInvoice() {
     if (end < start) return setError('Koniec okresu nie może być przed początkiem.');
     if (total === null) return setError('Podaj kwotę brutto.');
     if (consumption.trim() && (kwh === null || kwh < 0)) return setError('Nieprawidłowe zużycie.');
+    const due = dueDate ? parseIsoDate(dueDate) : null;
+    const toPay = amountDue.trim() ? parseDecimal(amountDue) : null;
+    if (due && due < issue) return setError('Termin płatności nie może być przed datą wystawienia.');
+    if (amountDue.trim() && toPay === null) return setError('Nieprawidłowa kwota do zapłaty.');
     if (file?.size && file.size > 10 * 1024 * 1024) return setError('Załącznik może mieć maksymalnie 10 MB.');
 
     setBusy(true);
@@ -66,6 +72,7 @@ export default function NewInvoice() {
     try {
       const invoice = await invoiceApi.create(property.id, {
         invoiceNumber: number.trim(), issueDate: issue, periodStart: start, periodEnd: end, totalGross: total, consumptionKwh: kwh, notes: notes.trim() || null,
+        dueDate: due, amountDue: toPay,
       });
       if (file) await invoiceApi.attach(invoice.id, await toFormData(file));
       await invalidate(property.id);
@@ -86,6 +93,11 @@ export default function NewInvoice() {
         <DateField label="Okres do (włącznie)" value={periodEnd} onChange={setPeriodEnd} />
         <Field label={`Kwota brutto (${property.currencyCode})`} value={gross} onChangeText={setGross} keyboardType="decimal-pad" />
         <Field label="Zużycie kWh (opcjonalnie)" value={consumption} onChangeText={setConsumption} keyboardType="decimal-pad" />
+        <DateField label="Termin płatności (opcjonalnie)" value={dueDate} onChange={setDueDate}
+          hint="Aplikacja przypomni o płatności (Ustawienia → Powiadomienia)." />
+        {dueDate ? <Button title="Usuń termin płatności" variant="ghost" icon="close-circle-outline" onPress={() => setDueDate('')} /> : null}
+        <Field label={`Kwota do zapłaty (${property.currencyCode}, opcjonalnie)`} value={amountDue} onChangeText={setAmountDue} keyboardType="decimal-pad"
+          hint="Gdy różni się od kwoty brutto, np. „Do zapłaty” po odliczeniu wpłaconych prognoz." />
         <Field label="Notatki (opcjonalnie)" value={notes} onChangeText={setNotes} multiline />
         <Button title={file ? `Załącznik: ${file.name}` : 'Dodaj PDF lub zdjęcie'} variant="secondary" icon="attach-outline" onPress={pick} />
         <Body muted>Dozwolone: PDF, JPEG, PNG do 10 MB.</Body>

@@ -40,7 +40,9 @@ export default function AppLayout() {
       <Stack.Screen name="settings/contract" options={{ title: 'Umowa i taryfa' }} />
       <Stack.Screen name="settings/rates" options={{ title: 'Stawki' }} />
       <Stack.Screen name="settings/meters" options={{ title: 'Liczniki' }} />
-      <Stack.Screen name="settings/reminders" options={{ title: 'Przypomnienia' }} />
+      <Stack.Screen name="settings/reminders" options={{ title: 'Powiadomienia' }} />
+      <Stack.Screen name="settings/reminder" options={{ title: 'Przypomnienie o odczycie' }} />
+      <Stack.Screen name="notifications" options={{ title: 'Historia powiadomień' }} />
     </Stack>
   );
 }
