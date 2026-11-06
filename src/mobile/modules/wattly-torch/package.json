@@ -1,0 +1,10 @@
+{
+  "name": "wattly-torch",
+  "version": "1.0.0",
+  "description": "Flashlight (torch) control for Wattly without the camera permission",
+  "license": "UNLICENSED",
+  "author": "Wattly",
+  "homepage": "https://github.com/Argoren05/Wattly",
+  "private": true,
+  "main": "index.ts"
+}

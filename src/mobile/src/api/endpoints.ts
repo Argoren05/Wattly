@@ -1,6 +1,6 @@
 import { http } from './client';
 import type {
-  Attachment, CalculationResult, CatalogEntry, EnergyContract, EnergyContractRequest, Forecast, Granularity, Invoice,
+  Appliance, ApplianceBreakdown, ApplianceRequest, ApplianceUsage, ApplianceUsageEntry, Attachment, CalculationResult, CatalogEntry, EnergyContract, EnergyContractRequest, Forecast, Granularity, Invoice,
   InvoiceRequest, Meter, MobileRelease, MeterRequest, PagedResult, Property, PropertyRequest, RatePlan, RatePlanRequest, Reading,
   ReadingRequest, ReadingSaved, Series, Tariff, TokenResponse, User,
 } from './types';
@@ -103,4 +103,17 @@ export const appApi = {
   /** Native installer status for the installed version. */
   release: (platform: 'android' | 'ios', version: string) =>
     http.get<MobileRelease>(`/app/release?platform=${platform}&version=${encodeURIComponent(version)}`),
+};
+
+/** Appliances (Tapo plugs, manual devices) and the consumption breakdown (DEC-034). */
+export const applianceApi = {
+  list: (propertyId: string) => http.get<Appliance[]>(`/properties/${propertyId}/appliances`),
+  create: (propertyId: string, body: ApplianceRequest) => http.post<Appliance>(`/properties/${propertyId}/appliances`, body),
+  update: (id: string, body: ApplianceRequest) => http.put<Appliance>(`/appliances/${id}`, body),
+  remove: (id: string) => http.delete(`/appliances/${id}`),
+  usage: (id: string) => http.get<ApplianceUsage[]>(`/appliances/${id}/usage`),
+  saveUsage: (id: string, entries: ApplianceUsageEntry[]) => http.put<{ created: number; updated: number }>(`/appliances/${id}/usage`, { entries }),
+  removeUsage: (id: string, usageId: string) => http.delete(`/appliances/${id}/usage/${usageId}`),
+  breakdown: (propertyId: string, from: string, to: string) =>
+    http.get<ApplianceBreakdown>(`/properties/${propertyId}/appliances/breakdown?from=${from}&to=${to}`),
 };

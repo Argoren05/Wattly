@@ -24,9 +24,9 @@ Wattly to aplikacja mobilna (Android, iOS) do monitorowania zużycia energii ele
 
 ## Stan projektu
 
-Działa: konto (e-mail i hasło, opcjonalnie Google / Microsoft / Facebook / Apple), wiele nieruchomości z numerem PPE, umowy (operator, sprzedawca, taryfa) z historią, własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, prognoza, statystyki, faktury z porównaniem i załącznikami, motyw jasny/ciemny z kolorami.
+Działa: konto (e-mail i hasło, opcjonalnie Google / Microsoft / Facebook / Apple), wiele nieruchomości z numerem PPE, umowy (operator, sprzedawca, taryfa) z historią, własne cenniki z okresami obowiązywania, liczniki wielostrefowe, odczyty z walidacją i historią korekt, kalkulacja kosztów z rozbiciem i założeniami, prognoza, statystyki, faktury z porównaniem i załącznikami, powiadomienia lokalne, zużycie urządzeń (gniazdka Tapo, wpisy ręczne) z ekranem „Na co schodzi prąd”, motyw jasny/ciemny z kolorami.
 
-Kolejne etapy: powiadomienia, odczyt ze zdjęcia (OCR), eksport, import odczytów, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline – szczegóły w [roadmapie](doc/Wattly_Roadmap.md).
+Kolejne etapy: odczyt ze zdjęcia (OCR), eksport, import odczytów, porównywarka taryf, fotowoltaika w kalkulacji, tryb offline – szczegóły w [roadmapie](doc/Wattly_Roadmap.md).
 
 ## Instalacja na telefonie
 
@@ -99,5 +99,6 @@ Pełny spis z opisem każdego dokumentu: **[doc/README.md](doc/README.md)**. Naj
 - [Kontrakt API](doc/Wattly_API.md)
 - [Rejestr decyzji](doc/Wattly_Decisions.md)
 - [Roadmapa](doc/Wattly_Roadmap.md)
+- [Gniazdka Tapo i „Na co schodzi prąd”](doc/Wattly_Tapo.md)
 
 Dokumenty wymagań, architektury i UI/UX opisują zamierzone zachowanie produktu; co jest już zrobione, pokazuje roadmapa. Każda zmiana w kodzie jest opisywana w odpowiednim pliku w `doc/` ([zasady pracy](doc/AI_WORKING_GUIDELINES.md)).

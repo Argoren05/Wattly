@@ -43,7 +43,7 @@ Proponowane zakładki:
 - Przycisk „Dodaj odczyt”.
 
 ### Dodawanie odczytu
-- Przycisk „Latarka” – dioda aparatu oświetla licznik w ciemnym miejscu (także w skanerze numeru PPE). Gaśnie po ponownym naciśnięciu lub wyjściu z ekranu.
+- Przycisk „Latarka” – dioda telefonu oświetla licznik w ciemnym miejscu (także w skanerze numeru PPE), bez prośby o dostęp do aparatu (DEC-032). Gaśnie po ponownym naciśnięciu, wyjściu z ekranu lub z aplikacji.
 - Wybór licznika i rejestru.
 - Data i godzina.
 - Wartość wskazania.
@@ -66,16 +66,26 @@ Proponowane zakładki:
 - Porównanie okresów.
 - Oznaczenie estymacji przy rzadkich odczytach – dni między odczytami odległymi o więcej niż 36 h (DEC-030); przy codziennych odczytach dzień jest „na podstawie odczytów”.
 
+- Karta „Na co schodzi prąd” prowadzi do zestawienia urządzeń (DEC-034): okresy 30 dni / poprzedni miesiąc / 90 dni (kończą się wczoraj), dla każdego urządzenia kWh, szacowany koszt, udział i pasek, pozycja „Pozostałe” (licznik − urządzenia), informacja „Dane z X z Y dni”, ostrzeżenie, gdy urządzenia przekraczają licznik lub brak odczytów.
+
 ### Faktury
 - Lista faktur.
-- Dodawanie kwoty i okresu.
+- Dodawanie kwoty i okresu, terminu płatności i kwoty do zapłaty (DEC-033).
 - Załącznik.
 - Porównanie prognozy z rzeczywistą kwotą.
 
 ### Ustawienia
 - Nieruchomości: wybór, dodawanie (kreator konfiguracji), edycja z numerem PPE (wpisywanym lub skanowanym), usuwanie z potwierdzeniem.
 - Wygląd: tryb jasny/ciemny/systemowy i kolor motywu – zapisywane na telefonie.
-- Przypomnienia o odczycie: codziennie (wybrane dni), co tydzień lub co miesiąc o wybranej godzinie; opcja pominięcia dnia z dodanym odczytem; dotknięcie powiadomienia otwiera „Dodaj odczyt” (DEC-031).
+- Powiadomienia (DEC-031, DEC-033):
+  - lista przypomnień o odczycie (do 10): codziennie w wybrane dni, co tydzień lub co miesiąc, o wybranej godzinie, z własną treścią i opcją pominięcia dnia z dodanym odczytem; każde można włączyć, edytować i usunąć;
+  - inne rodzaje (włącz/wyłącz): termin płatności faktury (w dniu terminu lub 1/3/7 dni wcześniej), prognoza przekracza budżet, nietypowo duże zużycie;
+  - historia powiadomień (ostatnie 100) z nieprzeczytanymi; dzwonek z licznikiem w nagłówku zakładek; dotknięcie wpisu lub powiadomienia otwiera właściwy ekran.
+- Urządzenia (DEC-034, [instrukcja](Wattly_Tapo.md)):
+  - lista urządzeń (gniazdka Tapo z adresem IP zapisanym na tym telefonie, urządzenia ręczne, ostatni dzień z danymi);
+  - konto Tapo (e-mail i hasło tylko na telefonie), dodawanie gniazdka po adresie IP (nazwa i model z gniazdka), dodawanie urządzenia ręcznego;
+  - synchronizacja: automatyczna przy otwarciu aplikacji, przycisk „Synchronizuj teraz”, wynik dla każdego gniazdka;
+  - szczegóły urządzenia: nazwa, ukrycie w zestawieniu, adres IP gniazdka, wpisy zużycia za okres (od–do, kWh), historia, usunięcie z potwierdzeniem.
 - Aplikacja: wersja instalatora z numerem kompilacji i wgrana aktualizacja (data, identyfikator), sprawdzanie aktualizacji.
 - Liczniki i rejestry.
 - Operator i sprzedawca.

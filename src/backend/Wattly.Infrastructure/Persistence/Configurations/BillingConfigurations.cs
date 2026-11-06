@@ -62,6 +62,7 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         b.Property(x => x.ConsumptionKwh).HasPrecision(18, 3);
         b.Property(x => x.TotalNet).HasPrecision(18, 2);
         b.Property(x => x.TotalGross).HasPrecision(18, 2);
+        b.Property(x => x.AmountDue).HasPrecision(18, 2);
         b.HasOne<Property>().WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<EnergySupplier>().WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Attachment>().WithMany().HasForeignKey(x => x.AttachmentId).OnDelete(DeleteBehavior.SetNull);

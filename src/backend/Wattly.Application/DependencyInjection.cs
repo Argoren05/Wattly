@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<CalculationService>();
         services.AddScoped<AnalyticsService>();
         services.AddScoped<InvoiceService>();
+        services.AddScoped<Appliances.ApplianceService>();
         services.AddSingleton<MobileReleaseService>();
         return services;
     }

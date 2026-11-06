@@ -83,7 +83,7 @@ export const ratePlan = (o: Partial<RatePlan> = {}): RatePlan => ({
 
 export const invoice = (o: Partial<Invoice> = {}): Invoice => ({
   id: 'i1', propertyId: 'p1', supplierId: null, invoiceNumber: 'FV/1/2026', issueDate: '2026-10-05', periodStart: '2026-09-01', periodEnd: '2026-09-30',
-  consumptionKwh: 250, totalNet: null, totalGross: 150, currencyCode: 'PLN', notes: 'Uwagi', attachment: null,
+  consumptionKwh: 250, totalNet: null, totalGross: 150, currencyCode: 'PLN', notes: 'Uwagi', dueDate: null, amountDue: null, attachment: null,
   comparison: { estimatedGross: 141.45, estimatedConsumptionKwh: 250, differenceGross: 8.55, differencePercent: 6, isEstimate: false, isComplete: true },
   createdAt: '2026-10-05T00:00:00Z', updatedAt: '2026-10-05T00:00:00Z', ...o,
 });

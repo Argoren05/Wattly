@@ -16,6 +16,11 @@ export const keys = {
   invoices: (propertyId: string) => ['invoices', propertyId] as const,
   invoice: (id: string) => ['invoice', id] as const,
   catalog: ['catalog'] as const,
+  /** Prefix of every appliance query (list, usage, breakdown) – invalidated after a Tapo sync. */
+  appliancesAll: ['appliances'] as const,
+  appliances: (propertyId: string) => ['appliances', propertyId] as const,
+  applianceUsage: (id: string) => ['appliances', 'usage', id] as const,
+  applianceBreakdown: (propertyId: string, from: string, to: string) => ['appliances', propertyId, 'breakdown', from, to] as const,
 };
 
 /** Register together with the name of its meter (for pickers). */

@@ -30,6 +30,29 @@ public class InvoiceServiceTests
     }
 
     [Fact]
+    public async Task Due_date_and_amount_due_are_stored_and_validated()
+    {
+        var (t, propertyId, service) = Setup();
+        using var _ = t;
+
+        var invoice = await service.CreateAsync(propertyId, Request(672.13m) with { DueDate = new DateOnly(2026, 10, 20), AmountDue = 393.27m }, CancellationToken.None);
+        Assert.Equal(new DateOnly(2026, 10, 20), invoice.DueDate);
+        Assert.Equal(393.27m, invoice.AmountDue);
+
+        var tooEarly = await Assert.ThrowsAsync<ValidationFailedException>(() =>
+            service.CreateAsync(propertyId, Request() with { DueDate = new DateOnly(2026, 10, 1) }, CancellationToken.None));
+        Assert.Contains(nameof(InvoiceRequest.DueDate), tooEarly.Errors.Keys);
+        var cents = await Assert.ThrowsAsync<ValidationFailedException>(() =>
+            service.CreateAsync(propertyId, Request() with { AmountDue = 1.234m }, CancellationToken.None));
+        Assert.Contains(nameof(InvoiceRequest.AmountDue), cents.Errors.Keys);
+
+        // Negative amounts (overpayment) are allowed; both fields can be cleared.
+        var updated = await service.UpdateAsync(invoice.Id, Request() with { AmountDue = -20.50m }, CancellationToken.None);
+        Assert.Equal(-20.50m, updated.AmountDue);
+        Assert.Null(updated.DueDate);
+    }
+
+    [Fact]
     public async Task Invoice_is_compared_with_estimate()
     {
         var (t, propertyId, service) = Setup();

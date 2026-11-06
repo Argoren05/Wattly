@@ -178,7 +178,11 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
             .Require(request.TotalGross is >= -1_000_000 and <= 10_000_000, nameof(request.TotalGross), "Nieprawidłowa kwota brutto.")
             .Require(decimal.Round(request.TotalGross, 2) == request.TotalGross, nameof(request.TotalGross), "Kwota może mieć maksymalnie 2 miejsca po przecinku.")
             .Require(request.TotalNet is null || decimal.Round(request.TotalNet.Value, 2) == request.TotalNet, nameof(request.TotalNet), "Kwota może mieć maksymalnie 2 miejsca po przecinku.")
-            .Require(request.ConsumptionKwh is null or >= 0, nameof(request.ConsumptionKwh), "Zużycie nie może być ujemne.");
+            .Require(request.ConsumptionKwh is null or >= 0, nameof(request.ConsumptionKwh), "Zużycie nie może być ujemne.")
+            .Require(request.AmountDue is null or >= -1_000_000 and <= 10_000_000, nameof(request.AmountDue), "Nieprawidłowa kwota do zapłaty.")
+            .Require(request.AmountDue is null || decimal.Round(request.AmountDue.Value, 2) == request.AmountDue, nameof(request.AmountDue), "Kwota może mieć maksymalnie 2 miejsca po przecinku.")
+            .Require(request.DueDate is null || request.DueDate >= request.IssueDate, nameof(request.DueDate), "Termin płatności nie może być wcześniejszy niż data wystawienia.")
+            .Require(request.DueDate is null || request.DueDate.Value.DayNumber - request.IssueDate.DayNumber <= 366, nameof(request.DueDate), "Termin płatności nie może przypadać później niż rok po wystawieniu.");
         if (request.SupplierId is { } supplierId)
             validation.Require(await db.EnergySuppliers.AnyAsync(s => s.Id == supplierId, ct), nameof(request.SupplierId), "Wybrany sprzedawca nie istnieje.");
         validation.ThrowIfInvalid();
@@ -196,6 +200,8 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
         invoice.TotalNet = request.TotalNet;
         invoice.TotalGross = request.TotalGross;
         invoice.Notes = Validation.Clean(request.Notes);
+        invoice.DueDate = request.DueDate;
+        invoice.AmountDue = request.AmountDue;
         invoice.UpdatedAt = now;
     }
 
@@ -216,7 +222,7 @@ public sealed class InvoiceService(IWattlyDbContext db, ICurrentUser currentUser
 
         var attachment = i.AttachmentId is { } id && attachments.TryGetValue(id, out var a) ? ToDto(a) : null;
         return new InvoiceDto(i.Id, i.PropertyId, i.SupplierId, i.InvoiceNumber, i.IssueDate, i.PeriodStart, i.PeriodEnd, i.ConsumptionKwh,
-            i.TotalNet, i.TotalGross, i.CurrencyCode, i.Notes, attachment, comparison, i.CreatedAt, i.UpdatedAt);
+            i.TotalNet, i.TotalGross, i.CurrencyCode, i.Notes, i.DueDate, i.AmountDue, attachment, comparison, i.CreatedAt, i.UpdatedAt);
     }
 
     /// <summary>Maps attachment metadata.</summary>

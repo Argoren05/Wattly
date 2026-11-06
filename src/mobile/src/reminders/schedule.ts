@@ -24,6 +24,48 @@ export const DEFAULT_REMINDERS: ReminderSettings = {
   frequency: 'off', time: '22:00', weekdays: [1, 2, 3, 4, 5, 6, 7], weekday: 7, dayOfMonth: 1, skipWhenRead: true,
 };
 
+/** One reminder on the list (users can have several, e.g. daily at 22:00 and monthly for the invoice). */
+export interface Reminder extends ReminderSettings {
+  id: string;
+  /** Optional own text, e.g. "Spisz licznik do faktury". */
+  label: string;
+  enabled: boolean;
+}
+
+/** Upper limit of reminders on the list (keeps the number of planned notifications reasonable). */
+export const MAX_REMINDERS = 10;
+
+/**
+ * Reads the reminder list. Accepts the list format and the single-reminder format of version 1.2 (migrated to a list).
+ * @param raw Stored JSON or null.
+ */
+export function parseReminders(raw: string | null): Reminder[] {
+  let value: unknown;
+  try {
+    value = raw ? JSON.parse(raw) : null;
+  } catch {
+    return [];
+  }
+  if (value && !Array.isArray(value) && typeof value === 'object') {
+    // Version 1.2 stored one reminder; keep it if it was switched on.
+    const single = parseReminderSettings(JSON.stringify(value));
+    return single.frequency === 'off' ? [] : [{ ...single, id: 'r1', label: '', enabled: true }];
+  }
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, MAX_REMINDERS).flatMap((item, index) => {
+    if (!item || typeof item !== 'object') return [];
+    const entry = item as Partial<Reminder>;
+    const settings = parseReminderSettings(JSON.stringify(entry));
+    if (settings.frequency === 'off') return [];
+    return [{
+      ...settings,
+      id: typeof entry.id === 'string' && entry.id ? entry.id : `r${index + 1}`,
+      label: typeof entry.label === 'string' ? entry.label.slice(0, 80) : '',
+      enabled: entry.enabled !== false,
+    }];
+  });
+}
+
 /** How far ahead notifications are planned. They are re-planned on every app start and after each reading. */
 export const PLANNING_HORIZON_DAYS = 35;
 

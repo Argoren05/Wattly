@@ -36,6 +36,8 @@ public sealed record AttachmentDto(Guid Id, string FileName, string ContentType,
 /// <param name="TotalGross">Gross total.</param>
 /// <param name="CurrencyCode">Currency.</param>
 /// <param name="Notes">Notes.</param>
+/// <param name="DueDate">Payment deadline.</param>
+/// <param name="AmountDue">Amount to pay when it differs from the gross total.</param>
 /// <param name="Attachment">Attachment.</param>
 /// <param name="Comparison">Comparison with the estimate (null without rates/readings).</param>
 /// <param name="CreatedAt">Creation time.</param>
@@ -53,6 +55,8 @@ public sealed record InvoiceDto(
     decimal TotalGross,
     string CurrencyCode,
     string? Notes,
+    DateOnly? DueDate,
+    decimal? AmountDue,
     AttachmentDto? Attachment,
     InvoiceComparisonDto? Comparison,
     DateTimeOffset CreatedAt,
@@ -68,6 +72,8 @@ public sealed record InvoiceDto(
 /// <param name="TotalNet">Net total.</param>
 /// <param name="TotalGross">Gross total.</param>
 /// <param name="Notes">Notes.</param>
+/// <param name="DueDate">Payment deadline (optional).</param>
+/// <param name="AmountDue">Amount to pay when it differs from the gross total (optional).</param>
 public sealed record InvoiceRequest(
     Guid? SupplierId,
     string InvoiceNumber,
@@ -77,7 +83,9 @@ public sealed record InvoiceRequest(
     decimal? ConsumptionKwh,
     decimal? TotalNet,
     decimal TotalGross,
-    string? Notes);
+    string? Notes,
+    DateOnly? DueDate = null,
+    decimal? AmountDue = null);
 
 /// <summary>Downloadable file.</summary>
 /// <param name="FileName">File name.</param>

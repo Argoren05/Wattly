@@ -32,6 +32,15 @@ public class Invoice : Entity, IAuditable
     /// <summary>Gross total to pay.</summary>
     public decimal TotalGross { get; set; }
 
+    /// <summary>Payment deadline printed on the invoice (optional); the app reminds about it.</summary>
+    public DateOnly? DueDate { get; set; }
+
+    /// <summary>
+    /// Amount actually to pay (optional) when it differs from <see cref="TotalGross"/>, e.g. the settlement minus
+    /// forecast payments already made (TAURON: "Do zapłaty"). May be negative for an overpayment.
+    /// </summary>
+    public decimal? AmountDue { get; set; }
+
     /// <summary>Currency of the amounts.</summary>
     public string CurrencyCode { get; set; } = "PLN";
 

@@ -62,6 +62,7 @@ npx expo start
 - Na fizycznym telefonie ustaw `EXPO_PUBLIC_API_URL` na adres IP komputera w sieci LAN (np. `http://192.168.1.10:5103`), a nie `localhost`.
 - Kontrole jakości: `npm run typecheck`, `npm run lint` (wymusza JSDoc), `npm test` (Jest), `npm run test:coverage`.
 - Nowe moduły natywne instaluj przez `npx expo install <pakiet>`, aby wersje były zgodne z SDK.
+- Własne moduły natywne leżą w `src/mobile/modules/<nazwa>` (struktura modułu Expo: `expo-module.config.json`, `android/`, `ios/`, `index.ts`) i są autolinkowane bez instalacji. Obecnie: `wattly-torch` – latarka bez uprawnienia aparatu (DEC-032). Kod Kotlin/Swift kompiluje się dopiero w EAS Build; sprawdzenie autolinkowania lokalnie: `npx expo-modules-autolinking resolve --platform android`.
 
 ## Instalator na telefon (EAS Build)
 
@@ -159,9 +160,22 @@ Ustawienia → Aplikacja pokazują dwie wersje:
 - **Instalator** – `version` i numer kompilacji (`android.versionCode` / `ios.buildNumber`) z `app.json`, np. `1.1.0 (kompilacja 2)`; zmienia się tylko z nowym instalatorem;
 - **Aktualizacja** – data publikacji i pierwsze 8 znaków identyfikatora wgranej aktualizacji OTA (`Updates.createdAt`, `Updates.updateId`), np. `01.11.2026, 09:20 · 3f9a1c2b`, albo „wbudowana w instalator” przed pierwszą aktualizacją. Identyfikator jest widoczny na expo.dev → *Updates*.
 
-Przypomnienia o odczycie (DEC-031) to powiadomienia lokalne `expo-notifications` – nie wymagają serwera ani tokenów push. Logika planowania: `src/mobile/src/reminders/schedule.ts` (czyste funkcje), obsługa systemu: `reminders.ts`, otwieranie ekranu po dotknięciu: `useReminderLinks.ts`.
+Powiadomienia (DEC-031, DEC-033) są lokalne (`expo-notifications`) – nie wymagają serwera ani tokenów push. W `src/mobile/src/reminders/`: `schedule.ts` i `planner.ts` (czyste funkcje: przypomnienia, terminy płatności), `center.ts` (planowanie w systemie, historia w AsyncStorage, alerty, licznik), `useReminderLinks.ts` (dotknięcie powiadomienia, odświeżanie przy starcie i powrocie do aplikacji), `useNotificationLog.ts` (historia dla ekranów).
 
 W buildach deweloperskich i w Expo Go aktualizacje OTA są wyłączone. Ustawienia → Aplikacja pokazuje wtedy odpowiedni komunikat.
+
+Gniazdka Tapo (DEC-034, [instrukcja dla użytkownika](Wattly_Tapo.md)) są obsługiwane w `src/mobile/src/tapo/`:
+- `bytes.ts` – UTF-8 i Base64 bez API przeglądarki;
+- `klap.ts` – protokół KLAP v2 (skróty, klucze sesji, szyfrowanie z numerem sekwencji); testy zawierają wektory zgodności z python-kasa;
+- `client.ts` – `TapoClient` (uzgadnianie, `get_device_info`, `get_energy_data`) z wymiennym transportem, błędy z polskimi komunikatami; testy używają symulatora gniazdka;
+- `sync.ts` – konto (SecureStore), adresy gniazdek (AsyncStorage), `linkPlug`, `syncAll`, `autoSync` (co 6 h);
+- `useTapoAutoSync.ts` – synchronizacja przy starcie i powrocie do aplikacji (w układzie zakładek).
+
+Łączność z gniazdkiem wymaga lokalnego HTTP. W `app.json` są ustawione:
+- plugin `expo-build-properties` z `android.usesCleartextTraffic`;
+- na iOS `NSAppTransportSecurity.NSAllowsLocalNetworking` i `NSLocalNetworkUsageDescription`.
+
+Zmiana tych ustawień wymaga nowego instalatora.
 
 ## Konfiguracja (najważniejsze klucze API)
 

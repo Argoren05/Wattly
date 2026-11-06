@@ -9,6 +9,7 @@ Spis dokumentów projektu. Opis aplikacji, zasady produktu, technologie, instala
 | [Wattly_Requirements.md](Wattly_Requirements.md) | wymagania funkcjonalne i niefunkcjonalne |
 | [Wattly_UI_UX.md](Wattly_UI_UX.md) | ekrany, nawigacja, zasady projektowe, motyw, dostępność |
 | [Wattly_Roadmap.md](Wattly_Roadmap.md) | etapy rozwoju – co zrobione, co dalej |
+| [Wattly_Tapo.md](Wattly_Tapo.md) | gniazdka Tapo i „Na co schodzi prąd”: konfiguracja, bezpieczeństwo, sposób liczenia, problemy |
 
 ## Technika
 

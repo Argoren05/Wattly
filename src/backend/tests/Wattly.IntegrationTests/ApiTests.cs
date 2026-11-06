@@ -160,6 +160,38 @@ public class ApiTests(WattlyApiFactory factory)
     }
 
     [Fact]
+    public async Task Appliances_receive_usage_and_appear_in_the_breakdown()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var scenario = await Scenario.CreateAsync(client);
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-09-01T00:00:00+02:00", 0m);
+        await scenario.AddReadingAsync(client, scenario.NightRegisterId, "2026-09-01T00:00:00+02:00", 0m);
+        await scenario.AddReadingAsync(client, scenario.DayRegisterId, "2026-10-01T00:00:00+02:00", 150m);
+        await scenario.AddReadingAsync(client, scenario.NightRegisterId, "2026-10-01T00:00:00+02:00", 100m);
+
+        var plug = await client.PostJsonAsync($"/api/v1/properties/{scenario.PropertyId}/appliances",
+            new { name = "Pralka", source = "Tapo", externalId = "8022AB", model = "P110" });
+        Assert.Equal("Tapo", plug["source"]!.GetValue<string>());
+        var duplicate = await client.PostAsJsonAsync($"/api/v1/properties/{scenario.PropertyId}/appliances", new { name = "X", source = "Tapo", externalId = "8022AB" });
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+
+        var entries = Enumerable.Range(1, 30).Select(d => new { periodStart = $"2026-09-{d:00}", periodEnd = $"2026-09-{d:00}", energyKwh = 1.2m }).ToArray();
+        var saved = await client.PutJsonAsync($"/api/v1/appliances/{plug["id"]}/usage", new { entries });
+        Assert.Equal(30, saved["created"]!.GetValue<int>());
+        saved = await client.PutJsonAsync($"/api/v1/appliances/{plug["id"]}/usage", new { entries });
+        Assert.Equal(30, saved["updated"]!.GetValue<int>());
+
+        var breakdown = await client.GetJsonAsync($"/api/v1/properties/{scenario.PropertyId}/appliances/breakdown?from=2026-09-01&to=2026-09-30");
+        Assert.Equal(250m, breakdown["meterKwh"]!.GetValue<decimal>());
+        Assert.Equal(36m, breakdown["items"]![0]!["energyKwh"]!.GetValue<decimal>());
+        Assert.Equal(214m, breakdown["other"]!["energyKwh"]!.GetValue<decimal>());
+
+        var stranger = await factory.CreateUserClientAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.DeleteAsync($"/api/v1/appliances/{plug["id"]}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/api/v1/appliances/{plug["id"]}")).StatusCode);
+    }
+
+    [Fact]
     public async Task Health_endpoints_report_healthy()
     {
         var client = factory.CreateClient();

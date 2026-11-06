@@ -190,6 +190,48 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Decyzja: powiadomienia **lokalne** (`expo-notifications`) bez udziału serwera. Ustawienia są zapisywane na telefonie (`wattly.reminders`). Aplikacja planuje pojedyncze powiadomienia na 35 dni naprzód i planuje je od nowa przy każdym starcie, po zapisaniu odczytu i po zmianie ustawień. Dzięki temu opcja „pomiń, jeśli dodano odczyt” działa bez internetu. Dotknięcie powiadomienia otwiera „Dodaj odczyt”. Na Androidzie powiadomienia mają osobny kanał „Przypomnienia o odczycie”.
 - Konsekwencje: działa także offline i bez kosztów serwera. Odczyt dodany na innym telefonie nie wyłącza przypomnienia na tym. Android może opóźnić powiadomienie o kilka minut (oszczędzanie baterii; bez uprawnienia do dokładnych alarmów). Moduł jest natywny, więc potrzebny jest instalator 1.2.0 (`versionCode` 3).
 
+## DEC-032 – Latarka bez uprawnienia aparatu (własny moduł natywny)
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: pierwsza wersja latarki (1.2.0) włączała diodę przez niewidoczny podgląd `expo-camera`, co wymagało zgody na aparat i zapalało światło z opóźnieniem.
+- Decyzja: lokalny moduł Expo `src/mobile/modules/wattly-torch` (autolinkowany z katalogu `modules/`). Android: `CameraManager.setTorchMode` (Android 6+, bez uprawnienia `CAMERA`). iOS: `AVCaptureDevice.torchMode` (bez sesji przechwytywania). Moduł gasi latarkę, gdy aplikacja przechodzi w tło lub jest zamykana; aplikacja gasi ją po wyjściu z ekranu. Gdy modułu nie ma (instalator bez niego, Expo Go), aplikacja wraca do sposobu przez `expo-camera`.
+- Konsekwencje: brak prośby o aparat przy latarce, natychmiastowe zapalanie, mniejsze zużycie baterii. Kod natywny jest kompilowany dopiero w EAS Build – w CI sprawdzane są tylko autolinkowanie i warstwa JS. Wymaga instalatora 1.3.0 (`versionCode` 4).
+
+## DEC-033 – Centrum powiadomień: wiele przypomnień, historia, alerty
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: użytkownik chce mieć wiele przypomnień, historię powiadomień oraz nowe rodzaje: termin płatności faktury, przekroczenie budżetu, nietypowe zużycie.
+- Rozważane opcje: powiadomienia push z serwera (Firebase/FCM, tokeny urządzeń, zadanie cykliczne na serwerze) albo, jak w DEC-031, powiadomienia lokalne.
+- Decyzja: wszystko **lokalnie na telefonie** (`src/mobile/src/reminders/center.ts`):
+  - przypomnienia o odczycie (lista do 10) i terminy płatności są planowane z wyprzedzeniem (do 60 powiadomień; terminy z faktur z `dueDate`, kwota `amountDue` lub brutto); plan jest odświeżany przy starcie, po odczycie, po zmianie faktur i ustawień;
+  - alerty „prognoza przekracza budżet” (raz na okres rozliczeniowy) i „nietypowo duże zużycie” (gdy serwer zgłosi `reading.unusual_jump`) są wyświetlane od razu, gdy aplikacja je wykryje;
+  - historia (ostatnie 100 wpisów, przeczytane/nieprzeczytane) w AsyncStorage – zaplanowane powiadomienia trafiają do niej po swojej godzinie; licznik nieprzeczytanych na dzwonku i na ikonie aplikacji (gdzie launcher to obsługuje);
+  - do faktur dodano `DueDate` i `AmountDue` (serwer, migracja `InvoiceDueDate`).
+- Konsekwencje: bez kosztów i konfiguracji Firebase, działa offline. Alert o budżecie pojawi się dopiero po otwarciu aplikacji (przy regularnych odczytach to wystarcza). Ustawienia i historia są per telefon. Nowy moduł natywny AsyncStorage wchodzi do instalatora 1.3.0.
+
+## DEC-034 – Zużycie urządzeń: gniazdka Tapo czytane przez telefon, wpisy ręczne
+- Data: 2026-11-05
+- Status: Zatwierdzona
+- Kontekst: użytkownik ma gniazdka Tapo P110/P115 mierzące zużycie i lodówkę Samsung raportującą zużycie w SmartThings. Chce widzieć, na co w mieszkaniu schodzi prąd.
+- Rozważane opcje:
+  - Home Assistant (HA Green) jako lokalna bramka – odrzucone przez użytkownika (dodatkowe urządzenie);
+  - chmura TP-Link – brak oficjalnego API;
+  - SmartThings API – osobiste tokeny wygasają po 24 h, pełna integracja wymaga rejestracji aplikacji OAuth;
+  - serwer łączący się z gniazdkami – serwer działa w Cloud Run i nie widzi sieci domowej.
+- Decyzja:
+  - **telefon jest pośrednikiem**: w domowym Wi-Fi łączy się z gniazdkiem lokalnym protokołem KLAP v2 (`src/mobile/src/tapo/`, AES-128-CBC z `@noble/ciphers`, SHA z `@noble/hashes`; zgodność z python-kasa sprawdzona wektorami testowymi);
+  - z gniazdka pobierana jest dzienna historia bieżącego i poprzedniego kwartału (`get_energy_data`, interwał 1440) i wysyłana jako dzienne wpisy (`PUT /appliances/{id}/usage` – ten sam okres jest nadpisywany);
+  - synchronizacja automatyczna przy otwarciu aplikacji, najwyżej co 6 h, oraz ręczna;
+  - dane konta Tapo i adresy IP zostają tylko na telefonie (SecureStore / AsyncStorage);
+  - urządzenia bez integracji (lodówka) mają wpisy ręczne za dowolny okres;
+  - serwer: encje `Appliance` i `ApplianceUsage` (migracja `Appliances`), zestawienie `GET /properties/{id}/appliances/breakdown`. Okresy są dzielone proporcjonalnie do dni; koszt to kWh × średnia cena brutto 1 kWh ze składników liczonych od kWh w tej samej kalkulacji co rozbicie kosztów; „Pozostałe” = licznik − suma urządzeń.
+- Konsekwencje:
+  - bez dodatkowego sprzętu i kosztów;
+  - dane spływają tylko, gdy telefon bywa w domowej sieci (historia z gniazdka pokrywa przerwy do ok. 3 miesięcy);
+  - nowsze oprogramowanie gniazdek z protokołem TPAP nie jest obsługiwane – aplikacja pokazuje czytelny komunikat;
+  - wymaga instalatora 1.3.0 (lokalne HTTP: `usesCleartextTraffic` na Androidzie przez `expo-build-properties`, `NSAllowsLocalNetworking` i `NSLocalNetworkUsageDescription` na iOS);
+  - instrukcja dla użytkownika: [Wattly_Tapo.md](Wattly_Tapo.md).
+
 ## Szablon nowej decyzji
 
 ### DEC-XXX – Tytuł
