@@ -27,9 +27,9 @@ export function tapoErrorMessage(error: unknown): string {
     case 'credentials':
       return 'Gniazdko nie przyjęło danych konta Tapo – sprawdź e-mail i hasło.';
     case 'thirdParty':
-      return 'Gniazdko odrzuciło połączenie lokalne. W aplikacji Tapo włącz: Ja → Usługi zewnętrzne (Third-Party Services) → Zgodność z usługami zewnętrznymi (Third-Party Compatibility), odczekaj minutę i spróbuj ponownie. Gdy już jest włączona – wyłącz ją, wyjdź z ekranu i włącz ponownie.';
+      return 'Gniazdko odrzuciło połączenie lokalne. W aplikacji Tapo włącz: Ja → Usługi innych firm (Third-Party Services) → Zgodność z usługami innych firm (Third-Party Compatibility), odczekaj minutę i spróbuj ponownie. Gdy już jest włączona – wyłącz ją, wyjdź z ekranu i włącz ponownie.';
     case 'protocol':
-      return `Gniazdko odpowiada w nieobsługiwany sposób – możliwe, że nowe oprogramowanie (TPAP) zmieniło protokół. Sprawdź, czy w aplikacji Tapo jest włączona zgodność z usługami zewnętrznymi. (${error.message})`;
+      return `Gniazdko odpowiada w nieobsługiwany sposób – możliwe, że nowe oprogramowanie (TPAP) zmieniło protokół. Sprawdź, czy w aplikacji Tapo jest włączona zgodność z usługami innych firm. (${error.message})`;
     case 'device':
       return `Gniazdko zgłosiło błąd (${error.message}).`;
     case 'unsupported':
