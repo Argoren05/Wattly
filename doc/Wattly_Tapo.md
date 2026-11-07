@@ -21,14 +21,15 @@ Instrukcja dla użytkownika: jak podłączyć gniazdka TP-Link Tapo P110/P115 i 
 
 1. **Stały adres IP gniazdek.** W routerze ustaw rezerwację DHCP (*DHCP reservation* / *static lease*) dla każdego gniazdka. Bez tego adres może się zmienić po restarcie routera i telefon straci połączenie.
    - Adres i MAC znajdziesz w aplikacji Tapo: gniazdko → ⚙ → *Informacje o urządzeniu*.
-2. **Konto Tapo w Wattly.** *Ustawienia → Urządzenia → Podaj konto Tapo* – e-mail i hasło konta, na które gniazdka są zarejestrowane w aplikacji Tapo.
-3. **Dodanie gniazdka.** *Dodaj gniazdko Tapo* → wpisz adres IP → *Połącz i dodaj*.
+2. **Zgodność z usługami zewnętrznymi.** W aplikacji Tapo: *Ja → Usługi zewnętrzne → Zgodność z usługami zewnętrznymi* – włącz. Jest wymagana od oprogramowania gniazdek 1.4.
+3. **Konto Tapo w Wattly.** *Ustawienia → Urządzenia → Podaj konto Tapo* – e-mail i hasło konta, na które gniazdka są zarejestrowane w aplikacji Tapo. E-mail musi być identyczny jak w aplikacji Tapo, znak w znak.
+4. **Dodanie gniazdka.** *Dodaj gniazdko Tapo* → wpisz adres IP → *Połącz i dodaj*.
    - Wattly odczyta nazwę i model gniazdka, utworzy urządzenie i od razu pobierze historię.
    - Nazwę możesz zmienić w szczegółach urządzenia.
-4. **Lodówka i inne urządzenia.** *Dodaj urządzenie ręcznie* → nazwa (np. „Lodówka”).
+5. **Lodówka i inne urządzenia.** *Dodaj urządzenie ręcznie* → nazwa (np. „Lodówka”).
    - W szczegółach urządzenia wpisz okres (od–do, włącznie) i zużycie w kWh.
    - Wpis za ten sam okres zastępuje poprzedni. Okresy nie mogą na siebie nachodzić.
-5. **Zestawienie.** *Statystyki → Na co schodzi prąd → Pokaż urządzenia*. Do wyboru są okresy: 30 dni, poprzedni miesiąc, 90 dni.
+6. **Zestawienie.** *Statystyki → Na co schodzi prąd → Pokaż urządzenia*. Do wyboru są okresy: 30 dni, poprzedni miesiąc, 90 dni.
 
 ## Jak liczony jest koszt i udział
 
@@ -45,6 +46,7 @@ Instrukcja dla użytkownika: jak podłączyć gniazdka TP-Link Tapo P110/P115 i 
 |---|---|
 | „Brak połączenia z gniazdkiem” | Telefon nie jest w domowym Wi-Fi albo adres IP się zmienił. Ustaw rezerwację DHCP i popraw adres w szczegółach urządzenia. |
 | „Gniazdko nie przyjęło danych konta Tapo” | Błędny e-mail lub hasło. Popraw je w *Ustawienia → Urządzenia → Konto Tapo → Zmień*. Hasło musi być hasłem konta, na które zarejestrowano gniazdko. |
+| „Gniazdko odrzuciło połączenie lokalne…” | Oprogramowanie gniazdek **1.4 i nowsze** przyjmuje połączenie lokalne (KLAP) tylko wtedy, gdy w aplikacji Tapo włączona jest zgodność z usługami zewnętrznymi. Bez niej gniazdko odpowiada „403” i oczekuje nowego protokołu TPAP. Włącz: *Ja → Usługi zewnętrzne (Third-Party Services) → Zgodność z usługami zewnętrznymi (Third-Party Compatibility)*. Odczekaj minutę i spróbuj ponownie. Jeśli opcja już była włączona, wyłącz ją, wyjdź z ekranu i włącz ponownie. W ostateczności zresetuj gniazdko, dodaj je w aplikacji Tapo od nowa i ponownie włącz zgodność. |
 | „Gniazdko odpowiada w nieobsługiwany sposób… (TPAP)” | Nowsze oprogramowanie gniazdek (2025+) może używać protokołu TPAP zamiast KLAP. Wattly obsługuje tylko KLAP. Sprawdź, czy w aplikacji Tapo nie ma opcji zgodności lub aktualizacji; w razie potrzeby wpisuj zużycie ręcznie. |
 | „… nie mierzy zużycia prądu” | Gniazdka P100/P105 nie mają pomiaru energii. Potrzebne są P110, P110M lub P115. |
 | Brak danych z dzisiejszego dnia w zestawieniu | Okresy kończą się wczoraj, bo dzisiejsze dane są niepełne. |

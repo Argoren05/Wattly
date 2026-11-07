@@ -72,6 +72,8 @@ test('wrong Tapo password, device errors and tampered answers have their own err
 test('plugs with other firmware (no KLAP) are reported as protocol errors', async () => {
   const transport: TapoTransport = { post: async () => ({ status: 404, body: utf8Encode('<html>'), setCookie: null }) };
   await expect(new TapoClient('h', 'a', 'b', transport, random).connect()).rejects.toMatchObject({ kind: 'protocol' });
+  const forbidden: TapoTransport = { post: async () => ({ status: 403, body: new Uint8Array(), setCookie: null }) };
+  await expect(new TapoClient('h', 'a', 'b', forbidden, random).connect()).rejects.toMatchObject({ kind: 'thirdParty' });
   const shortBody: TapoTransport = { post: async () => ({ status: 200, body: new Uint8Array(10), setCookie: null }) };
   await expect(new TapoClient('h', 'a', 'b', shortBody, random).connect()).rejects.toMatchObject({ kind: 'protocol' });
 });
@@ -81,7 +83,8 @@ test('session cookie parsing and friendly messages', () => {
   expect(parseSessionCookie(null)).toBeNull();
   expect(tapoErrorMessage(new TapoError('unreachable', 'x'))).toMatch(/tej samej sieci Wi-Fi/);
   expect(tapoErrorMessage(new TapoError('credentials', 'x'))).toMatch(/e-mail i hasło/);
-  expect(tapoErrorMessage(new TapoError('protocol', 'x'))).toMatch(/TPAP/);
+  expect(tapoErrorMessage(new TapoError('protocol', 'handshake1 HTTP 404'))).toMatch(/TPAP.*\(handshake1 HTTP 404\)/);
+  expect(tapoErrorMessage(new TapoError('thirdParty', 'x'))).toMatch(/Zgodność z usługami zewnętrznymi/);
   expect(tapoErrorMessage(new TapoError('device', 'kod -1'))).toMatch(/kod -1/);
   expect(tapoErrorMessage(new Error('?'))).toBe('Nie udało się połączyć z gniazdkiem.');
   expect(utf8Decode(utf8Encode('ok'))).toBe('ok');

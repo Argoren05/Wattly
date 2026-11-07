@@ -4,7 +4,7 @@ import { base64Decode, utf8Decode } from './bytes';
 import { authHash, equalBytes, handshake1Hash, handshake2Payload, KlapSession } from './klap';
 
 /** Why talking to a plug failed – each kind gets its own message for the user. */
-export type TapoErrorKind = 'unreachable' | 'credentials' | 'protocol' | 'device' | 'unsupported';
+export type TapoErrorKind = 'unreachable' | 'credentials' | 'thirdParty' | 'protocol' | 'device' | 'unsupported';
 
 /** Error of the Tapo client. */
 export class TapoError extends Error {
@@ -26,8 +26,10 @@ export function tapoErrorMessage(error: unknown): string {
       return 'Brak połączenia z gniazdkiem – telefon musi być w tej samej sieci Wi-Fi, a adres IP aktualny.';
     case 'credentials':
       return 'Gniazdko nie przyjęło danych konta Tapo – sprawdź e-mail i hasło.';
+    case 'thirdParty':
+      return 'Gniazdko odrzuciło połączenie lokalne. W aplikacji Tapo włącz: Ja → Usługi zewnętrzne (Third-Party Services) → Zgodność z usługami zewnętrznymi (Third-Party Compatibility), odczekaj minutę i spróbuj ponownie. Gdy już jest włączona – wyłącz ją, wyjdź z ekranu i włącz ponownie.';
     case 'protocol':
-      return 'Gniazdko odpowiada w nieobsługiwany sposób – możliwe, że nowe oprogramowanie (TPAP) zmieniło protokół.';
+      return `Gniazdko odpowiada w nieobsługiwany sposób – możliwe, że nowe oprogramowanie (TPAP) zmieniło protokół. Sprawdź, czy w aplikacji Tapo jest włączona zgodność z usługami zewnętrznymi. (${error.message})`;
     case 'device':
       return `Gniazdko zgłosiło błąd (${error.message}).`;
     case 'unsupported':
@@ -117,6 +119,8 @@ export class TapoClient {
   async connect(): Promise<void> {
     const local = this.random(16);
     const first = await this.transport.post(this.url('handshake1'), local, null);
+    // Firmware 1.4+ answers 403 when "Third-Party Compatibility" is off (it then expects TPAP, which is not supported).
+    if (first.status === 403) throw new TapoError('thirdParty', 'handshake1 HTTP 403');
     if (first.status !== 200) throw new TapoError('protocol', `handshake1 HTTP ${first.status}`);
     if (first.body.length !== 48) throw new TapoError('protocol', `handshake1 returned ${first.body.length} bytes`);
     const remote = first.body.slice(0, 16);

@@ -228,7 +228,7 @@ Dokument przechowuje zatwierdzone decyzje. Wpisy oznaczone jako „Propozycja”
 - Konsekwencje:
   - bez dodatkowego sprzętu i kosztów;
   - dane spływają tylko, gdy telefon bywa w domowej sieci (historia z gniazdka pokrywa przerwy do ok. 3 miesięcy);
-  - nowsze oprogramowanie gniazdek z protokołem TPAP nie jest obsługiwane – aplikacja pokazuje czytelny komunikat;
+  - oprogramowanie gniazdek 1.4+ obsługuje KLAP tylko po włączeniu w aplikacji Tapo „zgodności z usługami zewnętrznymi” – bez niej odpowiada 403 na `handshake1`, a aplikacja wskazuje, co włączyć (sprawdzone na prawdziwym P110, 2026-11-07); sam protokół TPAP (SPAKE2+, AES-CCM) nie jest obsługiwany;
   - wymaga instalatora 1.3.0 (lokalne HTTP: `usesCleartextTraffic` na Androidzie przez `expo-build-properties`, `NSAllowsLocalNetworking` i `NSLocalNetworkUsageDescription` na iOS);
   - instrukcja dla użytkownika: [Wattly_Tapo.md](Wattly_Tapo.md).
 
